@@ -60,7 +60,7 @@ async function sendMessage() {
     }
 
     try {
-        const response = await fetch('http://localhost:5050/analizar', {
+        const response = await fetch('/analizar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body)
@@ -161,4 +161,5 @@ document.addEventListener('click', e => {
 
 // Cargar modo oscuro al inicio
 document.body.classList.toggle('dark-mode', localStorage.getItem('darkMode') === 'true');
+
 isDarkMode = localStorage.getItem('darkMode') === 'true';
