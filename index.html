@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>MatyMat-01 - Tu Tutor de Matemáticas</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-robot"></i> MatyMat-01</h1>
+            <p>Resuelve ejercicios con texto o foto. ¡Estoy aquí para ayudarte!</p>
+        </header>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="message bot">
+                <div class="avatar bot-avatar">
+                    <img src="logo-tutor.png" alt="Tutor MatyMat-01">
+                </div>
+                <div class="message-content">
+                    ¡Hola! Soy MatyMat-01. Puedes escribir tu pregunta o tomar una foto del ejercicio. ¿En qué tema necesitas ayuda?
+                </div>
+            </div>
+        </div>
+
+        <div class="input-section">
+            <div class="input-wrapper">
+                <button class="btn upload-btn" id="uploadBtn" title="Subir foto o tomar">
+                    <i class="fas fa-camera-retro"></i>
+                </button>
+                <textarea id="userInput" placeholder="Escribe tu pregunta..."></textarea>
+                <button class="btn send-btn" id="sendBtn">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Input oculto para cámara y galería -->
+    <input type="file" id="fileInput" accept="image/*" capture="environment" style="display: none;">
+
+    <!-- Panel de Configuración -->
+    <div class="settings-panel">
+        <div class="settings-toggle" id="settingsToggle">
+            <i class="fas fa-cog"></i>
+        </div>
+        <div class="settings-menu" id="settingsMenu">
+            <div class="settings-option" id="themeOption">
+                <i class="fas fa-moon"></i>
+                <span>Activar Modo Oscuro</span>
+            </div>
+            <div class="settings-option" id="audioOption">
+                <i class="fas fa-volume-up"></i>
+                <span>Voz Activada</span>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
