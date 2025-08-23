@@ -5,7 +5,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { crearPrompt } from './prompt.js'; // ← Importamos el prompt experto
 
 const app = express();
-const PORT = 5050;
+const PORT = process.env.PORT || 5050;
 
 // Middleware
 app.use(cors());
@@ -81,4 +81,5 @@ process.on('unhandledRejection', (err) => {
 });
 process.on('uncaughtException', (err) => {
     console.error('❌ Uncaught Exception:', err.message || err);
+
 });
