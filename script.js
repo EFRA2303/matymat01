@@ -1,5 +1,7 @@
+// script.js
 import { speakText } from './tts.js';
 
+// Elementos del DOM
 const userInput = document.getElementById('userInput');
 const sendBtn = document.getElementById('sendBtn');
 const uploadBtn = document.getElementById('uploadBtn');
@@ -10,6 +12,7 @@ const settingsMenu = document.getElementById('settingsMenu');
 const themeOption = document.getElementById('themeOption');
 const audioOption = document.getElementById('audioOption');
 
+// Estados
 let isDarkMode = false;
 let isVoiceEnabled = true;
 let isSending = false;
@@ -19,13 +22,14 @@ let selectedImage = null;
 uploadBtn.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', handleImageSelect);
 sendBtn.addEventListener('click', sendMessage);
-userInput.addEventListener('keypress', e => {
+userInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         sendMessage();
     }
 });
 
+// Manejar selección de imagen
 function handleImageSelect(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -33,12 +37,13 @@ function handleImageSelect(e) {
     const reader = new FileReader();
     reader.onload = () => {
         selectedImage = reader.result;
-        addMessage(`📸 Imagen lista. Escribe y envía.`, 'user');
+        addMessage(`📸 Imagen seleccionada. Escribe y envía.`, 'user');
         if (userInput.value.trim()) sendMessage();
     };
     reader.readAsDataURL(file);
 }
 
+// Enviar mensaje
 async function sendMessage() {
     if (isSending) return;
     isSending = true;
@@ -85,41 +90,18 @@ async function sendMessage() {
     }
 }
 
+// Añadir mensaje al chat
 function addMessage(text, sender) {
     const div = document.createElement('div');
     div.className = `message ${sender}`;
+
     const avatar = document.createElement('div');
-avatar.className = `avatar ${sender}-avatar`;
-if (sender === 'bot') {
-    const img = document.createElement('img');
-    img.src = 'logo-tutor.png';
-    img.alt = 'Tutor';
-    avatar.appendChild(img);
-}
-    // Después de: chatContainer.appendChild(div);
-// Añade esto si es un mensaje del bot
-if (sender === 'bot') {
-    avatar.classList.add('blinking'); // Activa el parpadeo
-
-    // Detiene el parpadeo después de 3 segundos (ajusta según duración de la voz)
-    setTimeout(() => {
-        avatar.classList.remove('blinking');
-    }, 3000);
-
-    // O sincroniza con la duración del texto a voz
-    if (isVoiceEnabled) {
-        const words = text.split(' ').length;
-        const time = Math.max(2000, words * 300); // Tiempo estimado de lectura
-        setTimeout(() => {
-            avatar.classList.remove('blinking');
-        }, time);
-    }
-}
+    avatar.className = `avatar ${sender}-avatar`;
 
     if (sender === 'bot') {
         const img = document.createElement('img');
         img.src = 'logo-tutor.png';
-        img.alt = 'Tutor';
+        img.alt = 'Tutor Avatar';
         avatar.appendChild(img);
     } else {
         avatar.innerHTML = '<i class="fas fa-user"></i>';
@@ -133,19 +115,44 @@ if (sender === 'bot') {
     div.appendChild(content);
     chatContainer.appendChild(div);
     chatContainer.scrollTop = chatContainer.scrollHeight;
+
+    // === EFECTO DE PARPADEO DEL AVATAR (SOLO PARA EL BOT) ===
+    if (sender === 'bot') {
+        const botAvatar = avatar.querySelector('img') || avatar;
+        botAvatar.classList.add('blinking'); // Activa el parpadeo
+
+        // Estima el tiempo de lectura según la longitud del texto
+        const textLength = text.length;
+        const estimatedTime = Math.max(2000, textLength * 60); // 60ms por carácter
+
+        // Detener parpadeo después del tiempo estimado
+        setTimeout(() => {
+            botAvatar.classList.remove('blinking');
+        }, estimatedTime);
+
+        // Si la voz está activada, extiende un poco el tiempo
+        if (isVoiceEnabled) {
+            setTimeout(() => {
+                botAvatar.classList.remove('blinking');
+            }, estimatedTime + 1000);
+        }
+    }
+    // ========================================================
 }
 
+// Indicador de "escribiendo..."
 function showTypingIndicator() {
     const typing = document.createElement('div');
     typing.className = 'typing-indicator';
     typing.id = 'typing';
     typing.innerHTML = `
         <div class="avatar bot-avatar">
-            <img src="logo-tutor.png" alt="...">
+            <img src="logo-tutor.png" alt="Tutor">
         </div>
         <div class="message-content">Pensando...</div>
     `;
     chatContainer.appendChild(typing);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
 function hideTypingIndicator() {
@@ -173,19 +180,19 @@ audioOption.addEventListener('click', () => {
     span.textContent = isVoiceEnabled ? 'Voz Activada' : 'Voz Desactivada';
 });
 
-// Configuración
+// Configuración (menú deslizante)
 settingsToggle.addEventListener('click', () => {
     settingsMenu.classList.toggle('show');
 });
 
-document.addEventListener('click', e => {
+document.addEventListener('click', (e) => {
     if (!settingsMenu.contains(e.target) && !settingsToggle.contains(e.target)) {
         settingsMenu.classList.remove('show');
     }
 });
 
-// Cargar modo oscuro al inicio
+// Cargar configuración al iniciar
 document.body.classList.toggle('dark-mode', localStorage.getItem('darkMode') === 'true');
-
 isDarkMode = localStorage.getItem('darkMode') === 'true';
+
 
