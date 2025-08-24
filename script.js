@@ -195,4 +195,10 @@ document.addEventListener('click', (e) => {
 document.body.classList.toggle('dark-mode', localStorage.getItem('darkMode') === 'true');
 isDarkMode = localStorage.getItem('darkMode') === 'true';
 
+// Actualizar texto e icono del modo oscuro según el estado guardado
+const icon = themeOption.querySelector('i');
+const span = themeOption.querySelector('span');
+icon.className = isDarkMode ? 'fas fa-sun' : 'fas fa-moon';
+span.textContent = isDarkMode ? 'Modo Claro' : 'Modo Oscuro';
+
 
