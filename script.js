@@ -336,5 +336,46 @@ document.addEventListener('click', (e) => {
         toolbar.style.display = 'none';
     }
 });
+// === INICIALIZACIÓN Y EVENTOS ===
+document.addEventListener('DOMContentLoaded', () => {
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const fileInput = document.getElementById('fileInput');
+
+    // Verifica que los elementos existan
+    if (!userInput || !sendBtn || !uploadBtn || !fileInput) {
+        console.error('❌ No se encontraron elementos del DOM');
+        return;
+    }
+
+    // Enviar mensaje
+    sendBtn.addEventListener('click', () => {
+        if (userInput.value.trim()) sendMessage();
+    });
+
+    userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (userInput.value.trim()) sendMessage();
+        }
+    });
+
+    // Subir imagen
+    uploadBtn.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                addMessage(`📸 Imagen seleccionada. Escribe y envía.`, 'user');
+                if (userInput.value.trim()) sendMessage();
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+});
+
 
 
