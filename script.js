@@ -186,7 +186,145 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // === INDICADOR DE ESCRIBI
+    // === INDICADOR DE ESCRIBIENDO ===
+    function showTypingIndicator() {
+        const typing = document.createElement('div');
+        typing.className = 'typing-indicator';
+        typing.id = 'typing';
+        typing.innerHTML = `
+            <div class="avatar bot-avatar">
+                <img src="logo-tutor.png" alt="Tutor">
+            </div>
+            <div class="message-content">Pensando...</div>
+        `;
+        chatContainer.appendChild(typing);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function hideTypingIndicator() {
+        const typing = document.getElementById('typing');
+        if (typing) typing.remove();
+    }
+
+    // === MENÚ DE CONFIGURACIÓN (⋯) ===
+    if (menuToggle && menuPanel && closeMenu) {
+        menuToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menuPanel.style.display = 'block';
+        });
+
+        closeMenu.addEventListener('click', () => {
+            menuPanel.style.display = 'none';
+        });
+
+        // Cerrar al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (!menuPanel.contains(e.target) && !menuToggle.contains(e.target)) {
+                menuPanel.style.display = 'none';
+            }
+        });
+
+        // Modo oscuro
+        themeOption.addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode', isDarkMode);
+            localStorage.setItem('darkMode', isDarkMode);
+            updateThemeUI();
+        });
+
+        // Voz
+        audioOption.addEventListener('click', () => {
+            isVoiceEnabled = !isVoiceEnabled;
+            localStorage.setItem('isVoiceEnabled', isVoiceEnabled);
+            updateAudioUI();
+        });
+    }
+
+    // === TECLADO MATEMÁTICO INTEGRADO ===
+    if (toggleMathBtn && mathToolbar) {
+        toggleMathBtn.addEventListener('click', () => {
+            mathToolbar.style.display = mathToolbar.style.display === 'none' || mathToolbar.style.display === '' ? 'flex' : 'none';
+        });
+
+        // Insertar texto en el cursor
+        window.insertAtCursor = function(text) {
+            const start = userInput.selectionStart;
+            const end = userInput.selectionEnd;
+            userInput.value = userInput.value.substring(0, start) + text + userInput.value.substring(end);
+            userInput.focus();
+            userInput.setSelectionRange(start + text.length, start + text.length);
+            userInput.dispatchEvent(new Event('input'));
+        };
+
+        // Limpiar input
+        window.clearInput = function() {
+            userInput.value = '';
+            userInput.focus();
+        };
+
+        // Cerrar teclado al enviar
+        sendBtn.addEventListener('click', () => {
+            mathToolbar.style.display = 'none';
+        });
+
+        // Cerrar al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (!mathToolbar.contains(e.target) && !toggleMathBtn.contains(e.target)) {
+                mathToolbar.style.display = 'none';
+            }
+        });
+    }
+
+    // === GRÁFICA CON CHART.JS ===
+    if (graphBtn && graphContainer && graphCanvas) {
+        graphBtn.addEventListener('click', () => {
+            const func = userInput.value.trim();
+            if (!func) return;
+
+            graphContainer.style.display = 'block';
+
+            const x = Array.from({ length: 100 }, (_, i) => i / 10 - 5);
+            const y = x.map(val => {
+                try {
+                    return eval(func.replace(/x/g, `(${val})`));
+                } catch {
+                    return NaN;
+                }
+            });
+
+            if (graphChart) graphChart.destroy();
+
+            graphChart = new Chart(graphCanvas, {
+                type: 'line',
+                data: {
+                    labels: x,
+                    datasets: [{
+                        label: func,
+                        data: y,
+                        borderColor: '#4361ee',
+                        backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { display: true, grid: { color: 'rgba(255,255,255,0.1)' } },
+                        y: { display: true, grid: { color: 'rgba(255,255,255,0.1)' } }
+                    }
+                }
+            });
+        });
+
+        document.getElementById('closeGraph')?.addEventListener('click', () => {
+            graphContainer.style.display = 'none';
+        });
+    }
+});
+
 
 
 
