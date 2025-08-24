@@ -286,4 +286,13 @@ input, textarea {
     font-size: 16px;
 
 }
+/* Animación de parpadeo para el avatar */
+.blinking {
+    animation: blink 0.8s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(0.98); }
+}
 
