@@ -8,24 +8,21 @@ const uploadBtn = document.getElementById('uploadBtn');
 const fileInput = document.getElementById('fileInput');
 const chatContainer = document.getElementById('chatContainer');
 const menuToggle = document.getElementById('menuToggle');
-const menuDropdown = document.getElementById('menuDropdown');
-const themeOption = document.getElementById('themeOption');
-const audioOption = document.getElementById('audioOption');
-const mathKeyboardToggle = document.getElementById('mathKeyboardToggle');
-const mathKeyboard = document.getElementById('mathKeyboard');
-const closeKeyboard = document.getElementById('closeKeyboard');
+const menuPanel = document.getElementById('menuPanel');
+const closeMenu = document.getElementById('closeMenu');
+const mathMenuToggle = document.getElementById('mathMenuToggle');
+const mathPanel = document.getElementById('mathPanel');
+const closeMath = document.getElementById('closeMath');
 const graphBtn = document.getElementById('graphBtn');
-const geogebraContainer = document.getElementById('geogebraContainer');
-const closeGraph = document.getElementById('closeGraph');
-
-// Instancia de GeoGebra
-let ggbApp = null;
+const graphContainer = document.getElementById('graphContainer');
+const graphCanvas = document.getElementById('graphCanvas');
 
 // Estados
 let isDarkMode = false;
 let isVoiceEnabled = true;
 let isSending = false;
 let selectedImage = null;
+let graphChart = null;
 
 // Eventos
 uploadBtn.addEventListener('click', () => fileInput.click());
@@ -164,37 +161,34 @@ function hideTypingIndicator() {
     if (typing) typing.remove();
 }
 
-// Menú estilo Gemini
+// Menú de Configuración (⋯)
 menuToggle.addEventListener('click', (e) => {
     e.stopPropagation();
-    document.querySelector('.menu-container').classList.toggle('active');
+    menuPanel.classList.add('active');
 });
 
-document.addEventListener('click', (e) => {
-    const menuContainer = document.querySelector('.menu-container');
-    if (!menuContainer.contains(e.target)) {
-        menuContainer.classList.remove('active');
-    }
+closeMenu.addEventListener('click', () => {
+    menuPanel.classList.remove('active');
 });
 
 // Modo oscuro
-themeOption.addEventListener('click', () => {
+document.getElementById('themeOption').addEventListener('click', () => {
     isDarkMode = !isDarkMode;
     document.body.classList.toggle('dark-mode', isDarkMode);
     localStorage.setItem('darkMode', isDarkMode);
 
-    const icon = themeOption.querySelector('i');
-    const span = themeOption.querySelector('span');
+    const icon = document.querySelector('#themeOption i');
+    const span = document.querySelector('#themeOption span');
     icon.className = isDarkMode ? 'fas fa-sun' : 'fas fa-moon';
     span.textContent = isDarkMode ? 'Modo Claro' : 'Modo Oscuro';
 });
 
 // Voz
-audioOption.addEventListener('click', () => {
+document.getElementById('audioOption').addEventListener('click', () => {
     isVoiceEnabled = !isVoiceEnabled;
 
-    const icon = audioOption.querySelector('i');
-    const span = audioOption.querySelector('span');
+    const icon = document.querySelector('#audioOption i');
+    const span = document.querySelector('#audioOption span');
     icon.className = isVoiceEnabled ? 'fas fa-volume-up' : 'fas fa-volume-mute';
     span.textContent = isVoiceEnabled ? 'Voz Activada' : 'Voz Desactivada';
 });
@@ -208,6 +202,17 @@ document.querySelector('#themeOption i').className = isDarkMode ? 'fas fa-sun' :
 document.querySelector('#themeOption span').textContent = isDarkMode ? 'Modo Claro' : 'Modo Oscuro';
 document.querySelector('#audioOption i').className = isVoiceEnabled ? 'fas fa-volume-up' : 'fas fa-volume-mute';
 document.querySelector('#audioOption span').textContent = isVoiceEnabled ? 'Voz Activada' : 'Voz Desactivada';
+
+// Panel de Teclado (☰)
+mathMenuToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    mathPanel.classList.add('active');
+});
+
+closeMath.addEventListener('click', () => {
+    mathPanel.classList.remove('active');
+    graphContainer.style.display = 'none';
+});
 
 // Teclado Matemático
 function insertMath(text) {
@@ -237,54 +242,60 @@ function clearInput() {
     document.getElementById('userInput').focus();
 }
 
-mathKeyboardToggle.addEventListener('click', () => {
-    mathKeyboard.classList.toggle('active');
-});
-
-closeKeyboard.addEventListener('click', () => {
-    mathKeyboard.classList.remove('active');
-});
-
-document.addEventListener('click', (e) => {
-    if (!mathKeyboard.contains(e.target) && !mathKeyboardToggle.contains(e.target) && mathKeyboard.classList.contains('active')) {
-        mathKeyboard.classList.remove('active');
-    }
-});
-
-// Graficar con GeoGebra
+// Graficar con Chart.js
 graphBtn.addEventListener('click', () => {
     const func = userInput.value.trim();
     if (!func) return;
 
-    if (!ggbApp) {
-        ggbApp = new GGBApplet({
-            "appName": "classic",
-            "width": 400,
-            "height": 300,
-            "showToolBar": false,
-            "showAlgebraInput": false,
-            "showMenuBar": false,
-            "enableLabelDrags": false,
-            "enableShiftDragZoom": true,
-            "showZoomButtons": true,
-            "capturingThreshold": 3,
-            "showFullscreenButton": true,
-            "scale": 1,
-            "disableAutoScale": false,
-            "enableRightClick": false,
-            "language": "es",
-            "material_id": "null"
-        }, true);
-        ggbApp.inject('ggbElement');
+    graphContainer.style.display = 'block';
+
+    // Extrae valores para graficar (ej: x^2)
+    const x = Array.from({ length: 100 }, (_, i) => i / 10 - 5);
+    const y = x.map(val => {
+        try {
+            return eval(func.replace(/x/g, `(${val})`));
+        } catch {
+            return NaN;
+        }
+    });
+
+    if (graphChart) graphChart.destroy();
+
+    graphChart = new Chart(graphCanvas, {
+        type: 'line',
+        data: {
+            labels: x,
+            datasets: [{
+                label: func,
+                data: y,
+                borderColor: '#4361ee',
+                backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                borderWidth: 2,
+                pointRadius: 0,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: { display: true, grid: { color: 'rgba(255,255,255,0.1)' } },
+                y: { display: true, grid: { color: 'rgba(255,255,255,0.1)' } }
+            }
+        }
+    });
+});
+
+// Cerrar al hacer clic fuera
+document.addEventListener('click', (e) => {
+    if (!menuPanel.contains(e.target) && !menuToggle.contains(e.target)) {
+        menuPanel.classList.remove('active');
     }
-
-    setTimeout(() => {
-        ggbApp.evalCommand(func);
-    }, 500);
-
-    geogebraContainer.style.display = 'block';
+    if (!mathPanel.contains(e.target) && !mathMenuToggle.contains(e.target)) {
+        mathPanel.classList.remove('active');
+        graphContainer.style.display = 'none';
+    }
 });
 
-closeGraph.addEventListener('click', () => {
-    geogebraContainer.style.display = 'none';
-});
