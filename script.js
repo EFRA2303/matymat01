@@ -102,6 +102,9 @@ function addMessage(text, sender) {
         const img = document.createElement('img');
         img.src = 'logo-tutor.png';
         img.alt = 'Tutor Avatar';
+        img.onerror = () => {
+            img.src = 'https://via.placeholder.com/150x150?text=Tutor'; // Imagen de respaldo
+        };
         avatar.appendChild(img);
     } else {
         avatar.innerHTML = '<i class="fas fa-user"></i>';
@@ -118,24 +121,29 @@ function addMessage(text, sender) {
 
     // === EFECTO DE PARPADEO DEL AVATAR (SOLO PARA EL BOT) ===
     if (sender === 'bot') {
-        const botAvatar = avatar.querySelector('img') || avatar;
-        botAvatar.classList.add('blinking'); // Activa el parpadeo
+        // Aseguramos que el DOM se haya actualizado antes de aplicar la animación
+        requestAnimationFrame(() => {
+            const img = avatar.querySelector('img');
+            if (img) {
+                img.classList.add('blinking');
 
-        // Estima el tiempo de lectura según la longitud del texto
-        const textLength = text.length;
-        const estimatedTime = Math.max(2000, textLength * 60); // 60ms por carácter
+                // Estima el tiempo de lectura
+                const textLength = text.length;
+                const estimatedTime = Math.max(2000, textLength * 60);
 
-        // Detener parpadeo después del tiempo estimado
-        setTimeout(() => {
-            botAvatar.classList.remove('blinking');
-        }, estimatedTime);
+                // Detener parpadeo
+                setTimeout(() => {
+                    img.classList.remove('blinking');
+                }, estimatedTime);
 
-        // Si la voz está activada, extiende un poco el tiempo
-        if (isVoiceEnabled) {
-            setTimeout(() => {
-                botAvatar.classList.remove('blinking');
-            }, estimatedTime + 1000);
-        }
+                // Si la voz está activada, espera un poco más
+                if (isVoiceEnabled) {
+                    setTimeout(() => {
+                        img.classList.remove('blinking');
+                    }, estimatedTime + 1000);
+                }
+            }
+        });
     }
     // ========================================================
 }
@@ -195,10 +203,8 @@ document.addEventListener('click', (e) => {
 document.body.classList.toggle('dark-mode', localStorage.getItem('darkMode') === 'true');
 isDarkMode = localStorage.getItem('darkMode') === 'true';
 
-// Actualizar texto e icono del modo oscuro según el estado guardado
+// Actualizar texto e icono del modo oscuro
 const icon = themeOption.querySelector('i');
 const span = themeOption.querySelector('span');
 icon.className = isDarkMode ? 'fas fa-sun' : 'fas fa-moon';
 span.textContent = isDarkMode ? 'Modo Claro' : 'Modo Oscuro';
-
-
