@@ -5,13 +5,13 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const app = express();
 
-// 🔹 Puerto dinámico para Render
-const PORT = process.env.PORT || 10000; // Render usa por defecto 10000
+// 🔹 Usa el puerto de Render (por defecto 10000)
+const PORT = process.env.PORT || 10000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static('.')); // Sirve archivos estáticos (index.html, CSS, JS, etc.)
+app.use(express.static('.')); // Sirve index.html, CSS, JS, etc.
 
 // 🔑 Tu API Key de Gemini
 const API_KEY = 'AIzaSyCuRbKPJ5xFrq3eDFgltITbZqqeHph8LFg';
@@ -41,11 +41,10 @@ Responde como MatyMat-01, no como una IA genérica.
 `.trim();
 }
 
-// Ruta principal: analiza texto o imagen
+// Ruta para analizar texto o imagen
 app.post('/analizar', async (req, res) => {
     const { text, image, mimeType = 'image/jpeg' } = req.body;
 
-    // Validación de entrada
     if (!text || typeof text !== 'string') {
         return res.status(400).json({ error: 'Consulta inválida o vacía' });
     }
@@ -53,7 +52,6 @@ app.post('/analizar', async (req, res) => {
     try {
         let result;
 
-        // Si hay imagen, combinar con el prompt especializado
         if (image && typeof image === 'string') {
             const imgData = {
                 inlineData: { image, mimeType }
@@ -65,17 +63,12 @@ app.post('/analizar', async (req, res) => {
             result = await model.generateContent(prompt);
         }
 
-        // Obtener respuesta
         const response = await result.response;
         const respuesta = response.text();
-
-        // Enviar respuesta al frontend
         res.json({ respuesta });
 
     } catch (error) {
         console.error('❌ Error con Gemini:', error.message || error);
-
-        // Manejo de errores específicos
         if (error.message?.includes('API key')) {
             return res.status(500).json({ error: 'Error de autenticación con Gemini' });
         }
@@ -87,15 +80,11 @@ app.post('/analizar', async (req, res) => {
                 respuesta: 'No puedo responder eso, pero estoy aquí para ayudarte con matemáticas.'
             });
         }
-
-        // Error genérico
-        return res.status(500).json({
-            error: 'No pude procesar tu pregunta. Intenta recargar la página.'
-        });
+        return res.status(500).json({ error: 'No pude procesar tu pregunta. Intenta de nuevo.' });
     }
 });
 
-// ✅ Escucha en 0.0.0.0 para que Render pueda enrutar tráfico
+// ✅ Escucha en 0.0.0.0 y en el puerto correcto
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Servidor listo en http://0.0.0.0:${PORT}`);
     console.log(`🌐 Tu app está disponible en: https://matymat01.onrender.com`);
