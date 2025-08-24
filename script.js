@@ -7,10 +7,19 @@ const sendBtn = document.getElementById('sendBtn');
 const uploadBtn = document.getElementById('uploadBtn');
 const fileInput = document.getElementById('fileInput');
 const chatContainer = document.getElementById('chatContainer');
-const settingsToggle = document.getElementById('settingsToggle');
-const settingsMenu = document.getElementById('settingsMenu');
+const menuToggle = document.getElementById('menuToggle');
+const menuDropdown = document.getElementById('menuDropdown');
 const themeOption = document.getElementById('themeOption');
 const audioOption = document.getElementById('audioOption');
+const mathKeyboardToggle = document.getElementById('mathKeyboardToggle');
+const mathKeyboard = document.getElementById('mathKeyboard');
+const closeKeyboard = document.getElementById('closeKeyboard');
+const graphBtn = document.getElementById('graphBtn');
+const geogebraContainer = document.getElementById('geogebraContainer');
+const closeGraph = document.getElementById('closeGraph');
+
+// Instancia de GeoGebra
+let ggbApp = null;
 
 // Estados
 let isDarkMode = false;
@@ -102,9 +111,7 @@ function addMessage(text, sender) {
         const img = document.createElement('img');
         img.src = 'logo-tutor.png';
         img.alt = 'Tutor Avatar';
-        img.onerror = () => {
-            img.src = 'https://via.placeholder.com/150?text=Tutor';
-        };
+        img.onerror = () => img.src = 'https://via.placeholder.com/150?text=Tutor';
         avatar.appendChild(img);
     } else {
         avatar.innerHTML = '<i class="fas fa-user"></i>';
@@ -119,32 +126,22 @@ function addMessage(text, sender) {
     chatContainer.appendChild(div);
     chatContainer.scrollTop = chatContainer.scrollHeight;
 
-    // === EFECTO DE PARPADEO DEL AVATAR (SOLO PARA EL BOT) ===
+    // Efecto de parpadeo del avatar del bot
     if (sender === 'bot') {
         requestAnimationFrame(() => {
             const img = avatar.querySelector('img');
             if (img) {
                 img.classList.add('blinking');
-
-                // Estima el tiempo de lectura según la longitud del texto
                 const textLength = text.length;
                 const estimatedTime = Math.max(2000, textLength * 60);
 
-                // Detener parpadeo después del tiempo estimado
-                setTimeout(() => {
-                    img.classList.remove('blinking');
-                }, estimatedTime);
-
-                // Si la voz está activada, extiende un poco el tiempo
+                setTimeout(() => img.classList.remove('blinking'), estimatedTime);
                 if (isVoiceEnabled) {
-                    setTimeout(() => {
-                        img.classList.remove('blinking');
-                    }, estimatedTime + 1000);
+                    setTimeout(() => img.classList.remove('blinking'), estimatedTime + 1000);
                 }
             }
         });
     }
-    // ========================================================
 }
 
 // Indicador de "escribiendo..."
@@ -167,11 +164,25 @@ function hideTypingIndicator() {
     if (typing) typing.remove();
 }
 
+// Menú estilo Gemini
+menuToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.querySelector('.menu-container').classList.toggle('active');
+});
+
+document.addEventListener('click', (e) => {
+    const menuContainer = document.querySelector('.menu-container');
+    if (!menuContainer.contains(e.target)) {
+        menuContainer.classList.remove('active');
+    }
+});
+
 // Modo oscuro
 themeOption.addEventListener('click', () => {
     isDarkMode = !isDarkMode;
     document.body.classList.toggle('dark-mode', isDarkMode);
     localStorage.setItem('darkMode', isDarkMode);
+
     const icon = themeOption.querySelector('i');
     const span = themeOption.querySelector('span');
     icon.className = isDarkMode ? 'fas fa-sun' : 'fas fa-moon';
@@ -181,34 +192,24 @@ themeOption.addEventListener('click', () => {
 // Voz
 audioOption.addEventListener('click', () => {
     isVoiceEnabled = !isVoiceEnabled;
+
     const icon = audioOption.querySelector('i');
     const span = audioOption.querySelector('span');
     icon.className = isVoiceEnabled ? 'fas fa-volume-up' : 'fas fa-volume-mute';
     span.textContent = isVoiceEnabled ? 'Voz Activada' : 'Voz Desactivada';
 });
 
-// Configuración (menú deslizante)
-settingsToggle.addEventListener('click', () => {
-    settingsMenu.classList.toggle('show');
-});
-
-document.addEventListener('click', (e) => {
-    if (!settingsMenu.contains(e.target) && !settingsToggle.contains(e.target)) {
-        settingsMenu.classList.remove('show');
-    }
-});
-
 // Cargar configuración al iniciar
 document.body.classList.toggle('dark-mode', localStorage.getItem('darkMode') === 'true');
 isDarkMode = localStorage.getItem('darkMode') === 'true';
 
-// Actualizar texto e icono del modo oscuro
-const icon = themeOption.querySelector('i');
-const span = themeOption.querySelector('span');
-icon.className = isDarkMode ? 'fas fa-sun' : 'fas fa-moon';
-span.textContent = isDarkMode ? 'Modo Claro' : 'Modo Oscuro';
+// Actualizar menú al cargar
+document.querySelector('#themeOption i').className = isDarkMode ? 'fas fa-sun' : 'fas fa-moon';
+document.querySelector('#themeOption span').textContent = isDarkMode ? 'Modo Claro' : 'Modo Oscuro';
+document.querySelector('#audioOption i').className = isVoiceEnabled ? 'fas fa-volume-up' : 'fas fa-volume-mute';
+document.querySelector('#audioOption span').textContent = isVoiceEnabled ? 'Voz Activada' : 'Voz Desactivada';
 
-// === FUNCIONES DEL TECLADO MATEMÁTICO ===
+// Teclado Matemático
 function insertMath(text) {
     const input = document.getElementById('userInput');
     input.setRangeText(text, input.selectionStart, input.selectionEnd, 'end');
@@ -236,18 +237,54 @@ function clearInput() {
     document.getElementById('userInput').focus();
 }
 
-document.getElementById('mathKeyboardToggle').addEventListener('click', () => {
-    document.getElementById('mathKeyboard').classList.toggle('active');
+mathKeyboardToggle.addEventListener('click', () => {
+    mathKeyboard.classList.toggle('active');
 });
 
-document.getElementById('closeKeyboard').addEventListener('click', () => {
-    document.getElementById('mathKeyboard').classList.remove('active');
+closeKeyboard.addEventListener('click', () => {
+    mathKeyboard.classList.remove('active');
 });
 
 document.addEventListener('click', (e) => {
-    const keyboard = document.getElementById('mathKeyboard');
-    const toggle = document.getElementById('mathKeyboardToggle');
-    if (!keyboard.contains(e.target) && !toggle.contains(e.target) && keyboard.classList.contains('active')) {
-        keyboard.classList.remove('active');
+    if (!mathKeyboard.contains(e.target) && !mathKeyboardToggle.contains(e.target) && mathKeyboard.classList.contains('active')) {
+        mathKeyboard.classList.remove('active');
     }
+});
+
+// Graficar con GeoGebra
+graphBtn.addEventListener('click', () => {
+    const func = userInput.value.trim();
+    if (!func) return;
+
+    if (!ggbApp) {
+        ggbApp = new GGBApplet({
+            "appName": "classic",
+            "width": 400,
+            "height": 300,
+            "showToolBar": false,
+            "showAlgebraInput": false,
+            "showMenuBar": false,
+            "enableLabelDrags": false,
+            "enableShiftDragZoom": true,
+            "showZoomButtons": true,
+            "capturingThreshold": 3,
+            "showFullscreenButton": true,
+            "scale": 1,
+            "disableAutoScale": false,
+            "enableRightClick": false,
+            "language": "es",
+            "material_id": "null"
+        }, true);
+        ggbApp.inject('ggbElement');
+    }
+
+    setTimeout(() => {
+        ggbApp.evalCommand(func);
+    }, 500);
+
+    geogebraContainer.style.display = 'block';
+});
+
+closeGraph.addEventListener('click', () => {
+    geogebraContainer.style.display = 'none';
 });
