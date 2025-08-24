@@ -229,18 +229,11 @@ header p {
     transform: translateY(-2px);
 }
 
-/* Menú estilo Gemini */
-.menu-container {
+/* Botón de configuración (⋯) */
+.menu-toggle {
     position: fixed;
     top: 15px;
     right: 15px;
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-}
-
-.menu-toggle {
     width: 40px;
     height: 40px;
     background: rgba(67, 97, 238, 0.1);
@@ -253,6 +246,7 @@ header p {
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);
     border: 1px solid rgba(67, 97, 238, 0.2);
+    z-index: 1000;
 }
 
 .menu-toggle:hover {
@@ -260,27 +254,78 @@ header p {
     transform: scale(1.05);
 }
 
-.menu-dropdown {
-    margin-top: 8px;
+/* Botón de teclado (☰) */
+.math-menu-toggle {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 50px;
+    height: 50px;
+    background: var(--secondary);
+    color: white;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    z-index: 1000;
+    transition: all 0.3s;
+}
+
+.math-menu-toggle:hover {
+    transform: scale(1.1);
+    background: #5a1d91;
+}
+
+/* Panel de Configuración */
+.menu-panel {
+    display: none;
+    position: fixed;
+    top: 60px;
+    right: 15px;
+    width: 240px;
     background: var(--card);
     border-radius: 12px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    overflow: hidden;
-    min-width: 200px;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    z-index: 950;
     border: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+    background: rgba(30, 30, 30, 0.95);
 }
 
-.menu-container.active .menu-dropdown {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
+.menu-panel.active {
+    display: block;
 }
 
-.menu-option {
+.panel-header {
+    padding: 12px 16px;
+    background: rgba(67, 97, 238, 0.2);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel-header h3 {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+#closeMenu {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: none;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+.panel-options {
+    padding: 10px 0;
+}
+
+.option {
     padding: 14px 16px;
     display: flex;
     align-items: center;
@@ -291,80 +336,35 @@ header p {
     font-size: 0.95rem;
 }
 
-.menu-option:hover {
+.option:hover {
     background: rgba(67, 97, 238, 0.08);
 }
 
-.menu-option i {
+.option i {
     color: var(--primary);
     width: 20px;
     text-align: center;
 }
 
-/* Teclado Matemático Compacto (1/4 de pantalla) */
-.math-toggle-btn {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    background: var(--secondary);
-    color: white;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    font-size: 1.2rem;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    z-index: 900;
-    transition: all 0.3s;
-}
-
-.math-toggle-btn:hover {
-    transform: scale(1.1);
-    background: #5a1d91;
-}
-
-.math-keyboard {
+/* Panel de Teclado y Gráfica */
+.math-panel {
     display: none;
     position: fixed;
     bottom: 80px;
     left: 0;
     right: 0;
-    background: var(--card);
+    background: rgba(18, 18, 18, 0.95);
     border-radius: 15px 15px 0 0;
-    box-shadow: 0 -10px 30px rgba(0,0,0,0.2);
-    max-height: 40vh; /* Solo 1/4 de la pantalla */
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.3);
+    max-height: 45vh;
     overflow-y: auto;
-    z-index: 950;
-    border-top: 1px solid var(--border);
+    z-index: 940;
+    border-top: 1px solid rgba(255,255,255,0.1);
     backdrop-filter: blur(10px);
-    background: rgba(30, 30, 30, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.math-keyboard.active {
+.math-panel.active {
     display: block;
-}
-
-.keyboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 15px;
-    background: rgba(67, 97, 238, 0.2);
-    color: white;
-    border-radius: 15px 15px 0 0;
-    font-weight: 500;
-    backdrop-filter: blur(10px);
-}
-
-#closeKeyboard {
-    background: rgba(255,255,255,0.2);
-    color: white;
-    border: none;
-    width: 25px;
-    height: 25px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 1.2rem;
 }
 
 .keyboard-buttons {
@@ -383,6 +383,7 @@ header p {
     cursor: pointer;
     transition: all 0.2s;
     color: white;
+    text-align: center;
 }
 
 .key:hover {
@@ -405,47 +406,16 @@ header p {
     color: #c62828;
 }
 
-/* Contenedor de GeoGebra */
-.geogebra-container {
+.graph-container {
+    padding: 15px;
     display: none;
-    position: fixed;
-    bottom: 80px;
-    left: 0;
-    right: 0;
-    background: rgba(18, 18, 18, 0.95);
-    border-radius: 15px 15px 0 0;
-    box-shadow: 0 -10px 30px rgba(0,0,0,0.3);
-    max-height: 50vh;
-    overflow: hidden;
-    z-index: 960;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    backdrop-filter: blur(10px);
 }
 
-.geogebra-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 15px;
-    background: rgba(67, 97, 238, 0.2);
-    color: white;
-    font-weight: 500;
-}
-
-#closeGraph {
-    background: rgba(255,255,255,0.2);
-    color: white;
-    border: none;
-    width: 25px;
-    height: 25px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 1.2rem;
-}
-
-#ggbElement {
+#graphCanvas {
     width: 100%;
-    height: 300px;
+    height: 200px;
     background: #1e1e1e;
+    border-radius: 10px;
 }
+
 
