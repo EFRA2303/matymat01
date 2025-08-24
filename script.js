@@ -89,7 +89,32 @@ function addMessage(text, sender) {
     const div = document.createElement('div');
     div.className = `message ${sender}`;
     const avatar = document.createElement('div');
-    avatar.className = `avatar ${sender}-avatar`;
+avatar.className = `avatar ${sender}-avatar`;
+if (sender === 'bot') {
+    const img = document.createElement('img');
+    img.src = 'logo-tutor.png';
+    img.alt = 'Tutor';
+    avatar.appendChild(img);
+}
+    // Después de: chatContainer.appendChild(div);
+// Añade esto si es un mensaje del bot
+if (sender === 'bot') {
+    avatar.classList.add('blinking'); // Activa el parpadeo
+
+    // Detiene el parpadeo después de 3 segundos (ajusta según duración de la voz)
+    setTimeout(() => {
+        avatar.classList.remove('blinking');
+    }, 3000);
+
+    // O sincroniza con la duración del texto a voz
+    if (isVoiceEnabled) {
+        const words = text.split(' ').length;
+        const time = Math.max(2000, words * 300); // Tiempo estimado de lectura
+        setTimeout(() => {
+            avatar.classList.remove('blinking');
+        }, time);
+    }
+}
 
     if (sender === 'bot') {
         const img = document.createElement('img');
@@ -163,3 +188,4 @@ document.addEventListener('click', e => {
 document.body.classList.toggle('dark-mode', localStorage.getItem('darkMode') === 'true');
 
 isDarkMode = localStorage.getItem('darkMode') === 'true';
+
