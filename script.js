@@ -298,4 +298,43 @@ document.addEventListener('click', (e) => {
         graphContainer.style.display = 'none';
     }
 });
+// Insertar texto en la posición del cursor
+function insertAtCursor(text) {
+    const input = document.getElementById('userInput');
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    input.value = input.value.substring(0, start) + text + input.value.substring(end);
+    input.focus();
+    input.setSelectionRange(start + text.length, start + text.length);
+    // Dispara el evento de cambio para que otros scripts lo detecten
+    input.dispatchEvent(new Event('input'));
+}
+
+// Limpiar el input
+function clearInput() {
+    document.getElementById('userInput').value = '';
+    document.getElementById('userInput').focus();
+}
+
+// Alternar el teclado matemático
+document.getElementById('toggleMathBtn').addEventListener('click', () => {
+    const toolbar = document.getElementById('mathToolbar');
+    toolbar.style.display = toolbar.style.display === 'none' ? 'flex' : 'none';
+});
+
+// Cerrar el teclado al enviar
+document.getElementById('sendBtn').addEventListener('click', () => {
+    document.getElementById('mathToolbar').style.display = 'none';
+});
+
+// Cerrar el teclado al hacer clic fuera (opcional)
+document.addEventListener('click', (e) => {
+    const toolbar = document.getElementById('mathToolbar');
+    const container = document.querySelector('.math-input-container');
+    const btn = document.getElementById('toggleMathBtn');
+    if (!container.contains(e.target) && !btn.contains(e.target)) {
+        toolbar.style.display = 'none';
+    }
+});
+
 
