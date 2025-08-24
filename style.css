@@ -74,6 +74,20 @@ header h1 {
     }
 }
 
+@keyframes glow {
+    from {
+        text-shadow: 
+            0 0 5px rgba(67, 97, 238, 0.4),
+            0 0 10px rgba(67, 97, 238, 0.3);
+    }
+    to {
+        text-shadow: 
+            0 0 10px rgba(67, 97, 238, 0.6),
+            0 0 20px rgba(67, 97, 238, 0.5),
+            0 0 30px rgba(67, 97, 238, 0.4);
+    }
+}
+
 .message {
     display: flex;
     margin-bottom: 15px;
@@ -272,3 +286,4 @@ input, textarea {
     font-size: 16px;
 
 }
+
