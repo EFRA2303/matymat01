@@ -51,17 +51,27 @@ header {
 header h1 {
     font-size: 1.8rem;
     font-weight: 600;
+    color: #4361ee;
+    text-shadow: 
+        0 0 5px rgba(67, 97, 238, 0.4),
+        0 0 10px rgba(67, 97, 238, 0.3),
+        0 0 20px rgba(67, 97, 238, 0.2);
+    animation: glow 2s ease-in-out infinite alternate;
+    transition: all 0.3s;
 }
 
-header p {
-    font-size: 0.95rem;
-    opacity: 0.9;
-}
-
-.chat-container {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
+@keyframes glow {
+    from {
+        text-shadow: 
+            0 0 5px rgba(67, 97, 238, 0.4),
+            0 0 10px rgba(67, 97, 238, 0.3);
+    }
+    to {
+        text-shadow: 
+            0 0 10px rgba(67, 97, 238, 0.6),
+            0 0 20px rgba(67, 97, 238, 0.5),
+            0 0 30px rgba(67, 97, 238, 0.4);
+    }
 }
 
 .message {
@@ -260,4 +270,5 @@ header p {
 /* Evitar zoom en móviles */
 input, textarea {
     font-size: 16px;
+
 }
