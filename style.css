@@ -417,5 +417,64 @@ header p {
     background: #1e1e1e;
     border-radius: 10px;
 }
+/* Contenedor del input con toolbar */
+.math-input-container {
+    position: relative;
+    flex: 1;
+}
+
+/* Toolbar de símbolos matemáticos */
+.math-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    padding: 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-top: 8px;
+    max-height: 80px;
+    overflow-y: auto;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.tool-btn {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    padding: 6px 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tool-btn:hover {
+    background: var(--primary);
+    color: white;
+    transform: scale(1.05);
+}
+
+.tool-btn.clear {
+    background: #ff8a65;
+    color: white;
+}
+
+/* Botón para mostrar el teclado */
+.math-toggle-btn {
+    width: 45px;
+    height: 45px;
+    background: var(--secondary);
+    color: white;
+    border-radius: 50%;
+    font-size: 1.1rem;
+    transition: all 0.3s;
+}
+
+.math-toggle-btn:hover {
+    transform: scale(1.1);
+    background: #5a1d91;
+}
+
 
 
