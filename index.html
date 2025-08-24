@@ -44,7 +44,30 @@
                 <button class="btn upload-btn" id="uploadBtn" title="Subir foto o tomar">
                     <i class="fas fa-camera-retro"></i>
                 </button>
-                <textarea id="userInput" placeholder="Escribe tu pregunta o función..." rows="1"></textarea>
+
+                <!-- Input con toolbar matemático integrado -->
+                <div class="math-input-container">
+                    <textarea id="userInput" placeholder="Escribe tu pregunta o función..." rows="1"></textarea>
+                    <div class="math-toolbar" id="mathToolbar" style="display: none;">
+                        <button class="tool-btn" onclick="insertAtCursor('²')">x²</button>
+                        <button class="tool-btn" onclick="insertAtCursor('³')">x³</button>
+                        <button class="tool-btn" onclick="insertAtCursor('√')">√</button>
+                        <button class="tool-btn" onclick="insertAtCursor('π')">π</button>
+                        <button class="tool-btn" onclick="insertAtCursor('θ')">θ</button>
+                        <button class="tool-btn" onclick="insertAtCursor('sin()')">sin()</button>
+                        <button class="tool-btn" onclick="insertAtCursor('cos()')">cos()</button>
+                        <button class="tool-btn" onclick="insertAtCursor('tan()')">tan()</button>
+                        <button class="tool-btn" onclick="insertAtCursor('½')">½</button>
+                        <button class="tool-btn" onclick="insertAtCursor('=')">=</button>
+                        <button class="tool-btn clear" onclick="clearInput()">C</button>
+                    </div>
+                </div>
+
+                <!-- Botón para mostrar/ocultar el teclado matemático -->
+                <button class="btn math-toggle-btn" id="toggleMathBtn" title="Símbolos matemáticos">
+                    <i class="fas fa-square-root-alt"></i>
+                </button>
+
                 <button class="btn send-btn" id="sendBtn">
                     <i class="fas fa-paper-plane"></i>
                 </button>
@@ -55,17 +78,12 @@
     <!-- Input oculto para cámara -->
     <input type="file" id="fileInput" accept="image/*" capture="environment" style="display: none;">
 
-    <!-- Botón flotante del teclado (☰) -->
-    <button id="mathMenuToggle" class="btn math-menu-toggle" title="Teclado y Gráfica">
-        <i class="fas fa-bars"></i>
-    </button>
-
     <!-- Menú de Configuración (⋯) en esquina superior derecha -->
     <button id="menuToggle" class="btn menu-toggle" title="Configuración">
         <i class="fas fa-ellipsis-v"></i>
     </button>
 
-    <!-- Panel de Configuración (modo oscuro, voz) -->
+    <!-- Panel de Configuración -->
     <div class="menu-panel" id="menuPanel">
         <div class="panel-header">
             <h3>⚙️ Configuración</h3>
@@ -83,53 +101,13 @@
         </div>
     </div>
 
-    <!-- Panel de Teclado y Gráfica -->
-    <div class="math-panel" id="mathPanel">
+    <!-- Contenedor de gráfica (Chart.js) -->
+    <div class="graph-container" id="graphContainer" style="display: none;">
         <div class="panel-header">
-            <h3>⌨️ Teclado Matemático</h3>
-            <button id="closeMath">×</button>
+            <h3>📈 Gráfica de Función</h3>
+            <button id="closeGraph">×</button>
         </div>
-        <div class="keyboard-buttons">
-            <button class="key" onclick="insertMath('sin()')">sin</button>
-            <button class="key" onclick="insertMath('cos()')">cos</button>
-            <button class="key" onclick="insertMath('tan()')">tan</button>
-            <button class="key" onclick="insertMath('²')">x²</button>
-            <button class="key" onclick="insertMath('³')">x³</button>
-            <button class="key" onclick="insertMath('^')">x^</button>
-
-            <button class="key" onclick="insertMath('√')">√</button>
-            <button class="key" onclick="insertMath('(')">(</button>
-            <button class="key" onclick="insertMath(')')">)</button>
-            <button class="key" onclick="insertMath('π')">π</button>
-            <button class="key" onclick="insertMath('θ')">θ</button>
-            <button class="key" onclick="insertMath('=')">=</button>
-
-            <button class="key num" onclick="insertMath('1')">1</button>
-            <button class="key num" onclick="insertMath('2')">2</button>
-            <button class="key num" onclick="insertMath('3')">3</button>
-            <button class="key op" onclick="insertMath('+')">+</button>
-            <button class="key op" onclick="insertMath('-')">−</button>
-            <button class="key op" onclick="insertMath('*')">×</button>
-
-            <button class="key num" onclick="insertMath('4')">4</button>
-            <button class="key num" onclick="insertMath('5')">5</button>
-            <button class="key num" onclick="insertMath('6')">6</button>
-            <button class="key op" onclick="insertMath('/')">÷</button>
-            <button class="key frac" onclick="insertMath('½')">½</button>
-            <button class="key clear" onclick="clearInput()">C</button>
-
-            <button class="key num" onclick="insertMath('7')">7</button>
-            <button class="key num" onclick="insertMath('8')">8</button>
-            <button class="key num" onclick="insertMath('9')">9</button>
-            <button class="key del" onclick="backspace()">⌫</button>
-            <button class="key graph-btn" id="graphBtn">📊 Graficar</button>
-            <button class="key num" onclick="insertMath('0')">0</button>
-        </div>
-
-        <!-- Gráfica con Chart.js -->
-        <div class="graph-container" id="graphContainer">
-            <canvas id="graphCanvas"></canvas>
-        </div>
+        <canvas id="graphCanvas"></canvas>
     </div>
 
     <script type="module" src="script.js"></script>
