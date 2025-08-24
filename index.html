@@ -3,10 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#4361ee">
+    <meta name="description" content="Tutor inteligente de matemáticas con IA, voz y cámara. Resuelve ejercicios con texto o foto.">
+
     <title>MatyMat-01 - Tu Tutor de Matemáticas</title>
+
+    <!-- Enlace al CSS -->
     <link rel="stylesheet" href="style.css">
+
+    <!-- Fuentes -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Iconos (Font Awesome) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Manifest para PWA (instalable como app) -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Para Apple (iOS) -->
+    <link rel="apple-touch-icon" href="logo-tutor.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="MatyMat-01">
+
+    <!-- Preload del logo para mejor rendimiento -->
+    <link rel="preload" href="logo-tutor.png" as="image">
 </head>
 <body>
     <div class="container">
@@ -31,7 +52,7 @@
                 <button class="btn upload-btn" id="uploadBtn" title="Subir foto o tomar">
                     <i class="fas fa-camera-retro"></i>
                 </button>
-                <textarea id="userInput" placeholder="Escribe tu pregunta..."></textarea>
+                <textarea id="userInput" placeholder="Escribe tu pregunta..." rows="1"></textarea>
                 <button class="btn send-btn" id="sendBtn">
                     <i class="fas fa-paper-plane"></i>
                 </button>
@@ -59,6 +80,7 @@
         </div>
     </div>
 
+    <!-- Carga del script principal -->
     <script type="module" src="script.js"></script>
 </body>
 </html>
