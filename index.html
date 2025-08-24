@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#121212">
-    <meta name="description" content="Tutor inteligente de matemáticas con IA, voz, teclado y gráficas">
+    <meta name="description" content="Tutor inteligente de matemáticas con IA, teclado y gráficas">
 
     <title>MatyMat-01 - Tu Tutor de Matemáticas</title>
 
@@ -18,8 +18,8 @@
     <meta name="apple-mobile-web-app-title" content="MatyMat-01">
     <link rel="preload" href="logo-tutor.png" as="image">
 
-    <!-- GeoGebra Script (embebido) -->
-    <script src="https://www.geogebra.org/apps/deployggb.js"></script>
+    <!-- Chart.js para graficar (ligero y fácil) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
@@ -55,16 +55,39 @@
     <!-- Input oculto para cámara -->
     <input type="file" id="fileInput" accept="image/*" capture="environment" style="display: none;">
 
-    <!-- Botón flotante del teclado matemático -->
-    <button id="mathKeyboardToggle" class="btn math-toggle-btn" title="Teclado Matemático">
-        <i class="fas fa-keyboard"></i>
+    <!-- Botón flotante del teclado (☰) -->
+    <button id="mathMenuToggle" class="btn math-menu-toggle" title="Teclado y Gráfica">
+        <i class="fas fa-bars"></i>
     </button>
 
-    <!-- Teclado Matemático Compacto (1/4 de la pantalla) -->
-    <div class="math-keyboard" id="mathKeyboard">
-        <div class="keyboard-header">
-            <span>⌨️ Teclado Matemático</span>
-            <button id="closeKeyboard">×</button>
+    <!-- Menú de Configuración (⋯) en esquina superior derecha -->
+    <button id="menuToggle" class="btn menu-toggle" title="Configuración">
+        <i class="fas fa-ellipsis-v"></i>
+    </button>
+
+    <!-- Panel de Configuración (modo oscuro, voz) -->
+    <div class="menu-panel" id="menuPanel">
+        <div class="panel-header">
+            <h3>⚙️ Configuración</h3>
+            <button id="closeMenu">×</button>
+        </div>
+        <div class="panel-options">
+            <div class="option" id="themeOption">
+                <i class="fas fa-moon"></i>
+                <span>Activar Modo Oscuro</span>
+            </div>
+            <div class="option" id="audioOption">
+                <i class="fas fa-volume-up"></i>
+                <span>Voz Activada</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel de Teclado y Gráfica -->
+    <div class="math-panel" id="mathPanel">
+        <div class="panel-header">
+            <h3>⌨️ Teclado Matemático</h3>
+            <button id="closeMath">×</button>
         </div>
         <div class="keyboard-buttons">
             <button class="key" onclick="insertMath('sin()')">sin</button>
@@ -102,31 +125,10 @@
             <button class="key graph-btn" id="graphBtn">📊 Graficar</button>
             <button class="key num" onclick="insertMath('0')">0</button>
         </div>
-    </div>
 
-    <!-- Contenedor de GeoGebra (se muestra al graficar) -->
-    <div class="geogebra-container" id="geogebraContainer">
-        <div class="geogebra-header">
-            <span>📈 Gráfica de Función</span>
-            <button id="closeGraph">×</button>
-        </div>
-        <div id="ggbElement"></div>
-    </div>
-
-    <!-- Menú estilo Gemini (esquina superior derecha) -->
-    <div class="menu-container">
-        <button id="menuToggle" class="btn menu-toggle">
-            <i class="fas fa-ellipsis-v"></i>
-        </button>
-        <div class="menu-dropdown" id="menuDropdown">
-            <div class="menu-option" id="themeOption">
-                <i class="fas fa-moon"></i>
-                <span>Activar Modo Oscuro</span>
-            </div>
-            <div class="menu-option" id="audioOption">
-                <i class="fas fa-volume-up"></i>
-                <span>Voz Activada</span>
-            </div>
+        <!-- Gráfica con Chart.js -->
+        <div class="graph-container" id="graphContainer">
+            <canvas id="graphCanvas"></canvas>
         </div>
     </div>
 
