@@ -188,18 +188,23 @@ header p {
 
 #userInput {
     flex: 1;
-    padding: 14px 20px;
+    padding: 16px 20px;
     border: 1px solid var(--border);
     border-radius: 25px;
     outline: none;
     resize: none;
-    font-size: 1rem;
+    font-size: 1.1rem;
     background: var(--bg);
     color: var(--text);
-    min-height: 50px;
-    max-height: 120px;
-    overflow-y: auto;
+    min-height: 60px; /* Más alto */
     line-height: 1.4;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+#userInput:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
 }
 
 #userInput:focus {
@@ -475,6 +480,7 @@ header p {
     transform: scale(1.1);
     background: #5a1d91;
 }
+
 
 
 
