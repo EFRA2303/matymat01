@@ -121,10 +121,12 @@ header p {
 }
 
 .bot-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #003366;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .message-content {
@@ -407,6 +409,7 @@ header p {
         font-size: 0.85rem;
     }
 }
+
 
 
 
