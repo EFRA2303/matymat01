@@ -12,7 +12,7 @@ app.use(express.json());
 app.use(express.static('.'));
 
 // 🔑 Reemplaza con tu API Key de Gemini
-const API_KEY = 'AIzaSyCuRbKPJ5xFrq3eDFgltITbZqqeHph8LFg'; // ← Pégala aquí
+const API_KEY = 'AIzaSyDJY5xk2K50YUuerXupcsuxaDDez_TMmas'; // ← Pégala aquí
 const genAI = new GoogleGenerativeAI(API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
@@ -70,4 +70,5 @@ process.on('unhandledRejection', (err) => {
 });
 process.on('uncaughtException', (err) => {
     console.error('❌ Uncaught Exception:', err.message || err);
+
 });
