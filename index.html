@@ -8,30 +8,38 @@
 
     <title>MatyMat-01 - Tu Tutor de Matemáticas</title>
 
+    <!-- CSS y Fuentes -->
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Manifest y PWA -->
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="logo-tutor.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="MatyMat-01">
-    <link rel="preload" href="logo-tutor.png" as="image">
 
-    <!-- Chart.js para graficar (ligero y fácil) -->
+    <!-- Preload de ícono -->
+    <link rel="preload" href="icon-192.png" as="image">
+
+    <!-- Favicon (pequeño) -->
+    <link rel="icon" href="icon-192.png" type="image/png" sizes="192x192">
+
+    <!-- Chart.js para graficar -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
         <header>
             <h1><i class="fas fa-robot"></i> MatyMat-01</h1>
-            <p>Te ayudare a resolver ejercicios con texto, foto y apoyo emocional</p>
+            <p>Te ayudaré a resolver ejercicios con texto, foto y apoyo emocional</p>
         </header>
 
         <div class="chat-container" id="chatContainer">
             <div class="message bot">
                 <div class="avatar bot-avatar">
-                    <img src="logo-tutor.png" alt="Tutor MatyMat-01">
+                    <img src="tutor-avatar.png" alt="Tutor MatyMat-01" class="tutor-img">
                 </div>
                 <div class="message-content">
                     ¡Hola! Soy MatyMat-01. Puedes escribir tu pregunta, tomar una foto o graficar una función. ¿En qué tema necesitas ayuda?
