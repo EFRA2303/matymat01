@@ -12,7 +12,7 @@ app.use(express.static('.'));
 
 // 🔐 Validación de API Key
 const API_KEY = process.env.GEMINI_API_KEY;
-if (!API_KEY || API_KEY.includes('AIzaSyCV6r3bHsnDirlPBIk_dT6RYMI0YJJ6yGc')) {
+if (!API_KEY || API_KEY.includes('AIzaSyA37Nj5pShHLDCKiPwlLzQ-UTqMsSU3VHE')) {
     console.error('❌ ERROR: API Key no configurada o es la ejemplo');
     console.error('❌ Configura GEMINI_API_KEY en Render con tu key real');
 }
@@ -45,7 +45,7 @@ app.get('/', (req, res) => {
     res.json({
         status: 'OK',
         message: 'Tutor MatyMat-01 funcionando',
-        hasValidApiKey: !!API_KEY && !API_KEY.includes('AIzaSyCV6r3bHsnDirlPBIk_dT6RYMI0YJJ6yGc'),
+        hasValidApiKey: !!API_KEY && !API_KEY.includes('AIzaSyA37Nj5pShHLDCKiPwlLzQ-UTqMsSU3VHE'),
         timestamp: new Date().toISOString()
     });
 });
@@ -138,6 +138,7 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Servidor en http://0.0.0.0:${PORT}`);
     console.log(`🔧 Entorno: ${process.env.NODE_ENV || 'development'}`);
     console.log(`🔑 API Key configurada: ${!!API_KEY}`);
-    console.log(`🔑 API Key válida: ${!!API_KEY && !API_KEY.includes('AIzaSyCV6r3bHsnDirlPBIk_dT6RYMI0YJJ6yGc')}`);
+    console.log(`🔑 API Key válida: ${!!API_KEY && !API_KEY.includes('AIzaSyA37Nj5pShHLDCKiPwlLzQ-UTqMsSU3VHE')}`);
 });
+
 
