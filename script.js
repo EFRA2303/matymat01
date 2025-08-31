@@ -1,9 +1,5 @@
-// script.js
-import { speakText } from './tts.js';
-
-// === INICIALIZACIÓN Y EVENTOS (espera al DOM) ===
+// script.js - MatyMat-01 
 document.addEventListener('DOMContentLoaded', () => {
-    // Elementos del DOM (ahora seguros, porque el DOM está listo)
     const userInput = document.getElementById('userInput');
     const sendBtn = document.getElementById('sendBtn');
     const uploadBtn = document.getElementById('uploadBtn');
@@ -20,25 +16,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const graphContainer = document.getElementById('graphContainer');
     const graphCanvas = document.getElementById('graphCanvas');
 
-    // Verifica que todos los elementos existan
     if (!userInput || !sendBtn || !uploadBtn || !fileInput || !chatContainer) {
         console.error('❌ No se encontraron elementos del DOM principales');
         return;
     }
 
-    // Estados
     let isDarkMode = localStorage.getItem('darkMode') === 'true';
     let isVoiceEnabled = localStorage.getItem('isVoiceEnabled') !== 'false';
     let isSending = false;
     let selectedImage = null;
     let graphChart = null;
 
-    // Aplicar modo oscuro al cargar
     if (isDarkMode) {
         document.body.classList.add('dark-mode');
     }
 
-    // Actualizar UI de configuración
     function updateThemeUI() {
         const icon = themeOption.querySelector('i');
         const span = themeOption.querySelector('span');
@@ -63,17 +55,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Inicializar UI
     updateThemeUI();
     updateAudioUI();
 
-    // === MANEJAR SELECCIÓN DE IMAGEN ===
     uploadBtn.addEventListener('click', () => fileInput.click());
 
     fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
-
         const reader = new FileReader();
         reader.onload = () => {
             selectedImage = reader.result;
@@ -83,26 +72,24 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.readAsDataURL(file);
     });
 
-    // === ENVIAR MENSAJE ===
     async function sendMessage() {
         if (isSending) return;
         isSending = true;
-
         const text = userInput.value.trim();
         if (!text && !selectedImage) {
             isSending = false;
             return;
         }
-
         if (text) addMessage(text, 'user');
         userInput.value = '';
         showTypingIndicator();
 
-        const body = { text: text || 'Analiza esta imagen.' };
-        if (selectedImage) {
-            body.image = selectedImage.split(',')[1];
-            body.mimeType = selectedImage.includes('png') ? 'image/png' : 'image/jpeg';
-        }
+        const body = { 
+            text: text || 'Analiza esta imagen.',
+            image: selectedImage ? selectedImage.split(',')[1] : null,
+            mimeType: selectedImage && selectedImage.includes('png') ? 'image/png' : 'image/jpeg',
+            usuarioId: localStorage.getItem('usuarioId') || generarIdUnico()
+        };
 
         try {
             const response = await fetch('/analizar', {
@@ -110,13 +97,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             });
-
             const data = await response.json();
             hideTypingIndicator();
 
-            if (data.respuesta) {
-                addMessage(data.respuesta, 'bot');
-                if (isVoiceEnabled) speakText(data.respuesta);
+            if (data.pasos && data.pasos.length > 0) {
+                data.pasos.forEach(paso => {
+                    addMessage(paso, 'bot');
+                    if (isVoiceEnabled && window.speakText) {
+                        setTimeout(() => window.speakText(paso), 600);
+                    }
+                });
             } else if (data.error) {
                 addMessage("⚠️ " + data.error, 'bot');
             }
@@ -141,34 +131,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // === AÑADIR MENSAJE AL CHAT ===
     function addMessage(text, sender) {
         const div = document.createElement('div');
         div.className = `message ${sender}`;
-
         const avatar = document.createElement('div');
         avatar.className = `avatar ${sender}-avatar`;
-
         if (sender === 'bot') {
             const img = document.createElement('img');
-            img.src = 'logo-tutor.png';
+            img.src = 'tutor-avatar.png';
             img.alt = 'Tutor Avatar';
             img.onerror = () => img.src = 'https://via.placeholder.com/150?text=Tutor';
             avatar.appendChild(img);
         } else {
             avatar.innerHTML = '<i class="fas fa-user"></i>';
         }
-
         const content = document.createElement('div');
         content.className = 'message-content';
         content.textContent = text;
-
         div.appendChild(avatar);
         div.appendChild(content);
         chatContainer.appendChild(div);
         chatContainer.scrollTop = chatContainer.scrollHeight;
 
-        // Efecto de parpadeo del avatar del bot
         if (sender === 'bot') {
             requestAnimationFrame(() => {
                 const img = avatar.querySelector('img');
@@ -176,24 +160,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     img.classList.add('blinking');
                     const textLength = text.length;
                     const estimatedTime = Math.max(2000, textLength * 60);
-
                     setTimeout(() => img.classList.remove('blinking'), estimatedTime);
-                    if (isVoiceEnabled) {
-                        setTimeout(() => img.classList.remove('blinking'), estimatedTime + 1000);
+                    if (isVoiceEnabled && window.speakText) {
+                        setTimeout(() => window.speakText(text), estimatedTime + 500);
                     }
                 }
             });
         }
     }
 
-    // === INDICADOR DE ESCRIBIENDO ===
     function showTypingIndicator() {
         const typing = document.createElement('div');
         typing.className = 'typing-indicator';
         typing.id = 'typing';
         typing.innerHTML = `
             <div class="avatar bot-avatar">
-                <img src="logo-tutor.png" alt="Tutor">
+                <img src="tutor-avatar.png" alt="Tutor">
             </div>
             <div class="message-content">Pensando...</div>
         `;
@@ -206,33 +188,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typing) typing.remove();
     }
 
-    // === MENÚ DE CONFIGURACIÓN (⋯) ===
     if (menuToggle && menuPanel && closeMenu) {
         menuToggle.addEventListener('click', (e) => {
             e.stopPropagation();
             menuPanel.style.display = 'block';
         });
-
         closeMenu.addEventListener('click', () => {
             menuPanel.style.display = 'none';
         });
-
-        // Cerrar al hacer clic fuera
         document.addEventListener('click', (e) => {
             if (!menuPanel.contains(e.target) && !menuToggle.contains(e.target)) {
                 menuPanel.style.display = 'none';
             }
         });
-
-        // Modo oscuro
         themeOption.addEventListener('click', () => {
             isDarkMode = !isDarkMode;
             document.body.classList.toggle('dark-mode', isDarkMode);
             localStorage.setItem('darkMode', isDarkMode);
             updateThemeUI();
         });
-
-        // Voz
         audioOption.addEventListener('click', () => {
             isVoiceEnabled = !isVoiceEnabled;
             localStorage.setItem('isVoiceEnabled', isVoiceEnabled);
@@ -240,13 +214,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // === TECLADO MATEMÁTICO INTEGRADO ===
     if (toggleMathBtn && mathToolbar) {
         toggleMathBtn.addEventListener('click', () => {
-            mathToolbar.style.display = mathToolbar.style.display === 'none' || mathToolbar.style.display === '' ? 'flex' : 'none';
+            mathToolbar.style.display = mathToolbar.style.display === 'none' ? 'flex' : 'none';
         });
-
-        // Insertar texto en el cursor
         window.insertAtCursor = function(text) {
             const start = userInput.selectionStart;
             const end = userInput.selectionEnd;
@@ -255,19 +226,10 @@ document.addEventListener('DOMContentLoaded', () => {
             userInput.setSelectionRange(start + text.length, start + text.length);
             userInput.dispatchEvent(new Event('input'));
         };
-
-        // Limpiar input
         window.clearInput = function() {
             userInput.value = '';
             userInput.focus();
         };
-
-        // Cerrar teclado al enviar
-        sendBtn.addEventListener('click', () => {
-            mathToolbar.style.display = 'none';
-        });
-
-        // Cerrar al hacer clic fuera
         document.addEventListener('click', (e) => {
             if (!mathToolbar.contains(e.target) && !toggleMathBtn.contains(e.target)) {
                 mathToolbar.style.display = 'none';
@@ -275,14 +237,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // === GRÁFICA CON CHART.JS ===
     if (graphBtn && graphContainer && graphCanvas) {
         graphBtn.addEventListener('click', () => {
             const func = userInput.value.trim();
             if (!func) return;
-
             graphContainer.style.display = 'block';
-
             const x = Array.from({ length: 100 }, (_, i) => i / 10 - 5);
             const y = x.map(val => {
                 try {
@@ -291,9 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return NaN;
                 }
             });
-
             if (graphChart) graphChart.destroy();
-
             graphChart = new Chart(graphCanvas, {
                 type: 'line',
                 data: {
@@ -318,13 +275,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
-
         document.getElementById('closeGraph')?.addEventListener('click', () => {
             graphContainer.style.display = 'none';
         });
     }
-});
 
+    function generarIdUnico() {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
+});
 
 
 
