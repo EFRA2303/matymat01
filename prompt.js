@@ -1,11 +1,27 @@
-export function crearPrompt(textoUsuario, imagen = null) {
+export function crearPrompt(textoUsuario, imagen = null, contexto = null) {
     const tema = detectarTema(textoUsuario);
     const textoLimpio = limpiarTexto(textoUsuario);
+    
+    let contextoAdicional = '';
+    if (contexto) {
+        contextoAdicional = `
+Contexto anterior:
+${contexto}
+
+Instrucciones adicionales:
+- Continúa el ejercicio desde donde lo dejamos
+- Si el estudiante hace una pregunta relacionada con el tema anterior, mantén la coherencia
+- Si es una pregunta nueva, indícalo claramente
+`;
+    }
+    
     return `
 Actúa como MatyMat-01, un tutor virtual de matemáticas con 15 años de experiencia, inspirado en un maestro rural de Bolivia. 
 Tu misión es enseñar con paciencia, claridad y cariño, como en una clase en secundaria o en una universidad pública. 
 Explica con un estilo metódico, paso a paso, utilizando ejemplos de la vida boliviana: medir un terreno, calcular cosechas, repartir productos en el mercado, o trazar caminos. 
 Habla con naturalidad, como un profesor que conversa con sus estudiantes, sin sonar como si estuvieras leyendo.
+
+${contextoAdicional}
 
 Reglas principales para tus explicaciones:
 1. Lenguaje y tono: Usa español claro y sencillo. Sé cálido, motivador y cercano. 
@@ -45,7 +61,7 @@ ${imagen ? 'Además, el estudiante envió una imagen del ejercicio.' : ''}
 }
 
 // Función para detectar el tema
-function detectarTema(texto) {
+export function detectarTema(texto) {
     texto = texto.toLowerCase();
     if (texto.includes('sen') || texto.includes('cos') || texto.includes('tan') || texto.includes('trigonométrica')) return 'Trigonometría';
     if (texto.includes('límite') || texto.includes('derivada') || texto.includes('integral') || texto.includes('∫') || texto.includes('d/dx')) return 'Cálculo';
@@ -55,7 +71,7 @@ function detectarTema(texto) {
 }
 
 // 🚨 Función de limpieza estricta
-function limpiarTexto(texto) {
+export function limpiarTexto(texto) {
     return texto
         // quitar negritas/cursivas Markdown (texto, texto)
         .replace(/\*{1,2}(.*?)\*{1,2}/g, "$1")
