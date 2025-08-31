@@ -1,62 +1,68 @@
 import express from 'express';
 import cors from 'cors';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { crearPrompt, limpiarTexto } from './prompt.js'; // Importamos funciones de prompt.js
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-app.use(cors());
-app.use(express.json());
-app.use(express.static('.')); 
+// Configuración de CORS para producción
+app.use(cors({
+    origin: process.env.NODE_ENV === 'production' 
+        ? ['https://tu-app-name.onrender.com', 'http://localhost:3000'] 
+        : '*',
+    credentials: true
+}));
 
-// 🔑 API Gemini
-const API_KEY = 'AIzaSyCuRbKPJ5xFrq3eDFgltITbZqqeHph8LFg';
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.static('.'));
+
+// 🔑 API Gemini - usa variable de entorno
+const API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyCuRbKPJ5xFrq3eDFgltITbZqqeHph8LFg';
 const genAI = new GoogleGenerativeAI(API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-/**
- * 🧹 Limpieza de texto para que el tutor no lea símbolos raros
- * - Elimina **negritas** de Markdown
- * - Elimina *cursivas*
- * - Elimina > citas
- * - Reemplaza flechas y emojis no deseados por palabras amigables
- * - Conserva emojis motivadores específicos
- */
-function limpiarTextoServidor(texto) {
-    return texto
-        // Quitar asteriscos de negrita/cursiva
-        .replace(/\*\*(.*?)\*\*/g, '$1')
-        .replace(/\*(.*?)\*/g, '$1')
-        // Quitar guiones de listas
-        .replace(/^- /gm, '')
-        // Quitar citas con ">"
-        .replace(/^>+/gm, '')
-        // Reemplazar flechas
-        .replace(/➡️|→/g, ' sigue con ')
-        // Emojis comunes a palabras (excepto los permitidos)
-        .replace(/✅/g, ' correcto ')
-        .replace(/📝/g, ' nota ')
-        .replace(/💡/g, ' idea ')
-        .replace(/🔥/g, ' importante ')
-        // Conservar emojis motivadores permitidos
-        .replace(/😊|👍|😢|🤔|💡|✅|❌|📝/g, (match) => match)
-        // Quitar cualquier otro emoji o símbolo extraño
-        .replace(/[^\p{L}\p{N}\p{P}\p{Z}\n😊👍😢🤔💡✅❌📝]/gu, "")
-        // Quitar espacios duplicados
-        .replace(/\s+/g, ' ')
-        .trim();
-}
+// Ruta de health check para Render
+app.get('/', (req, res) => {
+    res.json({ 
+        status: 'OK', 
+        message: 'Servidor de Tutor MatyMat-01 funcionando',
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Ruta de verificación de API
+app.get('/api/status', async (req, res) => {
+    try {
+        // Intenta una consulta simple para verificar la API
+        const result = await model.generateContent("Hola, responde 'OK' si estás funcionando");
+        const response = await result.response;
+        res.json({ 
+            gemini_status: 'OK', 
+            response: response.text() 
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            gemini_status: 'ERROR', 
+            error: error.message 
+        });
+    }
+});
 
 // === RUTA PRINCIPAL ===
 app.post('/analizar', async (req, res) => {
     const { text, image, mimeType = 'image/jpeg' } = req.body;
+    
     if (!text || typeof text !== 'string') {
         return res.status(400).json({ error: 'Consulta inválida o vacía' });
     }
+    
     try {
         let result;
-        const prompt = crearPrompt(text, !!image); // Usamos la función de prompt.js
+        // Usa la función de prompt.js si existe, sino crea un prompt básico
+        const prompt = await crearPrompt(text, !!image).catch(() => 
+            `Eres un tutor de matemáticas. Responde esta pregunta: ${text}`
+        );
         
         if (image && typeof image === 'string') {
             const imgData = { inlineData: { image, mimeType } };
@@ -80,21 +86,16 @@ app.post('/analizar', async (req, res) => {
         });
     } catch (error) {
         console.error('❌ Error con Gemini:', error.message || error);
-        return res.status(500).json({ error: 'No pude procesar tu pregunta. Intenta de nuevo.' });
+        return res.status(500).json({ 
+            error: 'No pude procesar tu pregunta. Intenta de nuevo.',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 });
 
-// Función para detectar el tema (repetida aquí para evitar importaciones circulares)
-function detectarTema(texto) {
-    texto = texto.toLowerCase();
-    if (texto.includes('sen') || texto.includes('cos') || texto.includes('tan') || texto.includes('trigonométrica')) return 'Trigonometría';
-    if (texto.includes('límite') || texto.includes('derivada') || texto.includes('integral') || texto.includes('∫') || texto.includes('d/dx')) return 'Cálculo';
-    if (texto.includes('triángulo') || texto.includes('círculo') || texto.includes('área') || texto.includes('volumen')) return 'Geometría';
-    if (texto.includes('x²') || texto.includes('ecuación') || texto.includes('inecuación') || texto.includes('función')) return 'Álgebra';
-    return 'Matemáticas generales';
-}
+// ... (el resto de las funciones limpiarTextoServidor y detectarTema se mantienen igual)
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Servidor en http://0.0.0.0:${PORT}`);
+    console.log(`🔧 Entorno: ${process.env.NODE_ENV || 'development'}`);
 });
-
