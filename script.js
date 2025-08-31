@@ -1,4 +1,3 @@
-// script.js
 import { speakText } from './tts.js';
 
 // === INICIALIZACIÓN Y EVENTOS (espera al DOM) ===
@@ -19,25 +18,40 @@ document.addEventListener('DOMContentLoaded', () => {
     const graphBtn = document.getElementById('graphBtn');
     const graphContainer = document.getElementById('graphContainer');
     const graphCanvas = document.getElementById('graphCanvas');
-
+    
     // Verifica que todos los elementos existan
     if (!userInput || !sendBtn || !uploadBtn || !fileInput || !chatContainer) {
         console.error('❌ No se encontraron elementos del DOM principales');
         return;
     }
-
+    
     // Estados
     let isDarkMode = localStorage.getItem('darkMode') === 'true';
     let isVoiceEnabled = localStorage.getItem('isVoiceEnabled') !== 'false';
     let isSending = false;
     let selectedImage = null;
     let graphChart = null;
-
+    
+    // Generar o obtener ID de usuario
+    function getUsuarioId() {
+        let usuarioId = localStorage.getItem('usuarioId');
+        if (!usuarioId) {
+            usuarioId = generarIdUnico();
+            localStorage.setItem('usuarioId', usuarioId);
+        }
+        return usuarioId;
+    }
+    
+    // Función para generar IDs únicos
+    function generarIdUnico() {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
+    
     // Aplicar modo oscuro al cargar
     if (isDarkMode) {
         document.body.classList.add('dark-mode');
     }
-
+    
     // Actualizar UI de configuración
     function updateThemeUI() {
         const icon = themeOption.querySelector('i');
@@ -50,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             span.textContent = 'Modo Oscuro';
         }
     }
-
+    
     function updateAudioUI() {
         const icon = audioOption.querySelector('i');
         const span = audioOption.querySelector('span');
@@ -62,18 +76,16 @@ document.addEventListener('DOMContentLoaded', () => {
             span.textContent = 'Voz Desactivada';
         }
     }
-
+    
     // Inicializar UI
     updateThemeUI();
     updateAudioUI();
-
+    
     // === MANEJAR SELECCIÓN DE IMAGEN ===
     uploadBtn.addEventListener('click', () => fileInput.click());
-
     fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
-
         const reader = new FileReader();
         reader.onload = () => {
             selectedImage = reader.result;
@@ -82,39 +94,48 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         reader.readAsDataURL(file);
     });
-
+    
     // === ENVIAR MENSAJE ===
     async function sendMessage() {
         if (isSending) return;
         isSending = true;
-
         const text = userInput.value.trim();
         if (!text && !selectedImage) {
             isSending = false;
             return;
         }
-
         if (text) addMessage(text, 'user');
         userInput.value = '';
         showTypingIndicator();
-
-        const body = { text: text || 'Analiza esta imagen.' };
+        
+        const usuarioId = getUsuarioId();
+        const body = { 
+            text: text || 'Analiza esta imagen.',
+            usuarioId: usuarioId
+        };
+        
         if (selectedImage) {
             body.image = selectedImage.split(',')[1];
             body.mimeType = selectedImage.includes('png') ? 'image/png' : 'image/jpeg';
         }
-
+        
         try {
             const response = await fetch('/analizar', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             });
-
             const data = await response.json();
             hideTypingIndicator();
-
-            if (data.respuesta) {
+            
+            if (data.pasos && data.pasos.length > 0) {
+                // Mostrar cada paso como un mensaje separado
+                data.pasos.forEach(paso => {
+                    addMessage(paso, 'bot');
+                    if (isVoiceEnabled) speakText(paso);
+                });
+            } else if (data.respuesta) {
+                // Si no hay pasos, mostrar la respuesta completa
                 addMessage(data.respuesta, 'bot');
                 if (isVoiceEnabled) speakText(data.respuesta);
             } else if (data.error) {
@@ -129,26 +150,24 @@ document.addEventListener('DOMContentLoaded', () => {
             isSending = false;
         }
     }
-
+    
     sendBtn.addEventListener('click', () => {
         if (userInput.value.trim() || selectedImage) sendMessage();
     });
-
+    
     userInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             if (userInput.value.trim() || selectedImage) sendMessage();
         }
     });
-
+    
     // === AÑADIR MENSAJE AL CHAT ===
     function addMessage(text, sender) {
         const div = document.createElement('div');
         div.className = `message ${sender}`;
-
         const avatar = document.createElement('div');
         avatar.className = `avatar ${sender}-avatar`;
-
         if (sender === 'bot') {
             const img = document.createElement('img');
             img.src = 'logo-tutor.png';
@@ -158,16 +177,14 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             avatar.innerHTML = '<i class="fas fa-user"></i>';
         }
-
         const content = document.createElement('div');
         content.className = 'message-content';
         content.textContent = text;
-
         div.appendChild(avatar);
         div.appendChild(content);
         chatContainer.appendChild(div);
         chatContainer.scrollTop = chatContainer.scrollHeight;
-
+        
         // Efecto de parpadeo del avatar del bot
         if (sender === 'bot') {
             requestAnimationFrame(() => {
@@ -176,7 +193,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     img.classList.add('blinking');
                     const textLength = text.length;
                     const estimatedTime = Math.max(2000, textLength * 60);
-
                     setTimeout(() => img.classList.remove('blinking'), estimatedTime);
                     if (isVoiceEnabled) {
                         setTimeout(() => img.classList.remove('blinking'), estimatedTime + 1000);
@@ -185,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     }
-
+    
     // === INDICADOR DE ESCRIBIENDO ===
     function showTypingIndicator() {
         const typing = document.createElement('div');
@@ -200,30 +216,27 @@ document.addEventListener('DOMContentLoaded', () => {
         chatContainer.appendChild(typing);
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
-
+    
     function hideTypingIndicator() {
         const typing = document.getElementById('typing');
         if (typing) typing.remove();
     }
-
+    
     // === MENÚ DE CONFIGURACIÓN (⋯) ===
     if (menuToggle && menuPanel && closeMenu) {
         menuToggle.addEventListener('click', (e) => {
             e.stopPropagation();
             menuPanel.style.display = 'block';
         });
-
         closeMenu.addEventListener('click', () => {
             menuPanel.style.display = 'none';
         });
-
         // Cerrar al hacer clic fuera
         document.addEventListener('click', (e) => {
             if (!menuPanel.contains(e.target) && !menuToggle.contains(e.target)) {
                 menuPanel.style.display = 'none';
             }
         });
-
         // Modo oscuro
         themeOption.addEventListener('click', () => {
             isDarkMode = !isDarkMode;
@@ -231,7 +244,6 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('darkMode', isDarkMode);
             updateThemeUI();
         });
-
         // Voz
         audioOption.addEventListener('click', () => {
             isVoiceEnabled = !isVoiceEnabled;
@@ -239,13 +251,12 @@ document.addEventListener('DOMContentLoaded', () => {
             updateAudioUI();
         });
     }
-
+    
     // === TECLADO MATEMÁTICO INTEGRADO ===
     if (toggleMathBtn && mathToolbar) {
         toggleMathBtn.addEventListener('click', () => {
             mathToolbar.style.display = mathToolbar.style.display === 'none' || mathToolbar.style.display === '' ? 'flex' : 'none';
         });
-
         // Insertar texto en el cursor
         window.insertAtCursor = function(text) {
             const start = userInput.selectionStart;
@@ -255,18 +266,15 @@ document.addEventListener('DOMContentLoaded', () => {
             userInput.setSelectionRange(start + text.length, start + text.length);
             userInput.dispatchEvent(new Event('input'));
         };
-
         // Limpiar input
         window.clearInput = function() {
             userInput.value = '';
             userInput.focus();
         };
-
         // Cerrar teclado al enviar
         sendBtn.addEventListener('click', () => {
             mathToolbar.style.display = 'none';
         });
-
         // Cerrar al hacer clic fuera
         document.addEventListener('click', (e) => {
             if (!mathToolbar.contains(e.target) && !toggleMathBtn.contains(e.target)) {
@@ -274,15 +282,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
+    
     // === GRÁFICA CON CHART.JS ===
     if (graphBtn && graphContainer && graphCanvas) {
         graphBtn.addEventListener('click', () => {
             const func = userInput.value.trim();
             if (!func) return;
-
             graphContainer.style.display = 'block';
-
             const x = Array.from({ length: 100 }, (_, i) => i / 10 - 5);
             const y = x.map(val => {
                 try {
@@ -291,9 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return NaN;
                 }
             });
-
             if (graphChart) graphChart.destroy();
-
             graphChart = new Chart(graphCanvas, {
                 type: 'line',
                 data: {
@@ -318,14 +322,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
-
         document.getElementById('closeGraph')?.addEventListener('click', () => {
             graphContainer.style.display = 'none';
         });
     }
 });
-
-
 
 
 
