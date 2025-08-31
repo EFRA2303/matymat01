@@ -1,26 +1,21 @@
 {
   "name": "MatyMat-01",
   "short_name": "MatyMat",
-  "description": "Tutor inteligente de matemáticas con IA, resuelve ejercicios con texto o foto.",
+  "description": "Tutor inteligente de matemáticas con IA",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#121212",
-  "theme_color": "#121212",
-  "orientation": "portrait",
-  "scope": "/",
+  "background_color": "#4361ee",
+  "theme_color": "#4361ee",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "logo-tutor.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
-      "src": "icon-512.png",
+      "src": "logo-tutor.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }
-
