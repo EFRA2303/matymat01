@@ -1,0 +1,418 @@
+:root {
+    --primary: #4361ee;
+    --secondary: #7209b7;
+    --bg: #f8f9fa;
+    --card: #ffffff;
+    --text: #212529;
+    --border: #dee2e6;
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    --transition: all 0.3s ease;
+}
+
+.dark-mode {
+    --bg: #121212;
+    --card: #1e1e1e;
+    --text: #e0e0e0;
+    --border: #444;
+    --primary: #6c5ce7;
+    --secondary: #a29bfe;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    transition: var(--transition);
+    min-height: 100vh;
+    padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+}
+
+.container {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    background: linear-gradient(135deg, #4361ee, #7209b7, #9d4edd);
+    color: white;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1), rgba(255,255,255,0) 70%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+header h1 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: white;
+    text-shadow: 0 0 5px rgba(67, 97, 238, 0.4), 0 0 10px rgba(67, 97, 238, 0.3);
+    margin-bottom: 5px;
+    letter-spacing: -0.5px;
+}
+
+header h1 {
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from { text-shadow: 0 0 5px rgba(67, 97, 238, 0.4), 0 0 10px rgba(67, 97, 238, 0.3); }
+    to { text-shadow: 0 0 10px rgba(67, 97, 238, 0.6), 0 0 20px rgba(67, 97, 238, 0.5), 0 0 30px rgba(67, 97, 238, 0.4); }
+}
+
+header p {
+    font-size: 0.95rem;
+    opacity: 0.9;
+    font-weight: 300;
+}
+
+.chat-container {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    max-height: calc(100vh - 180px);
+    scroll-behavior: smooth;
+}
+
+@media (max-height: 700px) {
+    .chat-container {
+        max-height: calc(100vh - 220px);
+    }
+}
+
+.message {
+    display: flex;
+    margin-bottom: 15px;
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    margin-right: 15px;
+    flex-shrink: 0;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.bot-avatar img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #003366;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.message-content {
+    background: var(--card);
+    padding: 15px 20px;
+    border-radius: 20px;
+    max-width: 75%;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    transition: var(--transition);
+}
+
+.bot .message-content {
+    background: var(--card);
+}
+
+.user {
+    justify-content: flex-end;
+}
+
+.user .message-content {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    margin-left: auto;
+    border-top-right-radius: 4px;
+}
+
+/* === SECCIÓN DE ENTRADA DEL CHAT === */
+.input-section {
+    padding: 15px;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    position: sticky;
+    bottom: 0;
+    z-index: 100;
+    width: 100%;
+}
+
+.input-wrapper {
+    display: flex;
+    align-items: end; /* Alinea los botones al borde inferior del input */
+    gap: 10px;
+    position: relative;
+    padding: 10px 0;
+    border-radius: 15px 15px 0 0;
+}
+
+/* Contenedor del input con toolbar */
+.math-input-container {
+    position: relative;
+    flex: 1;
+}
+
+/* Campo de entrada mejorado */
+#userInput {
+    flex: 1;
+    padding: 16px 20px;
+    border: 1px solid var(--border);
+    border-radius: 25px;
+    outline: none;
+    resize: none;
+    font-size: 1.1rem;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 70px; /* Más alto */
+    max-height: 120px; /* Limita altura en móviles */
+    line-height: 1.4;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    width: 100%; /* Ocupa todo el ancho del contenedor */
+    margin: 0; /* Elimina márgenes extra */
+}
+
+#userInput:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+    transform: scale(1.01);
+}
+
+/* Toolbar de símbolos matemáticos */
+.math-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px 15px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin: 8px 0;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.tool-btn {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    padding: 8px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 40px;
+    text-align: center;
+}
+
+.tool-btn:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(67, 97, 238, 0.2);
+}
+
+.tool-btn.clear {
+    background: #ff8a65;
+    color: white;
+}
+
+/* Botones flotantes (cámara, teclado, enviar) */
+.upload-btn, .math-toggle-btn, .send-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    transition: all 0.3s;
+}
+
+.upload-btn {
+    background: white;
+    color: var(--primary);
+    border: 1px solid var(--border);
+}
+
+.upload-btn:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.math-toggle-btn {
+    background: var(--secondary);
+    color: white;
+}
+
+.math-toggle-btn:hover {
+    transform: scale(1.1);
+    background: #5a1d91;
+}
+
+.send-btn {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+}
+
+.btn {
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Botón de configuración (⋯) */
+.menu-toggle {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    width: 40px;
+    height: 40px;
+    background: rgba(67, 97, 238, 0.1);
+    color: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(67, 97, 238, 0.2);
+    z-index: 1000;
+}
+
+.menu-toggle:hover {
+    background: rgba(67, 97, 238, 0.2);
+    transform: scale(1.05);
+}
+
+/* Panel de Configuración */
+.menu-panel {
+    display: none;
+    position: fixed;
+    top: 60px;
+    right: 15px;
+    width: 240px;
+    background: rgba(30, 30, 30, 0.95);
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    z-index: 950;
+    border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+}
+
+.menu-panel.active {
+    display: block;
+}
+
+.panel-header {
+    padding: 12px 16px;
+    background: rgba(67, 97, 238, 0.2);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel-header h3 {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+#closeMenu {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: none;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+.panel-options {
+    padding: 10px 0;
+}
+
+.option {
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    color: var(--text);
+    transition: background 0.3s ease;
+    font-size: 0.95rem;
+}
+
+.option:hover {
+    background: rgba(67, 97, 238, 0.08);
+}
+
+.option i {
+    color: var(--primary);
+    width: 20px;
+    text-align: center;
+}
+
+/* Ajuste para móviles pequeños */
+@media (max-width: 480px) {
+    .input-wrapper {
+        gap: 8px;
+        padding: 8px 0;
+    }
+    .upload-btn, .math-toggle-btn, .send-btn {
+        width: 46px;
+        height: 46px;
+        font-size: 1.1rem;
+    }
+    .tool-btn {
+        padding: 6px 8px;
+        font-size: 0.85rem;
+    }
+}
+
+
+
+
+
+
+
