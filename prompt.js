@@ -1,5 +1,5 @@
-// prompt.js
-export function crearPrompt(textoUsuario, imagen = null) {
+// prompt.js - Versión corregida
+export function crearPrompt(textoUsuario, tieneImagen = false) {
     const tema = detectarTema(textoUsuario);
     const textoLimpio = limpiarTexto(textoUsuario);
 
@@ -30,12 +30,13 @@ Reglas principales para tus explicaciones:
 
 Tema detectado: ${tema}  
 Pregunta del estudiante: "${textoLimpio}"  
-${imagen ? 'Además, el estudiante envió una imagen del ejercicio.' : ''}
+${tieneImagen ? 'Además, el estudiante envió una imagen del ejercicio.' : ''}
     `.trim();
 }
 
-// Función para detectar el tema
+// 🎯 Función para detectar el tema (DEBE estar en el mismo archivo)
 function detectarTema(texto) {
+    if (!texto) return 'Matemáticas generales';
     texto = texto.toLowerCase();
     if (texto.includes('sen') || texto.includes('cos') || texto.includes('tan') || texto.includes('trigonométrica')) return 'Trigonometría';
     if (texto.includes('límite') || texto.includes('derivada') || texto.includes('integral') || texto.includes('∫') || texto.includes('d/dx')) return 'Cálculo';
@@ -44,8 +45,9 @@ function detectarTema(texto) {
     return 'Matemáticas generales';
 }
 
-// 🚨 Función de limpieza estricta (para que no lea asteriscos, flechas o emojis raros)
+// 🚨 Función de limpieza estricta
 export function limpiarTexto(texto) {
+    if (!texto) return '';
     return texto
         .replace(/\*{1,2}(.*?)\*{1,2}/g, "$1")   // quitar negritas/cursivas
         .replace(/_{1,2}(.*?)_{1,2}/g, "$1")     // quitar subrayados
@@ -64,3 +66,4 @@ export function limpiarTexto(texto) {
         .replace(/\s{2,}/g, " ")
         .trim();
 }
+
