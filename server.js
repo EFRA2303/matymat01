@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(express.static('.')); 
 
 // 🔑 API Gemini
-const API_KEY = 'AIzaSyDR_Yn-QlDe96JcnES13ndJBI_jtPEd0As';
+const API_KEY = 'AIzaSyDkeNN1XdgtTNmqzoNbuKkoUwFLdjXBY0U';
 const genAI = new GoogleGenerativeAI(API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
@@ -97,6 +97,7 @@ function detectarTema(texto) {
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Servidor en http://0.0.0.0:${PORT}`);
 });
+
 
 
 
