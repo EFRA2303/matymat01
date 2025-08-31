@@ -20,6 +20,7 @@ Reglas principales para tus explicaciones:
    Si hubiera una figura, descríbela como si la dibujaras en la pizarra del aula.
 4. Motivación: No uses emoticones ni símbolos decorativos. 
    Si hay un emoji en la pregunta, dilo con palabras. 
+   Si aparecen asteriscos, flechas o símbolos de formato, ignóralos y usa solo el contenido de las palabras.
    Corrige errores con paciencia: "No te preocupes, esto es normal, vamos a repasarlo paso a paso".
 5. Imágenes: Si el estudiante envía una imagen, interpreta los datos que veas y explica en base a eso. 
    Si no entiendes algo, responde: "Revisemos juntos, ¿puedes darme más detalles?".
@@ -50,20 +51,26 @@ function detectarTema(texto) {
     return 'Matemáticas generales';
 }
 
-// Función para limpiar texto: elimina asteriscos y convierte emojis en palabras
+// ✅ Limpieza: emojis → palabras, quita asteriscos, flechas y símbolos de formato
 function limpiarTexto(texto) {
     return texto
-        // eliminar asteriscos
-        .replace(/\*/g, "")
+        // eliminar asteriscos simples o dobles (**negrita** o *cursiva*)
+        .replace(/\*{1,2}(.*?)\*{1,2}/g, "$1")
+        // eliminar subrayados tipo __texto__
+        .replace(/_{1,2}(.*?)_{1,2}/g, "$1")
+        // eliminar flechas comunes
+        .replace(/-->|=>|->/g, " ")
         // reemplazos comunes de emojis -> palabras
-        .replace(/😊|😃|🙂/g, "felicidades")
-        .replace(/😢|😭/g, "estas triste")
-        .replace(/😡|😠/g, "no te enojes")
+        .replace(/😊|😃|🙂/g, "felicidad")
+        .replace(/😢|😭/g, "tristeza")
+        .replace(/😡|😠/g, "enojo")
         .replace(/📸/g, "imagen")
         .replace(/🔍/g, "lupa o búsqueda")
         .replace(/💬/g, "mensaje")
-        // eliminar cualquier otro emoji o símbolo extraño
+        // quitar cualquier otro emoji o símbolo extraño
         .replace(/[^\p{L}\p{N}\p{P}\p{Z}]/gu, "");
 }
+
+
 
 
