@@ -19,14 +19,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="MatyMat-01">
-
-    <!-- Preload de ícono -->
     <link rel="preload" href="icon-192.png" as="image">
-
-    <!-- Favicon (pequeño) -->
     <link rel="icon" href="icon-192.png" type="image/png" sizes="192x192">
 
-    <!-- Chart.js para graficar -->
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -53,7 +49,6 @@
                     <i class="fas fa-camera-retro"></i>
                 </button>
 
-                <!-- Input con toolbar matemático integrado -->
                 <div class="math-input-container">
                     <textarea id="userInput" placeholder="Escribe tu pregunta o función..." rows="1"></textarea>
                     <div class="math-toolbar" id="mathToolbar" style="display: none;">
@@ -74,7 +69,6 @@
                     </div>
                 </div>
 
-                <!-- Botón para mostrar/ocultar el teclado matemático -->
                 <button class="btn math-toggle-btn" id="toggleMathBtn" title="Símbolos matemáticos">
                     <i class="fas fa-square-root-alt"></i>
                 </button>
@@ -86,15 +80,12 @@
         </div>
     </div>
 
-    <!-- Input oculto para cámara -->
     <input type="file" id="fileInput" accept="image/*" capture="environment" style="display: none;">
 
-    <!-- Menú de Configuración (⋯) en esquina superior derecha -->
     <button id="menuToggle" class="btn menu-toggle" title="Configuración">
         <i class="fas fa-ellipsis-v"></i>
     </button>
 
-    <!-- Panel de Configuración -->
     <div class="menu-panel" id="menuPanel">
         <div class="panel-header">
             <h3>⚙️ Configuración</h3>
@@ -112,7 +103,6 @@
         </div>
     </div>
 
-    <!-- Contenedor de gráfica (Chart.js) -->
     <div class="graph-container" id="graphContainer" style="display: none;">
         <div class="panel-header">
             <h3>📈 Gráfica de Función</h3>
@@ -121,9 +111,13 @@
         <canvas id="graphCanvas"></canvas>
     </div>
 
+    <!-- Cargar tts.js antes de script.js -->
+    <script type="module">
+        import { speakText } from './tts.js';
+        window.speakText = speakText;
+    </script>
+
     <script type="module" src="script.js"></script>
 </body>
 </html>
-
-
 
