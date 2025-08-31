@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static('.'));
 
 // 🔑 API Gemini - usa variable de entorno
-const API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyCuRbKPJ5xFrq3eDFgltITbZqqeHph8LFg';
+const API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyB0oqyQ_x9tcmeJV-kmnVXp0TQQvzXVY1E';
 const genAI = new GoogleGenerativeAI(API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
@@ -99,3 +99,4 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Servidor en http://0.0.0.0:${PORT}`);
     console.log(`🔧 Entorno: ${process.env.NODE_ENV || 'development'}`);
 });
+
