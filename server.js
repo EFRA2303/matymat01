@@ -1,14 +1,17 @@
-import express from 'express';
-import cors from 'cors';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { crearPrompt, limpiarTexto, detectarTema } from './prompt.js';
+// ✅ server.js - Versión corregida con CommonJS (require)
+const express = require('express');
+const cors = require('cors');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+
+// Importar funciones personalizadas con require
+const { crearPrompt, limpiarTexto, detectarTema } = require('./prompt.js');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static('.')); 
+app.use(express.static('.'));
 
 // 🔑 API Gemini
 const API_KEY = 'AIzaSyCuRbKPJ5xFrq3eDFgltITbZqqeHph8LFg';
@@ -20,146 +23,148 @@ const conversaciones = {};
 
 // Función para obtener o crear una conversación
 function obtenerConversacion(usuarioId) {
-    if (!conversaciones[usuarioId]) {
-        conversaciones[usuarioId] = {
-            historial: [],
-            temaActual: null,
-            pasoActual: null
-        };
-    }
-    return conversaciones[usuarioId];
+  if (!conversaciones[usuarioId]) {
+    conversaciones[usuarioId] = {
+      historial: [],
+      temaActual: null,
+      pasoActual: null
+    };
+  }
+  return conversaciones[usuarioId];
 }
 
 // Función para generar IDs únicos
 function generarIdUnico() {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
 
 /**
  * 🧹 Limpieza de texto para que el tutor no lea símbolos raros
  */
 function limpiarTextoServidor(texto) {
-    return texto
-        .replace(/\*\*(.*?)\*\*/g, '$1')
-        .replace(/\*(.*?)\*/g, '$1')
-        .replace(/^- /gm, '')
-        .replace(/^>+/gm, '')
-        .replace(/➡️|→/g, ' sigue con ')
-        .replace(/✅/g, ' correcto ')
-        .replace(/📝/g, ' nota ')
-        .replace(/💡/g, ' idea ')
-        .replace(/🔥/g, ' importante ')
-        .replace(/😊|👍|😢|🤔|💡|✅|❌|📝/g, (match) => match)
-        .replace(/[^\p{L}\p{N}\p{P}\p{Z}\n😊👍😢🤔💡✅❌📝]/gu, "")
-        .replace(/\s+/g, ' ')
-        .trim();
+  return texto
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/^- /gm, '')
+    .replace(/^>+/gm, '')
+    .replace(/➡️|→/g, ' sigue con ')
+    .replace(/✅/g, ' correcto ')
+    .replace(/📝/g, ' nota ')
+    .replace(/💡/g, ' idea ')
+    .replace(/🔥/g, ' importante ')
+    .replace(/😊|👍|😢|🤔|💡|✅|❌|📝/g, (match) => match)
+    .replace(/[^\p{L}\p{N}\p{P}\p{Z}\n😊👍😢🤔💡✅❌📝]/gu, "")
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 // Función para crear prompt con historial
 function crearPromptConHistorial(conversacion, textoUsuario, tieneImagen) {
-    // Construir el historial de la conversación
-    let historialFormateado = '';
-    if (conversacion.historial.length > 0) {
-        historialFormateado = conversacion.historial.map(entry => {
-            return `${entry.rol === 'estudiante' ? 'Estudiante' : 'Tutor'}: ${entry.mensaje}`;
-        }).join('\n\n');
-    }
-    
-    return `
-Eres MatyMat-01, un tutor de matemáticas en Bolivia con 15 años de experiencia.
-Habla de forma natural, clara y amigable, como un profesor de secundaria.
-No leas símbolos de formato como asteriscos o flechas, solo explica de manera sencilla.
+  let historialFormateado = '';
+  if (conversacion.historial.length > 0) {
+    historialFormateado = conversacion.historial.map(entry => {
+      return `${entry.rol === 'estudiante' ? 'Estudiante' : 'Tutor'}: ${entry.mensaje}`;
+    }).join('\n\n');
+  }
 
-Historial de la conversación:
-${historialFormateado}
+  return `
+    Eres MatyMat-01, un tutor de matemáticas en Bolivia con 15 años de experiencia.
+    Habla de forma natural, clara y amigable, como un profesor de secundaria.
+    No leas símbolos de formato como asteriscos o flechas, solo explica de manera sencilla.
 
-Tema actual: ${conversacion.temaActual || 'No determinado'}
+    Historial de la conversación:
+    ${historialFormateado}
 
-Nueva consulta del estudiante:
-${tieneImagen ? 'Analiza la imagen y el texto.' : ''} ${textoUsuario}
+    Tema actual: ${conversacion.temaActual || 'No determinado'}
 
-Recuerda mantener el contexto de la conversación anterior y continuar desde donde lo dejamos.
-`.trim();
+    Nueva consulta del estudiante: ${tieneImagen ? 'Analiza la imagen y el texto.' : ''} ${textoUsuario}
+
+    Recuerda mantener el contexto de la conversación anterior y continuar desde donde lo dejamos.
+  `.trim();
 }
 
 // === RUTA PRINCIPAL ===
 app.post('/analizar', async (req, res) => {
-    const { text, image, mimeType = 'image/jpeg', usuarioId } = req.body;
-    
-    if (!text || typeof text !== 'string') {
-        return res.status(400).json({ error: 'Consulta inválida o vacía' });
-    }
-    
-    // Obtener o crear la conversación del usuario
-    const conversacion = obtenerConversacion(usuarioId || 'default');
-    
-    try {
-        let result;
-        
-        // Crear el prompt con el historial de conversación
-        const prompt = crearPromptConHistorial(conversacion, text, !!image);
-        
-        if (image && typeof image === 'string') {
-            const imgData = { inlineData: { image, mimeType } };
-            result = await model.generateContent([prompt, imgData]);
-        } else {
-            result = await model.generateContent(prompt);
+  const { text, image, mimeType = 'image/jpeg', usuarioId } = req.body;
+
+  if (!text || typeof text !== 'string') {
+    return res.status(400).json({ error: 'Consulta inválida o vacía' });
+  }
+
+  // Obtener o crear la conversación del usuario
+  const conversacion = obtenerConversacion(usuarioId || 'default');
+
+  try {
+    let result;
+
+    // Crear el prompt con el historial de conversación
+    const prompt = crearPromptConHistorial(conversacion, text, !!image);
+
+    if (image && typeof image === 'string') {
+      const imgData = {
+        inlineData: {
+          data: image,
+          mimeType
         }
-        
-        const response = await result.response;
-        let respuesta = response.text();
-        
-        // Limpiar la respuesta
-        respuesta = limpiarTextoServidor(respuesta);
-        
-        // Actualizar el historial de la conversación
-        conversacion.historial.push({
-            rol: 'estudiante',
-            mensaje: text,
-            timestamp: new Date()
-        });
-        
-        conversacion.historial.push({
-            rol: 'tutor',
-            mensaje: respuesta,
-            timestamp: new Date()
-        });
-        
-        // Detectar el tema actual
-        conversacion.temaActual = detectarTema(text);
-        
-        // Dividir la respuesta en pasos si contiene "Paso X:"
-        let pasos = [];
-        if (respuesta.includes('Paso')) {
-            // Dividir por "Paso X:" pero manteniendo el encabezado
-            const regex = /(Paso \d+:)/g;
-            const partes = respuesta.split(regex);
-            // Reconstruir cada paso
-            for (let i = 1; i < partes.length; i += 2) {
-                if (partes[i] && partes[i+1]) {
-                    pasos.push(partes[i] + partes[i+1]);
-                }
-            }
-            // Si no se pudo dividir correctamente, usar la respuesta completa
-            if (pasos.length === 0) {
-                pasos = [respuesta];
-            }
-        } else {
-            pasos = [respuesta];
-        }
-        
-        res.json({ 
-            pasos,
-            tema: conversacion.temaActual,
-            conversationId: usuarioId || 'default'
-        });
-    } catch (error) {
-        console.error('❌ Error con Gemini:', error.message || error);
-        return res.status(500).json({ error: 'No pude procesar tu pregunta. Intenta de nuevo.' });
+      };
+      result = await model.generateContent([prompt, imgData]);
+    } else {
+      result = await model.generateContent(prompt);
     }
+
+    const response = await result.response;
+    let respuesta = response.text();
+
+    // Limpiar la respuesta
+    respuesta = limpiarTextoServidor(respuesta);
+
+    // Actualizar el historial de la conversación
+    conversacion.historial.push({
+      rol: 'estudiante',
+      mensaje: text,
+      timestamp: new Date()
+    });
+    conversacion.historial.push({
+      rol: 'tutor',
+      mensaje: respuesta,
+      timestamp: new Date()
+    });
+
+    // Detectar el tema actual
+    conversacion.temaActual = detectarTema(text);
+
+    // Dividir la respuesta en pasos si contiene "Paso X:"
+    let pasos = [];
+    if (respuesta.includes('Paso')) {
+      const regex = /(Paso \d+:)/g;
+      const partes = respuesta.split(regex);
+      for (let i = 1; i < partes.length; i += 2) {
+        if (partes[i] && partes[i + 1]) {
+          pasos.push(partes[i] + partes[i + 1]);
+        }
+      }
+      if (pasos.length === 0) {
+        pasos = [respuesta];
+      }
+    } else {
+      pasos = [respuesta];
+    }
+
+    res.json({
+      pasos,
+      tema: conversacion.temaActual,
+      conversationId: usuarioId || 'default'
+    });
+
+  } catch (error) {
+    console.error('❌ Error con Gemini:', error.message || error);
+    return res.status(500).json({
+      error: 'No pude procesar tu pregunta. Intenta de nuevo.'
+    });
+  }
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ Servidor en http://0.0.0.0:${PORT}`);
+  console.log(`✅ Servidor listo en http://0.0.0.0:${PORT}`);
 });
 
