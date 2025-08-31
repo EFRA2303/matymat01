@@ -1,129 +1,167 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#121212">
-    <meta name="description" content="Tutor inteligente de matemáticas con IA, teclado y gráficas">
+import express from 'express';
+import cors from 'cors';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { crearPrompt, limpiarTexto, detectarTema } from './prompt.js';
 
-    <title>MatyMat-01 - Tu Tutor de Matemáticas</title>
+const app = express();
+const PORT = process.env.PORT || 10000;
 
-    <!-- CSS y Fuentes -->
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+app.use(cors());
+app.use(express.json());
+app.use(express.static('.')); 
 
-    <!-- Manifest y PWA -->
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="MatyMat-01">
+// 🔑 API Gemini
+const API_KEY = 'AIzaSyCuRbKPJ5xFrq3eDFgltITbZqqeHph8LFg';
+const genAI = new GoogleGenerativeAI(API_KEY);
+const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-    <!-- Preload de ícono -->
-    <link rel="preload" href="icon-192.png" as="image">
+// Almacenamiento en memoria del historial de conversaciones
+const conversaciones = {};
 
-    <!-- Favicon (pequeño) -->
-    <link rel="icon" href="icon-192.png" type="image/png" sizes="192x192">
+// Función para obtener o crear una conversación
+function obtenerConversacion(usuarioId) {
+    if (!conversaciones[usuarioId]) {
+        conversaciones[usuarioId] = {
+            historial: [],
+            temaActual: null,
+            pasoActual: null
+        };
+    }
+    return conversaciones[usuarioId];
+}
 
-    <!-- Chart.js para graficar -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h1><i class="fas fa-robot"></i> MatyMat-01</h1>
-            <p>Te ayudaré a resolver ejercicios con texto, foto y apoyo emocional</p>
-        </header>
+// Función para generar IDs únicos
+function generarIdUnico() {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
 
-        <div class="chat-container" id="chatContainer">
-            <div class="message bot">
-                <div class="avatar bot-avatar">
-                    <img src="tutor-avatar.png" alt="Tutor MatyMat-01" class="tutor-img">
-                </div>
-                <div class="message-content">
-                    ¡Hola! Soy MatyMat-01. Puedes escribir tu pregunta, tomar una foto o graficar una función. ¿En qué tema necesitas ayuda?
-                </div>
-            </div>
-        </div>
+/**
+ * 🧹 Limpieza de texto para que el tutor no lea símbolos raros
+ */
+function limpiarTextoServidor(texto) {
+    return texto
+        .replace(/\*\*(.*?)\*\*/g, '$1')
+        .replace(/\*(.*?)\*/g, '$1')
+        .replace(/^- /gm, '')
+        .replace(/^>+/gm, '')
+        .replace(/➡️|→/g, ' sigue con ')
+        .replace(/✅/g, ' correcto ')
+        .replace(/📝/g, ' nota ')
+        .replace(/💡/g, ' idea ')
+        .replace(/🔥/g, ' importante ')
+        .replace(/😊|👍|😢|🤔|💡|✅|❌|📝/g, (match) => match)
+        .replace(/[^\p{L}\p{N}\p{P}\p{Z}\n😊👍😢🤔💡✅❌📝]/gu, "")
+        .replace(/\s+/g, ' ')
+        .trim();
+}
 
-        <div class="input-section">
-            <div class="input-wrapper">
-                <button class="btn upload-btn" id="uploadBtn" title="Subir foto o tomar">
-                    <i class="fas fa-camera-retro"></i>
-                </button>
+// Función para crear prompt con historial
+function crearPromptConHistorial(conversacion, textoUsuario, tieneImagen) {
+    // Construir el historial de la conversación
+    let historialFormateado = '';
+    if (conversacion.historial.length > 0) {
+        historialFormateado = conversacion.historial.map(entry => {
+            return `${entry.rol === 'estudiante' ? 'Estudiante' : 'Tutor'}: ${entry.mensaje}`;
+        }).join('\n\n');
+    }
+    
+    return `
+Eres MatyMat-01, un tutor de matemáticas en Bolivia con 15 años de experiencia.
+Habla de forma natural, clara y amigable, como un profesor de secundaria.
+No leas símbolos de formato como asteriscos o flechas, solo explica de manera sencilla.
 
-                <!-- Input con toolbar matemático integrado -->
-                <div class="math-input-container">
-                    <textarea id="userInput" placeholder="Escribe tu pregunta o función..." rows="1"></textarea>
-                    <div class="math-toolbar" id="mathToolbar" style="display: none;">
-                        <button class="tool-btn" onclick="insertAtCursor('²')">x²</button>
-                        <button class="tool-btn" onclick="insertAtCursor('³')">x³</button>
-                        <button class="tool-btn" onclick="insertAtCursor('√')">√</button>
-                        <button class="tool-btn" onclick="insertAtCursor('π')">π</button>
-                        <button class="tool-btn" onclick="insertAtCursor('θ')">θ</button>
-                        <button class="tool-btn" onclick="insertAtCursor('x')">x</button>
-                        <button class="tool-btn" onclick="insertAtCursor('y')">y</button>
-                        <button class="tool-btn" onclick="insertAtCursor('z')">z</button>
-                        <button class="tool-btn" onclick="insertAtCursor('sin()')">sin()</button>
-                        <button class="tool-btn" onclick="insertAtCursor('cos()')">cos()</button>
-                        <button class="tool-btn" onclick="insertAtCursor('tan()')">tan()</button>
-                        <button class="tool-btn" onclick="insertAtCursor('½')">½</button>
-                        <button class="tool-btn" onclick="insertAtCursor('=')">=</button>
-                        <button class="tool-btn clear" onclick="clearInput()">C</button>
-                    </div>
-                </div>
+Historial de la conversación:
+${historialFormateado}
 
-                <!-- Botón para mostrar/ocultar el teclado matemático -->
-                <button class="btn math-toggle-btn" id="toggleMathBtn" title="Símbolos matemáticos">
-                    <i class="fas fa-square-root-alt"></i>
-                </button>
+Tema actual: ${conversacion.temaActual || 'No determinado'}
 
-                <button class="btn send-btn" id="sendBtn">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </div>
-        </div>
-    </div>
+Nueva consulta del estudiante:
+${tieneImagen ? 'Analiza la imagen y el texto.' : ''} ${textoUsuario}
 
-    <!-- Input oculto para cámara -->
-    <input type="file" id="fileInput" accept="image/*" capture="environment" style="display: none;">
+Recuerda mantener el contexto de la conversación anterior y continuar desde donde lo dejamos.
+`.trim();
+}
 
-    <!-- Menú de Configuración (⋯) en esquina superior derecha -->
-    <button id="menuToggle" class="btn menu-toggle" title="Configuración">
-        <i class="fas fa-ellipsis-v"></i>
-    </button>
+// === RUTA PRINCIPAL ===
+app.post('/analizar', async (req, res) => {
+    const { text, image, mimeType = 'image/jpeg', usuarioId } = req.body;
+    
+    if (!text || typeof text !== 'string') {
+        return res.status(400).json({ error: 'Consulta inválida o vacía' });
+    }
+    
+    // Obtener o crear la conversación del usuario
+    const conversacion = obtenerConversacion(usuarioId || 'default');
+    
+    try {
+        let result;
+        
+        // Crear el prompt con el historial de conversación
+        const prompt = crearPromptConHistorial(conversacion, text, !!image);
+        
+        if (image && typeof image === 'string') {
+            const imgData = { inlineData: { image, mimeType } };
+            result = await model.generateContent([prompt, imgData]);
+        } else {
+            result = await model.generateContent(prompt);
+        }
+        
+        const response = await result.response;
+        let respuesta = response.text();
+        
+        // Limpiar la respuesta
+        respuesta = limpiarTextoServidor(respuesta);
+        
+        // Actualizar el historial de la conversación
+        conversacion.historial.push({
+            rol: 'estudiante',
+            mensaje: text,
+            timestamp: new Date()
+        });
+        
+        conversacion.historial.push({
+            rol: 'tutor',
+            mensaje: respuesta,
+            timestamp: new Date()
+        });
+        
+        // Detectar el tema actual
+        conversacion.temaActual = detectarTema(text);
+        
+        // Dividir la respuesta en pasos si contiene "Paso X:"
+        let pasos = [];
+        if (respuesta.includes('Paso')) {
+            // Dividir por "Paso X:" pero manteniendo el encabezado
+            const regex = /(Paso \d+:)/g;
+            const partes = respuesta.split(regex);
+            // Reconstruir cada paso
+            for (let i = 1; i < partes.length; i += 2) {
+                if (partes[i] && partes[i+1]) {
+                    pasos.push(partes[i] + partes[i+1]);
+                }
+            }
+            // Si no se pudo dividir correctamente, usar la respuesta completa
+            if (pasos.length === 0) {
+                pasos = [respuesta];
+            }
+        } else {
+            pasos = [respuesta];
+        }
+        
+        res.json({ 
+            pasos,
+            tema: conversacion.temaActual,
+            conversationId: usuarioId || 'default'
+        });
+    } catch (error) {
+        console.error('❌ Error con Gemini:', error.message || error);
+        return res.status(500).json({ error: 'No pude procesar tu pregunta. Intenta de nuevo.' });
+    }
+});
 
-    <!-- Panel de Configuración -->
-    <div class="menu-panel" id="menuPanel">
-        <div class="panel-header">
-            <h3>⚙️ Configuración</h3>
-            <button id="closeMenu">×</button>
-        </div>
-        <div class="panel-options">
-            <div class="option" id="themeOption">
-                <i class="fas fa-moon"></i>
-                <span>Activar Modo Oscuro</span>
-            </div>
-            <div class="option" id="audioOption">
-                <i class="fas fa-volume-up"></i>
-                <span>Voz Activada</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Contenedor de gráfica (Chart.js) -->
-    <div class="graph-container" id="graphContainer" style="display: none;">
-        <div class="panel-header">
-            <h3>📈 Gráfica de Función</h3>
-            <button id="closeGraph">×</button>
-        </div>
-        <canvas id="graphCanvas"></canvas>
-    </div>
-
-    <script type="module" src="script.js"></script>
-</body>
-</html>
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ Servidor en http://0.0.0.0:${PORT}`);
+});
 
 
 
