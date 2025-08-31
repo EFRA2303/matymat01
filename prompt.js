@@ -1,7 +1,7 @@
 // prompt.js
 export function crearPrompt(textoUsuario, imagen = null) {
     const tema = detectarTema(textoUsuario);
-    const textoLimpio = limpiarTexto(textoUsuario);
+    const textoLimpio = limpiarTexto(textoUsuario); // ✅ Siempre usamos texto limpio
 
     return `
 Actúa como MatyMat-01, un tutor virtual de matemáticas con 15 años de experiencia, inspirado en un maestro rural de Bolivia. 
@@ -20,7 +20,7 @@ Reglas principales para tus explicaciones:
    Si hubiera una figura, descríbela como si la dibujaras en la pizarra del aula.
 4. Motivación: No uses emoticones ni símbolos decorativos. 
    Si hay un emoji en la pregunta, dilo con palabras. 
-   Si aparecen asteriscos, flechas o símbolos de formato, ignóralos y usa solo el contenido de las palabras.
+   Si aparecen asteriscos, flechas o símbolos de formato, ignóralos y conserva solo el contenido de las palabras.
    Corrige errores con paciencia: "No te preocupes, esto es normal, vamos a repasarlo paso a paso".
 5. Imágenes: Si el estudiante envía una imagen, interpreta los datos que veas y explica en base a eso. 
    Si no entiendes algo, responde: "Revisemos juntos, ¿puedes darme más detalles?".
@@ -51,15 +51,17 @@ function detectarTema(texto) {
     return 'Matemáticas generales';
 }
 
-// ✅ Limpieza: emojis → palabras, quita asteriscos, flechas y símbolos de formato
+// 🚨 Función de limpieza estricta
 function limpiarTexto(texto) {
     return texto
-        // eliminar asteriscos simples o dobles (**negrita** o *cursiva*)
+        // quitar negritas/cursivas Markdown (**texto**, *texto*)
         .replace(/\*{1,2}(.*?)\*{1,2}/g, "$1")
-        // eliminar subrayados tipo __texto__
+        // quitar subrayados tipo __texto__
         .replace(/_{1,2}(.*?)_{1,2}/g, "$1")
-        // eliminar flechas comunes
-        .replace(/-->|=>|->/g, " ")
+        // quitar flechas comunes -->, ->, =>, ⇒
+        .replace(/-->|=>|->|⇒/g, " ")
+        // quitar títulos tipo # Título
+        .replace(/^#+\s/gm, "")
         // reemplazos comunes de emojis -> palabras
         .replace(/😊|😃|🙂/g, "felicidad")
         .replace(/😢|😭/g, "tristeza")
@@ -68,9 +70,11 @@ function limpiarTexto(texto) {
         .replace(/🔍/g, "lupa o búsqueda")
         .replace(/💬/g, "mensaje")
         // quitar cualquier otro emoji o símbolo extraño
-        .replace(/[^\p{L}\p{N}\p{P}\p{Z}]/gu, "");
+        .replace(/[^\p{L}\p{N}\p{P}\p{Z}\n]/gu, "")
+        // limpiar espacios dobles
+        .replace(/\s{2,}/g, " ")
+        .trim();
 }
-
 
 
 
