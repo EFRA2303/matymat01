@@ -1,0 +1,31 @@
+{
+  "name": "MatyMat-01",
+  "description": "Tutor virtual de matemáticas con Gemini API",
+  "keywords": ["gemini", "tutor", "matemáticas", "educación"],
+  "website": "https://tu-app-name.onrender.com",
+  "repository": "https://github.com/tu-usuario/tu-repositorio",
+  "logo": "https://raw.githubusercontent.com/tu-usuario/tu-repositorio/main/logo.png",
+  "success_url": "/",
+  "env": {
+    "GEMINI_API_KEY": {
+      "description": "Tu API key de Google Gemini",
+      "required": true
+    },
+    "NODE_ENV": {
+      "description": "Entorno de ejecución",
+      "value": "production",
+      "required": true
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "free"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ]
+}
