@@ -3,7 +3,8 @@ services:
     name: matymat01
     runtime: node
     buildCommand: npm install
-    startCommand: node server.js
+    startCommand: npm start
     env:
       - key: PORT
+
         value: 10000
