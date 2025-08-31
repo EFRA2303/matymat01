@@ -1,6 +1,7 @@
 // prompt.js
 export function crearPrompt(textoUsuario, imagen = null) {
     const tema = detectarTema(textoUsuario);
+    const textoLimpio = limpiarTexto(textoUsuario);
 
     return `
 Actúa como MatyMat-01, un tutor virtual de matemáticas con 15 años de experiencia, inspirado en un maestro rural de Bolivia. 
@@ -34,7 +35,7 @@ Paso 3: Hallamos la raíz cuadrada para encontrar la diagonal.
 Así, poco a poco, llegamos al resultado."
 
 Tema detectado: ${tema}  
-Pregunta del estudiante: "${textoUsuario}"  
+Pregunta del estudiante: "${textoLimpio}"  
 ${imagen ? 'Además, el estudiante envió una imagen del ejercicio.' : ''}
     `.trim();
 }
@@ -48,4 +49,21 @@ function detectarTema(texto) {
     if (texto.includes('x²') || texto.includes('ecuación') || texto.includes('inecuación') || texto.includes('función')) return 'Álgebra';
     return 'Matemáticas generales';
 }
+
+// Función para limpiar texto: elimina asteriscos y convierte emojis en palabras
+function limpiarTexto(texto) {
+    return texto
+        // eliminar asteriscos
+        .replace(/\*/g, "")
+        // reemplazos comunes de emojis -> palabras
+        .replace(/😊|😃|🙂/g, "felicidades")
+        .replace(/😢|😭/g, "estas triste")
+        .replace(/😡|😠/g, "no te enojes")
+        .replace(/📸/g, "imagen")
+        .replace(/🔍/g, "lupa o búsqueda")
+        .replace(/💬/g, "mensaje")
+        // eliminar cualquier otro emoji o símbolo extraño
+        .replace(/[^\p{L}\p{N}\p{P}\p{Z}]/gu, "");
+}
+
 
