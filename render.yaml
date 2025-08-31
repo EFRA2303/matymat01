@@ -6,5 +6,4 @@ services:
     startCommand: npm start
     env:
       - key: PORT
-
         value: 10000
