@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(express.static('.')); 
 
 // 🔑 API Gemini
-const API_KEY = 'TU_API_KEY_AQUI';
+const API_KEY = 'AIzaSyCuRbKPJ5xFrq3eDFgltITbZqqeHph8LFg';
 const genAI = new GoogleGenerativeAI(API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
@@ -92,3 +92,4 @@ app.post('/analizar', async (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Servidor en http://0.0.0.0:${PORT}`);
 });
+
