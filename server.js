@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { crearPrompt, limpiarTexto } from './prompt.js'; // Importamos funciones de prompt.js
+import { crearPrompt, limpiarTexto, detectarTema } from './prompt.js';
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -15,48 +15,89 @@ const API_KEY = 'AIzaSyCuRbKPJ5xFrq3eDFgltITbZqqeHph8LFg';
 const genAI = new GoogleGenerativeAI(API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
+// Almacenamiento en memoria del historial de conversaciones
+const conversaciones = {};
+
+// Función para obtener o crear una conversación
+function obtenerConversacion(usuarioId) {
+    if (!conversaciones[usuarioId]) {
+        conversaciones[usuarioId] = {
+            historial: [],
+            temaActual: null,
+            pasoActual: null
+        };
+    }
+    return conversaciones[usuarioId];
+}
+
+// Función para generar IDs únicos
+function generarIdUnico() {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
 /**
  * 🧹 Limpieza de texto para que el tutor no lea símbolos raros
- * - Elimina **negritas** de Markdown
- * - Elimina *cursivas*
- * - Elimina > citas
- * - Reemplaza flechas y emojis no deseados por palabras amigables
- * - Conserva emojis motivadores específicos
  */
 function limpiarTextoServidor(texto) {
     return texto
-        // Quitar asteriscos de negrita/cursiva
         .replace(/\*\*(.*?)\*\*/g, '$1')
         .replace(/\*(.*?)\*/g, '$1')
-        // Quitar guiones de listas
         .replace(/^- /gm, '')
-        // Quitar citas con ">"
         .replace(/^>+/gm, '')
-        // Reemplazar flechas
         .replace(/➡️|→/g, ' sigue con ')
-        // Emojis comunes a palabras (excepto los permitidos)
         .replace(/✅/g, ' correcto ')
         .replace(/📝/g, ' nota ')
         .replace(/💡/g, ' idea ')
         .replace(/🔥/g, ' importante ')
-        // Conservar emojis motivadores permitidos
         .replace(/😊|👍|😢|🤔|💡|✅|❌|📝/g, (match) => match)
-        // Quitar cualquier otro emoji o símbolo extraño
         .replace(/[^\p{L}\p{N}\p{P}\p{Z}\n😊👍😢🤔💡✅❌📝]/gu, "")
-        // Quitar espacios duplicados
         .replace(/\s+/g, ' ')
         .trim();
 }
 
+// Función para crear prompt con historial
+function crearPromptConHistorial(conversacion, textoUsuario, tieneImagen) {
+    // Construir el historial de la conversación
+    let historialFormateado = '';
+    if (conversacion.historial.length > 0) {
+        historialFormateado = conversacion.historial.map(entry => {
+            return `${entry.rol === 'estudiante' ? 'Estudiante' : 'Tutor'}: ${entry.mensaje}`;
+        }).join('\n\n');
+    }
+    
+    return `
+Eres MatyMat-01, un tutor de matemáticas en Bolivia con 15 años de experiencia.
+Habla de forma natural, clara y amigable, como un profesor de secundaria.
+No leas símbolos de formato como asteriscos o flechas, solo explica de manera sencilla.
+
+Historial de la conversación:
+${historialFormateado}
+
+Tema actual: ${conversacion.temaActual || 'No determinado'}
+
+Nueva consulta del estudiante:
+${tieneImagen ? 'Analiza la imagen y el texto.' : ''} ${textoUsuario}
+
+Recuerda mantener el contexto de la conversación anterior y continuar desde donde lo dejamos.
+`.trim();
+}
+
 // === RUTA PRINCIPAL ===
 app.post('/analizar', async (req, res) => {
-    const { text, image, mimeType = 'image/jpeg' } = req.body;
+    const { text, image, mimeType = 'image/jpeg', usuarioId } = req.body;
+    
     if (!text || typeof text !== 'string') {
         return res.status(400).json({ error: 'Consulta inválida o vacía' });
     }
+    
+    // Obtener o crear la conversación del usuario
+    const conversacion = obtenerConversacion(usuarioId || 'default');
+    
     try {
         let result;
-        const prompt = crearPrompt(text, !!image); // Usamos la función de prompt.js
+        
+        // Crear el prompt con el historial de conversación
+        const prompt = crearPromptConHistorial(conversacion, text, !!image);
         
         if (image && typeof image === 'string') {
             const imgData = { inlineData: { image, mimeType } };
@@ -68,31 +109,55 @@ app.post('/analizar', async (req, res) => {
         const response = await result.response;
         let respuesta = response.text();
         
-        // 🔹 Limpiar antes de enviar al tutor
+        // Limpiar la respuesta
         respuesta = limpiarTextoServidor(respuesta);
         
-        // Estructurar la respuesta en pasos separados
-        const pasos = respuesta.split(/\n(?=Paso \d+:|\[CONCLUSION\])/);
+        // Actualizar el historial de la conversación
+        conversacion.historial.push({
+            rol: 'estudiante',
+            mensaje: text,
+            timestamp: new Date()
+        });
+        
+        conversacion.historial.push({
+            rol: 'tutor',
+            mensaje: respuesta,
+            timestamp: new Date()
+        });
+        
+        // Detectar el tema actual
+        conversacion.temaActual = detectarTema(text);
+        
+        // Dividir la respuesta en pasos si contiene "Paso X:"
+        let pasos = [];
+        if (respuesta.includes('Paso')) {
+            // Dividir por "Paso X:" pero manteniendo el encabezado
+            const regex = /(Paso \d+:)/g;
+            const partes = respuesta.split(regex);
+            // Reconstruir cada paso
+            for (let i = 1; i < partes.length; i += 2) {
+                if (partes[i] && partes[i+1]) {
+                    pasos.push(partes[i] + partes[i+1]);
+                }
+            }
+            // Si no se pudo dividir correctamente, usar la respuesta completa
+            if (pasos.length === 0) {
+                pasos = [respuesta];
+            }
+        } else {
+            pasos = [respuesta];
+        }
         
         res.json({ 
-            pasos: pasos.map(paso => paso.trim()),
-            tema: detectarTema(text)
+            pasos,
+            tema: conversacion.temaActual,
+            conversationId: usuarioId || 'default'
         });
     } catch (error) {
         console.error('❌ Error con Gemini:', error.message || error);
         return res.status(500).json({ error: 'No pude procesar tu pregunta. Intenta de nuevo.' });
     }
 });
-
-// Función para detectar el tema (repetida aquí para evitar importaciones circulares)
-function detectarTema(texto) {
-    texto = texto.toLowerCase();
-    if (texto.includes('sen') || texto.includes('cos') || texto.includes('tan') || texto.includes('trigonométrica')) return 'Trigonometría';
-    if (texto.includes('límite') || texto.includes('derivada') || texto.includes('integral') || texto.includes('∫') || texto.includes('d/dx')) return 'Cálculo';
-    if (texto.includes('triángulo') || texto.includes('círculo') || texto.includes('área') || texto.includes('volumen')) return 'Geometría';
-    if (texto.includes('x²') || texto.includes('ecuación') || texto.includes('inecuación') || texto.includes('función')) return 'Álgebra';
-    return 'Matemáticas generales';
-}
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Servidor en http://0.0.0.0:${PORT}`);
