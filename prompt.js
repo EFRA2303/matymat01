@@ -1,10 +1,39 @@
-export function crearPrompt(textoUsuario, imagen = null, contexto = null) {
-    const tema = detectarTema(textoUsuario);
-    const textoLimpio = limpiarTexto(textoUsuario);
-    
-    let contextoAdicional = '';
-    if (contexto) {
-        contextoAdicional = `
+/**
+ * prompt.js - Funciones para generar prompts y limpiar texto
+ * Usado en el backend (server.js)
+ */
+
+// Función para detectar el tema
+function detectarTema(texto) {
+  texto = texto.toLowerCase();
+  if (texto.includes('sen') || texto.includes('cos') || texto.includes('tan') || texto.includes('trigonométrica')) return 'Trigonometría';
+  if (texto.includes('límite') || texto.includes('derivada') || texto.includes('integral') || texto.includes('∫') || texto.includes('d/dx')) return 'Cálculo';
+  if (texto.includes('triángulo') || texto.includes('círculo') || texto.includes('área') || texto.includes('volumen')) return 'Geometría';
+  if (texto.includes('x²') || texto.includes('ecuación') || texto.includes('inecuación') || texto.includes('función')) return 'Álgebra';
+  return 'Matemáticas generales';
+}
+
+// 🚨 Función de limpieza estricta
+function limpiarTexto(texto) {
+  return texto
+    .replace(/\*{1,2}(.*?)\*{1,2}/g, "$1")
+    .replace(/_{1,2}(.*?)_{1,2}/g, "$1")
+    .replace(/-->|=>|->|⇒/g, " ")
+    .replace(/^#+\s/gm, "")
+    .replace(/😊|👍|😢|🤔|💡|✅|❌|📝/g, (match) => match)
+    .replace(/[^\p{L}\p{N}\p{P}\p{Z}\n😊👍😢🤔💡✅❌📝]/gu, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+// Función para crear prompt
+function crearPrompt(textoUsuario, imagen = null, contexto = null) {
+  const tema = detectarTema(textoUsuario);
+  const textoLimpio = limpiarTexto(textoUsuario);
+  
+  let contextoAdicional = '';
+  if (contexto) {
+    contextoAdicional = `
 Contexto anterior:
 ${contexto}
 
@@ -13,9 +42,9 @@ Instrucciones adicionales:
 - Si el estudiante hace una pregunta relacionada con el tema anterior, mantén la coherencia
 - Si es una pregunta nueva, indícalo claramente
 `;
-    }
-    
-    return `
+  }
+  
+  return `
 Actúa como MatyMat-01, un tutor virtual de matemáticas con 15 años de experiencia, inspirado en un maestro rural de Bolivia. 
 Tu misión es enseñar con paciencia, claridad y cariño, como en una clase en secundaria o en una universidad pública. 
 Explica con un estilo metódico, paso a paso, utilizando ejemplos de la vida boliviana: medir un terreno, calcular cosechas, repartir productos en el mercado, o trazar caminos. 
@@ -57,43 +86,8 @@ Así, poco a poco, llegamos al resultado. ¡Vamos, tú puedes! 😊"
 Tema detectado: ${tema}  
 Pregunta del estudiante: "${textoLimpio}"  
 ${imagen ? 'Además, el estudiante envió una imagen del ejercicio.' : ''}
-    `.trim();
+  `.trim();
 }
 
-// Función para detectar el tema
-export function detectarTema(texto) {
-    texto = texto.toLowerCase();
-    if (texto.includes('sen') || texto.includes('cos') || texto.includes('tan') || texto.includes('trigonométrica')) return 'Trigonometría';
-    if (texto.includes('límite') || texto.includes('derivada') || texto.includes('integral') || texto.includes('∫') || texto.includes('d/dx')) return 'Cálculo';
-    if (texto.includes('triángulo') || texto.includes('círculo') || texto.includes('área') || texto.includes('volumen')) return 'Geometría';
-    if (texto.includes('x²') || texto.includes('ecuación') || texto.includes('inecuación') || texto.includes('función')) return 'Álgebra';
-    return 'Matemáticas generales';
-}
-
-// 🚨 Función de limpieza estricta
-export function limpiarTexto(texto) {
-    return texto
-        // quitar negritas/cursivas Markdown (texto, texto)
-        .replace(/\*{1,2}(.*?)\*{1,2}/g, "$1")
-        // quitar subrayados tipo __texto__
-        .replace(/_{1,2}(.*?)_{1,2}/g, "$1")
-        // quitar flechas comunes -->, ->, =>, ⇒
-        .replace(/-->|=>|->|⇒/g, " ")
-        // quitar títulos tipo # Título
-        .replace(/^#+\s/gm, "")
-        // reemplazos comunes de emojis -> palabras (solo para los que no queremos conservar)
-        .replace(/😊|😃|🙂/g, "felicidad")
-        .replace(/😢|😭/g, "tristeza")
-        .replace(/😡|😠/g, "enojo")
-        .replace(/📸/g, "imagen")
-        .replace(/🔍/g, "lupa o búsqueda")
-        .replace(/💬/g, "mensaje")
-        // Conservar emojis motivadores permitidos
-        .replace(/😊|👍|😢|🤔|💡|✅|❌|📝/g, (match) => match)
-        // quitar cualquier otro emoji o símbolo extraño
-        .replace(/[^\p{L}\p{N}\p{P}\p{Z}\n😊👍😢🤔💡✅❌📝]/gu, "")
-        // limpiar espacios dobles
-        .replace(/\s{2,}/g, " ")
-        .trim();
-}
-
+// Exportar funciones
+module.exports = { crearPrompt, limpiarTexto, detectarTema };
