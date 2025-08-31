@@ -1,3 +1,9 @@
+/**
+ * prompt.js - Funciones para IA y limpieza de texto
+ * Todas las funciones deben estar exportadas para que server.js pueda importarlas
+ */
+
+// ✅ Exportar la función principal del prompt
 export function crearPrompt(textoUsuario, imagen = null) {
     const tema = detectarTema(textoUsuario);
     const textoLimpio = limpiarTexto(textoUsuario);
@@ -44,8 +50,8 @@ ${imagen ? 'Además, el estudiante envió una imagen del ejercicio.' : ''}
     `.trim();
 }
 
-// Función para detectar el tema
-function detectarTema(texto) {
+// ✅ Exportar la función detectarTema
+export function detectarTema(texto) {
     texto = texto.toLowerCase();
     if (texto.includes('sen') || texto.includes('cos') || texto.includes('tan') || texto.includes('trigonométrica')) return 'Trigonometría';
     if (texto.includes('límite') || texto.includes('derivada') || texto.includes('integral') || texto.includes('∫') || texto.includes('d/dx')) return 'Cálculo';
@@ -54,31 +60,22 @@ function detectarTema(texto) {
     return 'Matemáticas generales';
 }
 
-// 🚨 Función de limpieza estricta
-function limpiarTexto(texto) {
+// ✅ Exportar la función limpiarTexto
+export function limpiarTexto(texto) {
     return texto
-        // quitar negritas/cursivas Markdown (texto, texto)
         .replace(/\*{1,2}(.*?)\*{1,2}/g, "$1")
-        // quitar subrayados tipo __texto__
         .replace(/_{1,2}(.*?)_{1,2}/g, "$1")
-        // quitar flechas comunes -->, ->, =>, ⇒
         .replace(/-->|=>|->|⇒/g, " ")
-        // quitar títulos tipo # Título
         .replace(/^#+\s/gm, "")
-        // reemplazos comunes de emojis -> palabras (solo para los que no queremos conservar)
         .replace(/😊|😃|🙂/g, "felicidad")
         .replace(/😢|😭/g, "tristeza")
         .replace(/😡|😠/g, "enojo")
         .replace(/📸/g, "imagen")
         .replace(/🔍/g, "lupa o búsqueda")
         .replace(/💬/g, "mensaje")
-        // Conservar emojis motivadores permitidos
         .replace(/😊|👍|😢|🤔|💡|✅|❌|📝/g, (match) => match)
-        // quitar cualquier otro emoji o símbolo extraño
         .replace(/[^\p{L}\p{N}\p{P}\p{Z}\n😊👍😢🤔💡✅❌📝]/gu, "")
-        // limpiar espacios dobles
         .replace(/\s{2,}/g, " ")
         .trim();
 }
-
 
