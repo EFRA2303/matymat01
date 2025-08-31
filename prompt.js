@@ -54,7 +54,7 @@ function detectarTema(texto) {
 // 🚨 Función de limpieza estricta
 function limpiarTexto(texto) {
     return texto
-        // quitar negritas/cursivas Markdown (**texto**, *texto*)
+        // quitar negritas/cursivas Markdown (texto, texto)
         .replace(/\*{1,2}(.*?)\*{1,2}/g, "$1")
         // quitar subrayados tipo __texto__
         .replace(/_{1,2}(.*?)_{1,2}/g, "$1")
@@ -75,6 +75,7 @@ function limpiarTexto(texto) {
         .replace(/\s{2,}/g, " ")
         .trim();
 }
+
 
 
 
