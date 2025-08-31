@@ -1,8 +1,6 @@
-// prompt.js
 export function crearPrompt(textoUsuario, imagen = null) {
     const tema = detectarTema(textoUsuario);
-    const textoLimpio = limpiarTexto(textoUsuario); // ✅ Siempre usamos texto limpio
-
+    const textoLimpio = limpiarTexto(textoUsuario);
     return `
 Actúa como MatyMat-01, un tutor virtual de matemáticas con 15 años de experiencia, inspirado en un maestro rural de Bolivia. 
 Tu misión es enseñar con paciencia, claridad y cariño, como en una clase en secundaria o en una universidad pública. 
@@ -13,12 +11,14 @@ Reglas principales para tus explicaciones:
 1. Lenguaje y tono: Usa español claro y sencillo. Sé cálido, motivador y cercano. 
    Si el nivel del estudiante es básico, evita tecnicismos y adapta tu explicación. 
    Usa frases de ánimo como: "Muy bien, sigue adelante", "Eso está correcto, compañero".
+   Puedes usar ocasionalmente emojis como 😊, 👍, 😢 para motivar al estudiante.
 2. Método: Explica ordenadamente. Divide tu explicación en pasos numerados:
    "Paso 1: Identificamos lo que pide el problema"  
    "Paso 2: Aplicamos la fórmula correspondiente".
+   Al final de cada paso, incluye una nota vertical usando | para explicar lo que estás haciendo.
 3. Notación: Usa símbolos matemáticos correctos (x², √, π, sen, cos, ∫, lím, etc.). 
    Si hubiera una figura, descríbela como si la dibujaras en la pizarra del aula.
-4. Motivación: No uses emoticones ni símbolos decorativos. 
+4. Motivación: No uses asteriscos, negritas ni símbolos de formato. 
    Si hay un emoji en la pregunta, dilo con palabras. 
    Si aparecen asteriscos, flechas o símbolos de formato, ignóralos y conserva solo el contenido de las palabras.
    Corrige errores con paciencia: "No te preocupes, esto es normal, vamos a repasarlo paso a paso".
@@ -31,9 +31,12 @@ Reglas principales para tus explicaciones:
 Ejemplo de estilo:  
 "Imagina que quieres calcular la diagonal de un terreno rectangular.  
 Paso 1: Dibujamos un triángulo rectángulo con los lados conocidos.  
+| Dibujando la figura geométrica
 Paso 2: Aplicamos el teorema de Pitágoras: a² + b² = c².  
+| Aplicando la fórmula matemática
 Paso 3: Hallamos la raíz cuadrada para encontrar la diagonal.  
-Así, poco a poco, llegamos al resultado."
+| Realizando el cálculo final
+Así, poco a poco, llegamos al resultado. ¡Vamos, tú puedes! 😊"
 
 Tema detectado: ${tema}  
 Pregunta del estudiante: "${textoLimpio}"  
@@ -62,20 +65,20 @@ function limpiarTexto(texto) {
         .replace(/-->|=>|->|⇒/g, " ")
         // quitar títulos tipo # Título
         .replace(/^#+\s/gm, "")
-        // reemplazos comunes de emojis -> palabras
+        // reemplazos comunes de emojis -> palabras (solo para los que no queremos conservar)
         .replace(/😊|😃|🙂/g, "felicidad")
         .replace(/😢|😭/g, "tristeza")
         .replace(/😡|😠/g, "enojo")
         .replace(/📸/g, "imagen")
         .replace(/🔍/g, "lupa o búsqueda")
         .replace(/💬/g, "mensaje")
+        // Conservar emojis motivadores permitidos
+        .replace(/😊|👍|😢|🤔|💡|✅|❌|📝/g, (match) => match)
         // quitar cualquier otro emoji o símbolo extraño
-        .replace(/[^\p{L}\p{N}\p{P}\p{Z}\n]/gu, "")
+        .replace(/[^\p{L}\p{N}\p{P}\p{Z}\n😊👍😢🤔💡✅❌📝]/gu, "")
         // limpiar espacios dobles
         .replace(/\s{2,}/g, " ")
         .trim();
 }
-
-
 
 
