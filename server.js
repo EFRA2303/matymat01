@@ -107,7 +107,7 @@ app.post('/analizar', async (req, res) => {
     if (image && typeof image === 'string') {
       const imgData = {
         inlineData: {
-          data: image,
+           image,
           mimeType
         }
       };
