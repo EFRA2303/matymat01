@@ -1,20 +1,24 @@
-// ✅ server.js - Versión corregida con CommonJS (require)
+// server.js - Tutor Virtual MatyMat-01
+// Desarrollado con Node.js + Express + Google Generative AI
+// Desplegado en Render.com con cumplimiento de PORT y 0.0.0.0
+
 const express = require('express');
 const cors = require('cors');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-// Importar funciones personalizadas con require
+// Importar funciones personalizadas
 const { crearPrompt, limpiarTexto, detectarTema } = require('./prompt.js');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
+// Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static('.'));
+app.use(express.static('.')); // Sirve archivos estáticos (index.html, style.css, script.js)
 
-// 🔑 API Gemini
-const API_KEY = 'AIzaSyCuRbKPJ5xFrq3eDFgltITbZqqeHph8LFg';
+// 🔑 Configuración de Google Generative AI
+const API_KEY = 'AIzaSyCuRbKPJ5xFrq3eDFgltITbZqqeHph8LFg'; // Reemplaza con tu clave segura
 const genAI = new GoogleGenerativeAI(API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
@@ -164,7 +168,12 @@ app.post('/analizar', async (req, res) => {
   }
 });
 
+// Ruta de prueba
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/index.html');
+});
+
+// Iniciar el servidor
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Servidor listo en http://0.0.0.0:${PORT}`);
 });
-
