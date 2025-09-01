@@ -8,10 +8,7 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 10000;
 
-// Inicializar Gemini con tu API Key
-const genAI = new GoogleGenerativeAI(process.env.API_KEY);
-
-// PROMPT INTEGRADO DIRECTAMENTE EN EL SERVER.JS (funcionaba)
+// ✅ PROMPT MÍNIMO Y CLARO (funciona en producción)
 const promptBase = `
 Eres un tutor de matemáticas. Resuelve inmediatamente cualquier problema matemático que el estudiante te envíe.
 Nunca preguntes "¿cuál es tu pregunta?" o pidas aclaraciones.
@@ -23,6 +20,8 @@ Solución final: [Respuesta]
 
 Si la consulta no es matemática, responde: "Solo ayudo con problemas de matemáticas."
 `;
+
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
@@ -40,12 +39,15 @@ app.post('/analizar', async (req, res) => {
 
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     
-    // ✅ ESTRUCTURA QUE FUNCIONABA: PROMPT + CONSULTA
+    // ✅ ESTRUCTURA CLAVE: PROMPT + CONSULTA
     const fullPrompt = promptBase + "\n\nConsulta del estudiante: " + consulta;
     
     const result = await model.generateContent(fullPrompt);
     const response = await result.response;
-    const text = response.text();
+    let text = response.text();
+
+    // Limpieza mínima
+    text = text.replace(/\*\*/g, '').replace(/#/g, '');
 
     res.json({ respuesta: text });
   } catch (error) {
