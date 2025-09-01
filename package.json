@@ -1,29 +1,17 @@
 {
   "name": "matymat01",
   "version": "1.0.0",
-  "description": "Tutor virtual MatyMat-01 con IA para matemáticas",
+  "description": "Tutor Virtual Gamificado para estudiantes con TDAH",
   "main": "server.js",
-  "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "node-fetch": "^2.7.0"
+    "@google-ai/generativelanguage": "^0.3.1",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2"
   },
-  "devDependencies": {
-    "nodemon": "^3.1.0"
-  },
-  "keywords": [
-    "tutor",
-    "matemáticas",
-    "ia",
-    "openrouter",
-    "educación",
-    "bolivia"
-  ],
-  "author": "Tu Nombre",
-  "license": "MIT"
+  "engines": {
+    "node": "20.x"
+  }
 }
