@@ -8,9 +8,9 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 10000;
 
-// ✅ PROMPT INTEGRADO DIRECTAMENTE (sin archivos externos)
+// ✅ PROMPT MÍNIMO, CLARO Y OBLIGATORIO
 const promptBase = `
-Eres un tutor de matemáticas especializado en ayudar a estudiantes con TDAH tipo inatento.
+Eres un tutor de matemáticas especializado en estudiantes con TDAH tipo inatento.
 Resuelve inmediatamente cualquier problema matemático que el estudiante te envíe.
 Nunca preguntes "¿cuál es tu pregunta?" o pidas aclaraciones.
 Siempre responde paso a paso:
@@ -30,11 +30,11 @@ app.get('/', (req, res) => {
 
 app.post('/analizar', async (req, res) => {
   try {
-    // ✅ CORREGIDO: Ahora acepta "text" (lo que envía el frontend)
+    // ✅ Acepta ambos nombres: "text" (frontend) y "consulta" (backend)
     const { text, consulta } = req.body;
-    const input = text || consulta; // Acepta ambos nombres
+    const input = (text || consulta || '').trim();
 
-    if (!input || input.trim() === '') {
+    if (!input) {
       return res.status(400).json({ 
         respuesta: "Por favor, escribe tu pregunta de matemáticas." 
       });
