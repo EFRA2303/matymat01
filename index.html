@@ -1,129 +1,85 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#121212">
-    <meta name="description" content="Tutor inteligente de matemáticas con IA, teclado y gráficas">
-
-    <title>MatyMat-01 - Tu Tutor de Matemáticas</title>
-
-    <!-- CSS y Fuentes -->
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Manifest y PWA -->
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="MatyMat-01">
-
-    <!-- Preload de ícono -->
-    <link rel="preload" href="icon-192.png" as="image">
-
-    <!-- Favicon (pequeño) -->
-    <link rel="icon" href="icon-192.png" type="image/png" sizes="192x192">
-
-    <!-- Chart.js para graficar -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MatyMat-01 - Tu Tutor de Matemáticas</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1><i class="fas fa-robot"></i> MatyMat-01</h1>
-            <p>Te ayudaré a resolver ejercicios con texto, foto y apoyo emocional</p>
-        </header>
+  <div class="container" id="container">
+    <h1>MatyMat-01</h1>
+    <p>Resuelve ejercicios con texto o foto. ¡Estoy aquí para ayudarte!</p>
 
-        <div class="chat-container" id="chatContainer">
-            <div class="message bot">
-                <div class="avatar bot-avatar">
-                    <img src="tutor-avatar.png" alt="Tutor MatyMat-01" class="tutor-img">
-                </div>
-                <div class="message-content">
-                    ¡Hola! Soy MatyMat-01. Puedes escribir tu pregunta, tomar una foto o graficar una función. ¿En qué tema necesitas ayuda?
-                </div>
-            </div>
-        </div>
-
-        <div class="input-section">
-            <div class="input-wrapper">
-                <button class="btn upload-btn" id="uploadBtn" title="Subir foto o tomar">
-                    <i class="fas fa-camera-retro"></i>
-                </button>
-
-                <!-- Input con toolbar matemático integrado -->
-                <div class="math-input-container">
-                    <textarea id="userInput" placeholder="Escribe tu pregunta o función..." rows="1"></textarea>
-                    <div class="math-toolbar" id="mathToolbar" style="display: none;">
-                        <button class="tool-btn" onclick="insertAtCursor('²')">x²</button>
-                        <button class="tool-btn" onclick="insertAtCursor('³')">x³</button>
-                        <button class="tool-btn" onclick="insertAtCursor('√')">√</button>
-                        <button class="tool-btn" onclick="insertAtCursor('π')">π</button>
-                        <button class="tool-btn" onclick="insertAtCursor('θ')">θ</button>
-                        <button class="tool-btn" onclick="insertAtCursor('x')">x</button>
-                        <button class="tool-btn" onclick="insertAtCursor('y')">y</button>
-                        <button class="tool-btn" onclick="insertAtCursor('z')">z</button>
-                        <button class="tool-btn" onclick="insertAtCursor('sin()')">sin()</button>
-                        <button class="tool-btn" onclick="insertAtCursor('cos()')">cos()</button>
-                        <button class="tool-btn" onclick="insertAtCursor('tan()')">tan()</button>
-                        <button class="tool-btn" onclick="insertAtCursor('½')">½</button>
-                        <button class="tool-btn" onclick="insertAtCursor('=')">=</button>
-                        <button class="tool-btn clear" onclick="clearInput()">C</button>
-                    </div>
-                </div>
-
-                <!-- Botón para mostrar/ocultar el teclado matemático -->
-                <button class="btn math-toggle-btn" id="toggleMathBtn" title="Símbolos matemáticos">
-                    <i class="fas fa-square-root-alt"></i>
-                </button>
-
-                <button class="btn send-btn" id="sendBtn">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </div>
-        </div>
+    <div class="chat" id="chat">
+      <div class="mensaje bot">
+        ¡Hola! Soy MatyMat-01. Puedes escribir tu pregunta o tomar una foto del ejercicio. ¿En qué tema necesitas ayuda?
+      </div>
     </div>
 
-    <!-- Input oculto para cámara -->
-    <input type="file" id="fileInput" accept="image/*" capture="environment" style="display: none;">
-
-    <!-- Menú de Configuración (⋯) en esquina superior derecha -->
-    <button id="menuToggle" class="btn menu-toggle" title="Configuración">
-        <i class="fas fa-ellipsis-v"></i>
-    </button>
-
-    <!-- Panel de Configuración -->
-    <div class="menu-panel" id="menuPanel">
-        <div class="panel-header">
-            <h3>⚙️ Configuración</h3>
-            <button id="closeMenu">×</button>
-        </div>
-        <div class="panel-options">
-            <div class="option" id="themeOption">
-                <i class="fas fa-moon"></i>
-                <span>Activar Modo Oscuro</span>
-            </div>
-            <div class="option" id="audioOption">
-                <i class="fas fa-volume-up"></i>
-                <span>Voz Activada</span>
-            </div>
-        </div>
+    <div class="input-container">
+      <input type="text" id="input" placeholder="Escribe tu consulta..." />
+      <button id="btnEnviar">Enviar</button>
+      <button id="btnVoz" title="Activar/Desactivar voz">🎤</button>
+      <button id="btnOscuro" title="Modo oscuro">🌓</button>
     </div>
 
-    <!-- Contenedor de gráfica (Chart.js) -->
-    <div class="graph-container" id="graphContainer" style="display: none;">
-        <div class="panel-header">
-            <h3>📈 Gráfica de Función</h3>
-            <button id="closeGraph">×</button>
-        </div>
-        <canvas id="graphCanvas"></canvas>
+    <!-- Teclado matemático -->
+    <div class="teclado-matematico" id="teclado">
+      <button onclick="insertar('x')">x</button>
+      <button onclick="insertar('²')">x²</button>
+      <button onclick="insertar('³')">x³</button>
+      <button onclick="insertar('√')">√</button>
+      <button onclick="insertar('π')">π</button>
+      <button onclick="insertar('θ')">θ</button>
+      <button onclick="insertar('½')">½</button>
+      <button onclick="insertar('=')">=</button>
+      <button onclick="insertar('+')">+</button>
+      <button onclick="insertar('-')">−</button>
+      <button onclick="insertar('*')">×</button>
+      <button onclick="insertar('/')">÷</button>
+      <button onclick="insertar('(')">(</button>
+      <button onclick="insertar(')')">)</button>
+      <button onclick="insertar(',')">,</button>
+      <button onclick="insertar('.')">.</button>
     </div>
 
-    <script type="module" src="script.js"></script>
+    <button id="btnTeclado" class="btn-teclado">⌨️ Teclado matemático</button>
+  </div>
+
+  <!-- Input oculto para cámara -->
+  <input type="file" id="fileInput" accept="image/*" capture="environment" style="display: none;" />
+
+  <!-- Contenedor de gráfica -->
+  <div class="graph-container" id="graphContainer" style="display: none;">
+    <div class="panel-header">
+      <h3>📊 Gráfica</h3>
+      <button id="closeGraph">×</button>
+    </div>
+    <canvas id="graphCanvas"></canvas>
+  </div>
+
+  <!-- Menú de configuración -->
+  <button id="menuToggle" class="btn menu-toggle" title="Configuración">⚙️</button>
+  <div class="menu-panel" id="menuPanel" style="display: none;">
+    <div class="panel-header">
+      <h3>⚙️ Configuración</h3>
+      <button id="closeMenu">×</button>
+    </div>
+    <div class="panel-options">
+      <div class="option" id="themeOption">
+        <i class="fas fa-moon"></i>
+        <span>Activar Modo Oscuro</span>
+      </div>
+      <div class="option" id="audioOption">
+        <i class="fas fa-volume-up"></i>
+        <span>Voz Activada</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
-
-
-
