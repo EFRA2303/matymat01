@@ -1,4 +1,4 @@
-// script.js - Versión con PASOS SECUENCIALES ANIMADOS
+// script.js - Versión con VOZ EN CADA PASO y MEJOR VISIBILIDAD
 document.addEventListener('DOMContentLoaded', () => {
     // Elementos del DOM
     const userInput = document.getElementById('userInput');
@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
             typing.remove();
 
             if (data.respuesta) {
-                // ✅ MOSTRAR PASOS SECUENCIALMENTE
+                // ✅ MOSTRAR PASOS SECUENCIALMENTE CON VOZ
                 await showStepsSequentially(data.respuesta);
             } else {
                 addMessage("⚠️ No pude procesar tu pregunta.", 'bot');
@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // === MOSTRAR PASOS SECUENCIALMENTE ===
+    // === MOSTRAR PASOS SECUENCIALMENTE CON VOZ ===
     async function showStepsSequentially(fullResponse) {
         // Detectar y separar los pasos
         const steps = extractSteps(fullResponse);
@@ -72,11 +72,28 @@ document.addEventListener('DOMContentLoaded', () => {
         if (steps.length > 0) {
             // Mostrar cada paso con delay
             for (let i = 0; i < steps.length; i++) {
-                await addMessageWithDelay(steps[i], 'bot', i * 800); // 800ms entre pasos
+                await addMessageWithDelay(steps[i], 'bot', i * 1500); // 1500ms entre pasos
                 
-                // Leer cada paso con voz (opcional)
-                if (window.voiceEnabled && i === steps.length - 1) {
-                    speakText(steps[i]); // Leer solo el último paso o todo
+                // ✅ LEER CADA PASO CON VOZ (no solo el último)
+                if (window.voiceEnabled) {
+                    // Pequeña pausa antes de hablar
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    speakText(cleanTextForSpeech(steps[i]));
+                    
+                    // Esperar a que termine de hablar antes del siguiente paso
+                    if (i < steps.length - 1) {
+                        await new Promise(resolve => {
+                            const checkSpeaking = setInterval(() => {
+                                if (!window.speechSynthesis.speaking) {
+                                    clearInterval(checkSpeaking);
+                                    resolve();
+                                }
+                            }, 100);
+                        });
+                    }
+                } else {
+                    // Espera normal si no hay voz
+                    await new Promise(resolve => setTimeout(resolve, 1500));
                 }
             }
         } else {
@@ -88,37 +105,53 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // === EXTRAER PASOS DE LA RESPUESTA ===
+    // === LIMPIAR TEXTO PARA VOZ (eliminar fórmulas matemáticas) ===
+    function cleanTextForSpeech(text) {
+        return text
+            .replace(/\([^)]*\)/g, '') // Remover paréntesis con contenido
+            .replace(/[\(\)]/g, '')    // Remover paréntesis sueltos
+            .replace(/\$/g, '')        // Remover símbolos $
+            .replace(/\\/g, '')        // Remover backslashes
+            .replace(/\*/g, '')        // Remover asteriscos
+            .replace(/#/g, '')         // Remover numerales
+            .replace(/x\s*\/\s*3/g, 'x entre 3') // Hacer más natural
+            .replace(/\//g, ' entre ') // Reemplazar divisiones
+            .replace(/\*/g, ' por ')   // Reemplazar multiplicaciones
+            .replace(/3x/g, '3 x')     // Separar coeficientes
+            .trim();
+    }
+
+    // === EXTRACT STEPS MEJORADA ===
     function extractSteps(text) {
-        const steps = [];
+        // Primero intentar con el formato "Paso X:"
+        const stepPattern = /(Paso\s*\d+[:\-\.]\s*[^Paso]+)(?=Paso|Solución|$)/gi;
+        let matches = text.match(stepPattern);
         
-        // Patrones para detectar pasos
-        const patterns = [
-            /Paso \d+:([^Paso]+)(?=Paso|Solución|$)/gi,
-            /Paso \d+[\.\:]?([^Paso]+)(?=Paso|Solución|$)/gi,
-            /\d+[\.\)] ([^0-9]+)(?=\d+[\.\)]|Solución|$)/gi,
-            /• ([^\n]+)/gi,
-            /- ([^\n]+)/gi
-        ];
-
-        for (const pattern of patterns) {
-            const matches = text.match(pattern);
-            if (matches && matches.length > 1) {
-                return matches.map(step => step.trim());
-            }
+        if (matches && matches.length > 1) {
+            return matches.map(step => step.trim());
         }
-
-        // Si no encuentra patrones, dividir por líneas que contengan números
+        
+        // Intentar con números seguidos de punto
+        const numberPattern = /\d+[\.\)]\s*([^\n]+)/g;
+        matches = [];
+        let match;
+        
+        while ((match = numberPattern.exec(text)) !== null) {
+            matches.push(match[0].trim());
+        }
+        
+        if (matches.length > 1) {
+            return matches;
+        }
+        
+        // Si todo falla, dividir por líneas significativas
         const lines = text.split('\n').filter(line => 
-            line.trim() && /^(\d+[\.\)]|Paso|•|-)/i.test(line.trim())
+            line.trim().length > 10 && 
+            !line.includes('¡Hola!') && 
+            !line.includes('Puedes escribir')
         );
-
-        if (lines.length > 1) {
-            return lines;
-        }
-
-        // Si todo falla, devolver la respuesta completa como un solo "paso"
-        return [text];
+        
+        return lines.length > 1 ? lines : [text];
     }
 
     // === AÑADIR MENSAJE CON RETRASO ===
@@ -170,13 +203,14 @@ document.addEventListener('DOMContentLoaded', () => {
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    // === FORMATEAR TEXTO PARA MEJOR VISUALIZACIÓN ===
+    // === FORMATEAR TEXTO MEJORADO ===
     function formatText(text) {
-        // Resaltar "Paso X:", "Solución final:", etc.
+        // Resaltar más intensamente los pasos
         let formatted = text
-            .replace(/(Paso \d+:)/gi, '<strong style="color: #4361ee;">$1</strong>')
-            .replace(/(Solución final:)/gi, '<strong style="color: #00c853;">$1</strong>')
-            .replace(/\n/g, '<br>');
+            .replace(/(Paso\s*\d+[:\.\-])/gi, '<strong style="color: #1565c0; font-size: 1.1em;">$1</strong>')
+            .replace(/(Solución final[:\.\-])/gi, '<strong style="color: #2e7d32; font-size: 1.1em;">$1</strong>')
+            .replace(/\n/g, '<br>')
+            .replace(/\b(\d+[\.\)])/g, '<strong>$1</strong>'); // Resaltar números de paso
         
         return formatted;
     }
@@ -218,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // === RESTANTE DEL CÓDIGO (menú, eventos, etc.) ===
+    // === RESTANTE DEL CÓDIGO ===
     sendBtn.addEventListener('click', sendMessage);
 
     userInput.addEventListener('keypress', (e) => {
@@ -228,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Menú de configuración (mantener igual)
+    // Menú de configuración
     const menuToggle = document.getElementById('menuToggle');
     const menuPanel = document.getElementById('menuPanel');
     const closeMenu = document.getElementById('closeMenu');
@@ -286,7 +320,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Funciones matemáticas
     window.insertAtCursor = function(value) {
         const input = document.getElementById('userInput');
         const start = input.selectionStart;
@@ -301,8 +334,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('userInput').focus();
     };
 
-    // Inicializar voces
     if ('speechSynthesis' in window) {
         window.speechSynthesis.getVoices();
     }
 });
+
