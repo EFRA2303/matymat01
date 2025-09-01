@@ -1,105 +1,47 @@
-import express from 'express';
-import cors from 'cors';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+const express = require('express');
+const { GoogleGenerativeAI } = require('@google-ai/generativelanguage');
+require('dotenv').config();
 
 const app = express();
+app.use(express.static('.'));
+app.use(express.json());
+
 const PORT = process.env.PORT || 10000;
 
-// ================= CONFIGURACIÓN =================
-app.use(cors());
-app.use(express.json({ limit: '50mb' }));
-app.use(express.static('.'));
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
 
-// 🔐 API Key de Google Gemini
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const promptBase = `
+You are MatyMat-01, a patient and supportive tutor for secondary school students learning mathematics. 
+Your goal is to help students understand algebra, trigonometry, and geometry by providing clear, step-by-step explanations. 
+Always break down problems into simple steps. Use plain language and avoid jargon. 
+If the student uploads an image, respond: "I cannot view images. Please describe the exercise in text." 
+Do not use emojis, symbols, or markdown. Keep responses focused, educational, and professional.
+`;
 
-// Inicializar Gemini
-let genAI, model;
-if (GEMINI_API_KEY && !GEMINI_API_KEY.includes('AIzaSyCuRbKPJ5xFrq3eDFgltITbZqqeHph8LFg')) {
-    genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-}
-
-// ================= FUNCIÓN GEMINI =================
-async function geminiChat(prompt) {
-    if (!model) {
-        throw new Error('❌ Configura GEMINI_API_KEY en Render con tu key de https://aistudio.google.com/');
-    }
-
-    try {
-        console.log('🔧 Enviando a Gemini...');
-        
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        return response.text();
-        
-    } catch (error) {
-        console.error('❌ Error Gemini:', error.message);
-        throw new Error('Error procesando tu pregunta. Intenta de nuevo.');
-    }
-}
-
-// ================= RUTAS =================
 app.get('/', (req, res) => {
-    res.json({
-        status: 'OK',
-        message: 'Tutor MatyMat-01 funcionando',
-        has_gemini_key: !!GEMINI_API_KEY && !GEMINI_API_KEY.includes('AIzaSyCuRbKPJ5xFrq3eDFgltITbZqqeHph8LFg'),
-        tutorial: 'Consigue API key en https://aistudio.google.com/'
-    });
+  res.sendFile(__dirname + '/index.html');
 });
 
 app.post('/analizar', async (req, res) => {
-    try {
-        const { text } = req.body;
-        
-        if (!text || typeof text !== 'string') {
-            return res.status(400).json({ error: 'Envía una pregunta válida' });
-        }
+  try {
+    const { consulta } = req.body;
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-        console.log('📨 Pregunta recibida:', text.substring(0, 50) + '...');
-        
-        const prompt = `Eres MatyMat-01, un tutor virtual de matemáticas con 15 años de experiencia en Bolivia.
+    const result = await model.generateContent(promptBase + "\n\nStudent query: " + consulta);
+    const response = await result.response;
+    const text = response.text();
 
-Características:
-• Explica con paciencia y claridad
-• Usa ejemplos de la vida boliviana
-• Sé motivador y cercano
-• Adapta el lenguaje al nivel del estudiante
-
-Responde esta pregunta: ${text}`;
-
-        const respuesta = await geminiChat(prompt);
-        
-        res.json({ 
-            respuesta: respuesta,
-            servicio: 'google-gemini'
-        });
-
-    } catch (error) {
-        res.status(500).json({ 
-            error: error.message,
-            solucion: 'Configura GEMINI_API_KEY en Render con tu key de https://aistudio.google.com/'
-        });
-    }
-});
-
-// ================= MANEJO DE ERRORES =================
-app.use((err, req, res, next) => {
-    console.error('❌ Error general:', err.message);
+    res.json({ respuesta: text });
+  } catch (error) {
+    console.error('Error with Gemini:', error);
     res.status(500).json({ 
-        error: 'Error interno del servidor',
-        solucion: 'Revisa la configuración de API Key'
+      respuesta: "The system could not process your query. Please try again later." 
     });
+  }
 });
 
-// ================= INICIAR SERVIDOR =================
-app.listen(PORT, () => {
-    console.log(`✅ Servidor MatyMat-01 en puerto ${PORT}`);
-    console.log(`🔑 Gemini API: ${GEMINI_API_KEY ? '✅ Configurada' : '❌ Faltante'}`);
-    
-    if (!GEMINI_API_KEY || GEMINI_API_KEY.includes('AIzaSyCuRbKPJ5xFrq3eDFgltITbZqqeHph8LFg')) {
-        console.log('❌ IMPORTANTE: Configura GEMINI_API_KEY en Render');
-        console.log('👉 Ve a: https://aistudio.google.com/ para conseguir API Key gratis');
-    }
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server ready at http://localhost:${PORT}`);
 });
+
+module.exports = app;
