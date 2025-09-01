@@ -8,9 +8,10 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 10000;
 
-// ✅ PROMPT INTEGRADO DIRECTAMENTE (funciona en producción)
+// ✅ PROMPT INTEGRADO DIRECTAMENTE (sin archivos externos)
 const promptBase = `
-Eres un tutor de matemáticas. Resuelve inmediatamente cualquier problema matemático que el estudiante te envíe.
+Eres un tutor de matemáticas especializado en ayudar a estudiantes con TDAH tipo inatento.
+Resuelve inmediatamente cualquier problema matemático que el estudiante te envíe.
 Nunca preguntes "¿cuál es tu pregunta?" o pidas aclaraciones.
 Siempre responde paso a paso:
 Paso 1: [Explicación clara]
@@ -18,7 +19,7 @@ Paso 2: [Explicación clara]
 ...
 Solución final: [Respuesta]
 
-Si la consulta no es matemática, responde: "Solo ayudo con problemas de matemáticas."
+Si la consulta no es matemática, responde: Solo ayudo con problemas de matemáticas.
 `;
 
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
@@ -29,9 +30,11 @@ app.get('/', (req, res) => {
 
 app.post('/analizar', async (req, res) => {
   try {
-    const { consulta } = req.body;
-    
-    if (!consulta || consulta.trim() === '') {
+    // ✅ CORREGIDO: Ahora acepta "text" (lo que envía el frontend)
+    const { text, consulta } = req.body;
+    const input = text || consulta; // Acepta ambos nombres
+
+    if (!input || input.trim() === '') {
       return res.status(400).json({ 
         respuesta: "Por favor, escribe tu pregunta de matemáticas." 
       });
@@ -39,17 +42,16 @@ app.post('/analizar', async (req, res) => {
 
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     
-    // ✅ ESTRUCTURA CLAVE: PROMPT + CONSULTA
-    const fullPrompt = promptBase + "\n\nConsulta del estudiante: " + consulta;
+    const fullPrompt = promptBase + "\n\nConsulta del estudiante: " + input;
     
     const result = await model.generateContent(fullPrompt);
     const response = await result.response;
-    let text = response.text();
+    let textResponse = response.text();
 
     // ✅ Limpieza mínima
-    text = text.replace(/\*\*/g, '').replace(/#/g, '');
+    textResponse = textResponse.replace(/\*\*/g, '').replace(/#/g, '');
 
-    res.json({ respuesta: text });
+    res.json({ respuesta: textResponse });
   } catch (error) {
     console.error('Error con Gemini:', error);
     res.status(500).json({ 
