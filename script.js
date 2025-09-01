@@ -105,21 +105,62 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // === LIMPIAR TEXTO PARA VOZ (eliminar fórmulas matemáticas) ===
-    function cleanTextForSpeech(text) {
-        return text
-            .replace(/\([^)]*\)/g, '') // Remover paréntesis con contenido
-            .replace(/[\(\)]/g, '')    // Remover paréntesis sueltos
-            .replace(/\$/g, '')        // Remover símbolos $
-            .replace(/\\/g, '')        // Remover backslashes
-            .replace(/\*/g, '')        // Remover asteriscos
-            .replace(/#/g, '')         // Remover numerales
-            .replace(/x\s*\/\s*3/g, 'x entre 3') // Hacer más natural
-            .replace(/\//g, ' entre ') // Reemplazar divisiones
-            .replace(/\*/g, ' por ')   // Reemplazar multiplicaciones
-            .replace(/3x/g, '3 x')     // Separar coeficientes
-            .trim();
+    // === LIMPIAR TEXTO PARA VOZ (MEJORADO PARA MATEMÁTICAS) ===
+function cleanTextForSpeech(text) {
+    let cleanText = text
+        // Primero: convertir variables matemáticas
+        .replace(/(\d+)x/gi, '$1 equis') // 3x → "3 equis"
+        .replace(/(\d+)y/gi, '$1 ye')    // 2y → "2 ye"
+        .replace(/(\d+)z/gi, '$1 zeta')  // 5z → "5 zeta"
+        .replace(/\bx\b/gi, 'equis')     // x sola → "equis"
+        .replace(/\by\b/gi, 'ye')        // y sola → "ye"
+        .replace(/\bz\b/gi, 'zeta')      // z sola → "zeta"
+        
+        // Símbolos matemáticos
+        .replace(/\+/g, ' más ')
+        .replace(/\-/g, ' menos ')
+        .replace(/\*/g, ' por ')
+        .replace(/\//g, ' entre ')
+        .replace(/\=/g, ' igual a ')
+        .replace(/\^/g, ' elevado a ')
+        
+        // Expresiones comunes
+        .replace(/sin\(/gi, 'seno de ')
+        .replace(/cos\(/gi, 'coseno de ')
+        .replace(/tan\(/gi, 'tangente de ')
+        .replace(/sqrt\(/gi, 'raíz cuadrada de ')
+        .replace(/π/gi, 'pi')
+        .replace(/θ/gi, 'theta')
+        
+        // Limpieza general
+        .replace(/\([^)]*\)/g, '') // Remover contenido entre paréntesis
+        .replace(/[\(\)\[\]\{\}]/g, '') // Remover paréntesis y brackets
+        .replace(/\\/g, '') // Remover backslashes
+        .replace(/\$/g, '') // Remover símbolos $
+        .replace(/#/g, '')  // Remover numerales
+        
+        // Mejorar fluidez
+        .replace(/\s+/g, ' ') // Múltiples espacios a uno
+        .replace(/\s\./g, '.') // Espacio antes de punto
+        .replace(/\s\,/g, ',') // Espacio antes de coma
+        .trim();
+    
+    // Asegurar que suene natural como un maestro
+    cleanText = cleanText
+        .replace(/equis/gi, ' equis ') // Espacios alrededor de variables
+        .replace(/ye/gi, ' ye ')
+        .replace(/zeta/gi, ' zeta ')
+        .replace(/\s+/g, ' ') // Limpiar espacios again
+        .replace(/^Paso\s*\d+[:\-\.]\s*/i, '') // Remover "Paso X:" al inicio
+        .trim();
+    
+    // Capitalizar primera letra
+    if (cleanText.length > 0) {
+        cleanText = cleanText.charAt(0).toUpperCase() + cleanText.slice(1);
     }
+    
+    return cleanText;
+}
 
     // === EXTRACT STEPS MEJORADA ===
     function extractSteps(text) {
@@ -338,4 +379,5 @@ document.addEventListener('DOMContentLoaded', () => {
         window.speechSynthesis.getVoices();
     }
 });
+
 
