@@ -4,19 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Elementos del DOM
     const userInput = document.getElementById('userInput');
     const sendBtn = document.getElementById('sendBtn');
-    const uploadBtn = document.getElementById('uploadBtn');
-    const fileInput = document.getElementById('fileInput');
     const chatContainer = document.getElementById('chatContainer');
-    const menuToggle = document.getElementById('menuToggle');
-    const menuPanel = document.getElementById('menuPanel');
-    const closeMenu = document.getElementById('closeMenu');
-    const themeOption = document.getElementById('themeOption');
-    const audioOption = document.getElementById('audioOption');
-    const toggleMathBtn = document.getElementById('toggleMathBtn');
-    const mathToolbar = document.getElementById('mathToolbar');
-    const closeGraph = document.getElementById('closeGraph');
-    const graphContainer = document.getElementById('graphContainer');
-    const graphCanvas = document.getElementById('graphCanvas');
 
     // Verificación de elementos
     if (!userInput || !sendBtn || !chatContainer) {
@@ -25,45 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Estados
-    let isDarkMode = localStorage.getItem('darkMode') === 'true';
-    let isVoiceEnabled = localStorage.getItem('isVoiceEnabled') !== 'false';
     let isSending = false;
-    let selectedImage = null;
-    let graphChart = null;
-
-    // Aplicar modo oscuro al cargar
-    if (isDarkMode) {
-        document.body.classList.add('dark-mode');
-    }
-
-    // Actualizar UI de configuración
-    function updateThemeUI() {
-        const icon = themeOption.querySelector('i');
-        const span = themeOption.querySelector('span');
-        if (isDarkMode) {
-            icon.className = 'fas fa-sun';
-            span.textContent = 'Modo Claro';
-        } else {
-            icon.className = 'fas fa-moon';
-            span.textContent = 'Modo Oscuro';
-        }
-    }
-
-    function updateAudioUI() {
-        const icon = audioOption.querySelector('i');
-        const span = audioOption.querySelector('span');
-        if (isVoiceEnabled) {
-            icon.className = 'fas fa-volume-up';
-            span.textContent = 'Voz Activada';
-        } else {
-            icon.className = 'fas fa-volume-mute';
-            span.textContent = 'Voz Desactivada';
-        }
-    }
-
-    // Inicializar UI
-    updateThemeUI();
-    updateAudioUI();
 
     // === ENVIAR MENSAJE ===
     async function sendMessage() {
@@ -93,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/analizar', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ consulta: text })
+                body: JSON.stringify({ text: text }) // ✅ Enviando "text"
             });
 
             const data = await response.json();
@@ -101,9 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (data.respuesta) {
                 addMessage(data.respuesta, 'bot');
-                if (isVoiceEnabled) {
-                    speakText(data.respuesta);
-                }
             } else {
                 addMessage("⚠️ No pude procesar tu pregunta.", 'bot');
             }
@@ -164,66 +111,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // === MENÚ DE CONFIGURACIÓN ===
+    const menuToggle = document.getElementById('menuToggle');
+    const menuPanel = document.getElementById('menuPanel');
+    const closeMenu = document.getElementById('closeMenu');
+    const themeOption = document.getElementById('themeOption');
+    const audioOption = document.getElementById('audioOption');
+
     if (menuToggle && menuPanel && closeMenu) {
         menuToggle.addEventListener('click', (e) => {
             e.stopPropagation();
-            menuPanel.classList.add('show');
+            menuPanel.style.display = 'block';
         });
 
         closeMenu.addEventListener('click', () => {
-            menuPanel.classList.remove('show');
+            menuPanel.style.display = 'none';
         });
 
         document.addEventListener('click', (e) => {
             if (!menuPanel.contains(e.target) && !menuToggle.contains(e.target)) {
-                menuPanel.classList.remove('show');
+                menuPanel.style.display = 'none';
             }
         });
 
         themeOption.addEventListener('click', () => {
-            isDarkMode = !isDarkMode;
-            document.body.classList.toggle('dark-mode', isDarkMode);
-            localStorage.setItem('darkMode', isDarkMode);
-            updateThemeUI();
+            document.body.classList.toggle('dark-mode');
         });
 
         audioOption.addEventListener('click', () => {
-            isVoiceEnabled = !isVoiceEnabled;
-            localStorage.setItem('isVoiceEnabled', isVoiceEnabled);
-            updateAudioUI();
-        });
-    }
-
-    // === TECLADO MATEMÁTICO ===
-    if (toggleMathBtn && mathToolbar) {
-        toggleMathBtn.addEventListener('click', () => {
-            mathToolbar.style.display = mathToolbar.style.display === 'flex' ? 'none' : 'flex';
-        });
-
-        window.insertAtCursor = function(text) {
-            const start = userInput.selectionStart;
-            const end = userInput.selectionEnd;
-            userInput.value = userInput.value.substring(0, start) + text + userInput.value.substring(end);
-            userInput.focus();
-            userInput.setSelectionRange(start + text.length, start + text.length);
-        };
-
-        window.clearInput = function() {
-            userInput.value = '';
-            userInput.focus();
-        };
-
-        document.addEventListener('click', (e) => {
-            if (!mathToolbar.contains(e.target) && !toggleMathBtn.contains(e.target)) {
-                mathToolbar.style.display = 'none';
-            }
-        });
-    }
-
-    // === CERRAR GRÁFICA ===
-    if (closeGraph && graphContainer) {
-        closeGraph.addEventListener('click', () => {
-            graphContainer.style.display = 'none';
+            // Implementar lógica de voz si se necesita
         });
     }
 });
