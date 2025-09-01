@@ -1,6 +1,5 @@
 const express = require('express');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const { crearPrompt } = require('./prompt.js');
 require('dotenv').config();
 
 const app = express();
@@ -8,6 +7,22 @@ app.use(express.static('.'));
 app.use(express.json());
 
 const PORT = process.env.PORT || 10000;
+
+// ✅ PROMPT INTEGRADO DIRECTAMENTE EN EL SERVER.JS (funciona al 100%)
+const promptBase = `
+Eres un tutor de matemáticas. Resuelve inmediatamente cualquier problema matemático que el estudiante te envíe.
+Nunca preguntes "¿cuál es tu pregunta?" o pidas aclaraciones.
+Siempre responde paso a paso:
+Paso 1: [Explicación clara]
+Paso 2: [Explicación clara]
+...
+Solución final: [Respuesta]
+
+Si la consulta no es matemática, responde: "Solo ayudo con problemas de matemáticas."
+
+Consulta del estudiante: 
+`;
+
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
 
 app.get('/', (req, res) => {
@@ -26,25 +41,34 @@ app.post('/analizar', async (req, res) => {
 
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     
-    // ✅ ESTRUCTURA CRÍTICA: PROMPT + CONSULTA
-    const fullPrompt = crearPrompt(consulta);
+    // ✅ ESTRUCTURA MÍNIMA Y CLARA (SOLO PROMPT + CONSULTA)
+    const fullPrompt = promptBase + `"${consulta.trim()}"`;
     
     const result = await model.generateContent(fullPrompt);
     const response = await result.response;
     let text = response.text();
 
-    // Limpieza mínima
-    text = text.replace(/\*\*/g, '').replace(/#/g, '');
+    // Limpieza mínima para evitar problemas en el frontend
+    text = text.replace(/\*\*/g, '').replace(/#/g, '').replace(/```/g, '');
 
     res.json({ respuesta: text });
   } catch (error) {
     console.error('Error con Gemini:', error);
+    
+    // Manejo específico de errores
+    if (error.message && error.message.includes('429')) {
+      return res.status(429).json({ 
+        respuesta: "Demasiadas solicitudes. Por favor, espera unos minutos e intenta de nuevo." 
+      });
+    }
+    
     res.status(500).json({ 
       respuesta: "No pude procesar tu pregunta. Intenta de nuevo." 
     });
   }
 });
 
+// ✅ Escucha en 0.0.0.0 (REQUISITO DE RENDER.COM)
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Servidor listo en http://localhost:${PORT}`);
 });
