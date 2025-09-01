@@ -1,9 +1,7 @@
-// script.js
-import { speakText } from './tts.js';
+// script.js - Versión corregida (sin módulos, compatible con tu backend)
 
-// === INICIALIZACIÓN Y EVENTOS (espera al DOM) ===
 document.addEventListener('DOMContentLoaded', () => {
-    // Elementos del DOM (ahora seguros, porque el DOM está listo)
+    // Elementos del DOM
     const userInput = document.getElementById('userInput');
     const sendBtn = document.getElementById('sendBtn');
     const uploadBtn = document.getElementById('uploadBtn');
@@ -16,13 +14,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const audioOption = document.getElementById('audioOption');
     const toggleMathBtn = document.getElementById('toggleMathBtn');
     const mathToolbar = document.getElementById('mathToolbar');
-    const graphBtn = document.getElementById('graphBtn');
+    const closeGraph = document.getElementById('closeGraph');
     const graphContainer = document.getElementById('graphContainer');
-    const graphCanvas = document.getElementById('graphCanvas');
 
-    // Verifica que todos los elementos existan
-    if (!userInput || !sendBtn || !uploadBtn || !fileInput || !chatContainer) {
-        console.error('❌ No se encontraron elementos del DOM principales');
+    // Verificación de elementos
+    if (!userInput || !sendBtn || !chatContainer) {
+        console.error('❌ No se encontraron elementos del DOM');
         return;
     }
 
@@ -30,10 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let isDarkMode = localStorage.getItem('darkMode') === 'true';
     let isVoiceEnabled = localStorage.getItem('isVoiceEnabled') !== 'false';
     let isSending = false;
-    let selectedImage = null;
-    let graphChart = null;
 
-    // Aplicar modo oscuro al cargar
+    // Aplicar modo oscuro
     if (isDarkMode) {
         document.body.classList.add('dark-mode');
     }
@@ -67,77 +62,63 @@ document.addEventListener('DOMContentLoaded', () => {
     updateThemeUI();
     updateAudioUI();
 
-    // === MANEJAR SELECCIÓN DE IMAGEN ===
-    uploadBtn.addEventListener('click', () => fileInput.click());
-
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = () => {
-            selectedImage = reader.result;
-            addMessage(`📸 Imagen seleccionada. Escribe y envía.`, 'user');
-            if (userInput.value.trim()) sendMessage();
-        };
-        reader.readAsDataURL(file);
-    });
-
     // === ENVIAR MENSAJE ===
     async function sendMessage() {
         if (isSending) return;
+        const text = userInput.value.trim();
+        if (!text) return;
+
         isSending = true;
 
-        const text = userInput.value.trim();
-        if (!text && !selectedImage) {
-            isSending = false;
-            return;
-        }
-
-        if (text) addMessage(text, 'user');
+        // Mostrar mensaje del usuario
+        addMessage(text, 'user');
         userInput.value = '';
-        showTypingIndicator();
 
-        const body = { text: text || 'Analiza esta imagen.' };
-        if (selectedImage) {
-            body.image = selectedImage.split(',')[1];
-            body.mimeType = selectedImage.includes('png') ? 'image/png' : 'image/jpeg';
-        }
+        // Mostrar indicador de "pensando"
+        const typing = document.createElement('div');
+        typing.className = 'message bot';
+        typing.innerHTML = `
+            <div class="avatar bot-avatar">
+                <img src="tutor-avatar.png" alt="Tutor">
+            </div>
+            <div class="message-content">Pensando...</div>
+        `;
+        chatContainer.appendChild(typing);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
 
         try {
             const response = await fetch('/analizar', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
+                body: JSON.stringify({ consulta: text }) // ✅ CLAVE: "consulta", no "text"
             });
 
             const data = await response.json();
-            hideTypingIndicator();
+            typing.remove(); // Quitar "Pensando..."
 
             if (data.respuesta) {
                 addMessage(data.respuesta, 'bot');
-                if (isVoiceEnabled) speakText(data.respuesta);
-            } else if (data.error) {
-                addMessage("⚠️ " + data.error, 'bot');
+                if (isVoiceEnabled) {
+                    speakText(data.respuesta);
+                }
+            } else {
+                addMessage("⚠️ No pude procesar tu pregunta.", 'bot');
             }
         } catch (err) {
-            hideTypingIndicator();
-            addMessage("🔴 No pude conectar con el servidor. Intenta recargar.", 'bot');
-            console.error('Error de conexión:', err);
+            typing.remove();
+            addMessage("🔴 Error de conexión. Intenta recargar.", 'bot');
+            console.error('Error:', err);
         } finally {
-            selectedImage = null;
             isSending = false;
         }
     }
 
-    sendBtn.addEventListener('click', () => {
-        if (userInput.value.trim() || selectedImage) sendMessage();
-    });
+    sendBtn.addEventListener('click', sendMessage);
 
     userInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            if (userInput.value.trim() || selectedImage) sendMessage();
+            sendMessage();
         }
     });
 
@@ -151,9 +132,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (sender === 'bot') {
             const img = document.createElement('img');
-            img.src = 'logo-tutor.png';
-            img.alt = 'Tutor Avatar';
-            img.onerror = () => img.src = 'https://via.placeholder.com/150?text=Tutor';
+            img.src = 'tutor-avatar.png';
+            img.alt = 'Tutor MatyMat-01';
             avatar.appendChild(img);
         } else {
             avatar.innerHTML = '<i class="fas fa-user"></i>';
@@ -167,46 +147,20 @@ document.addEventListener('DOMContentLoaded', () => {
         div.appendChild(content);
         chatContainer.appendChild(div);
         chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
 
-        // Efecto de parpadeo del avatar del bot
-        if (sender === 'bot') {
-            requestAnimationFrame(() => {
-                const img = avatar.querySelector('img');
-                if (img) {
-                    img.classList.add('blinking');
-                    const textLength = text.length;
-                    const estimatedTime = Math.max(2000, textLength * 60);
-
-                    setTimeout(() => img.classList.remove('blinking'), estimatedTime);
-                    if (isVoiceEnabled) {
-                        setTimeout(() => img.classList.remove('blinking'), estimatedTime + 1000);
-                    }
-                }
-            });
+    // === SÍNTESIS DE VOZ (sin importar módulos) ===
+    function speakText(texto) {
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(texto);
+            utterance.lang = 'es-ES';
+            utterance.rate = 0.9;
+            utterance.pitch = 1;
+            speechSynthesis.speak(utterance);
         }
     }
 
-    // === INDICADOR DE ESCRIBIENDO ===
-    function showTypingIndicator() {
-        const typing = document.createElement('div');
-        typing.className = 'typing-indicator';
-        typing.id = 'typing';
-        typing.innerHTML = `
-            <div class="avatar bot-avatar">
-                <img src="logo-tutor.png" alt="Tutor">
-            </div>
-            <div class="message-content">Pensando...</div>
-        `;
-        chatContainer.appendChild(typing);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
-
-    function hideTypingIndicator() {
-        const typing = document.getElementById('typing');
-        if (typing) typing.remove();
-    }
-
-    // === MENÚ DE CONFIGURACIÓN (⋯) ===
+    // === MENÚ DE CONFIGURACIÓN ===
     if (menuToggle && menuPanel && closeMenu) {
         menuToggle.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -217,14 +171,12 @@ document.addEventListener('DOMContentLoaded', () => {
             menuPanel.style.display = 'none';
         });
 
-        // Cerrar al hacer clic fuera
         document.addEventListener('click', (e) => {
             if (!menuPanel.contains(e.target) && !menuToggle.contains(e.target)) {
                 menuPanel.style.display = 'none';
             }
         });
 
-        // Modo oscuro
         themeOption.addEventListener('click', () => {
             isDarkMode = !isDarkMode;
             document.body.classList.toggle('dark-mode', isDarkMode);
@@ -232,7 +184,6 @@ document.addEventListener('DOMContentLoaded', () => {
             updateThemeUI();
         });
 
-        // Voz
         audioOption.addEventListener('click', () => {
             isVoiceEnabled = !isVoiceEnabled;
             localStorage.setItem('isVoiceEnabled', isVoiceEnabled);
@@ -240,34 +191,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // === TECLADO MATEMÁTICO INTEGRADO ===
+    // === TECLADO MATEMÁTICO ===
     if (toggleMathBtn && mathToolbar) {
         toggleMathBtn.addEventListener('click', () => {
-            mathToolbar.style.display = mathToolbar.style.display === 'none' || mathToolbar.style.display === '' ? 'flex' : 'none';
+            mathToolbar.style.display = mathToolbar.style.display === 'flex' ? 'none' : 'flex';
         });
 
-        // Insertar texto en el cursor
         window.insertAtCursor = function(text) {
             const start = userInput.selectionStart;
             const end = userInput.selectionEnd;
             userInput.value = userInput.value.substring(0, start) + text + userInput.value.substring(end);
             userInput.focus();
             userInput.setSelectionRange(start + text.length, start + text.length);
-            userInput.dispatchEvent(new Event('input'));
         };
 
-        // Limpiar input
         window.clearInput = function() {
             userInput.value = '';
             userInput.focus();
         };
 
-        // Cerrar teclado al enviar
-        sendBtn.addEventListener('click', () => {
-            mathToolbar.style.display = 'none';
-        });
-
-        // Cerrar al hacer clic fuera
         document.addEventListener('click', (e) => {
             if (!mathToolbar.contains(e.target) && !toggleMathBtn.contains(e.target)) {
                 mathToolbar.style.display = 'none';
@@ -275,57 +217,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // === GRÁFICA CON CHART.JS ===
-    if (graphBtn && graphContainer && graphCanvas) {
-        graphBtn.addEventListener('click', () => {
-            const func = userInput.value.trim();
-            if (!func) return;
-
-            graphContainer.style.display = 'block';
-
-            const x = Array.from({ length: 100 }, (_, i) => i / 10 - 5);
-            const y = x.map(val => {
-                try {
-                    return eval(func.replace(/x/g, `(${val})`));
-                } catch {
-                    return NaN;
-                }
-            });
-
-            if (graphChart) graphChart.destroy();
-
-            graphChart = new Chart(graphCanvas, {
-                type: 'line',
-                data: {
-                    labels: x,
-                    datasets: [{
-                        label: func,
-                        data: y,
-                        borderColor: '#4361ee',
-                        backgroundColor: 'rgba(67, 97, 238, 0.1)',
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { display: true, grid: { color: 'rgba(255,255,255,0.1)' } },
-                        y: { display: true, grid: { color: 'rgba(255,255,255,0.1)' } }
-                    }
-                }
-            });
-        });
-
-        document.getElementById('closeGraph')?.addEventListener('click', () => {
+    // === CERRAR GRÁFICA ===
+    if (closeGraph && graphContainer) {
+        closeGraph.addEventListener('click', () => {
             graphContainer.style.display = 'none';
         });
     }
 });
-
-
-
-
-
