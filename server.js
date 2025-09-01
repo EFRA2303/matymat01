@@ -5,63 +5,68 @@ import fetch from 'node-fetch';
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// ================= CONFIGURACIÓN =================
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static('.'));
 
-// 🔐 Configuración de OpenRouter
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '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';
+// Respuestas de respaldo para cuando falla la conexión
+const respuestasRespaldo = [
+    "¡Hola! Soy MatyMat-01 🤗. Estamos mejorando nuestro servicio. Por favor, intenta nuevamente en 5 minutos.",
+    "📚 Momentámente el tutor está ocupado. Revisa tus apuntes y vuelve a intentarlo pronto.",
+    "⚡ Estamos optimizando las matemáticas para ti. Intenta en 2-3 minutos mientras tanto.",
+    "🎯 ¡No te rindas! Nuestro tutor se está actualizando. Vuelve en unos minutos."
+];
 
-// ================= FUNCIÓN OPENROUTER =================
+// Función mejorada con manejo de errores
 async function openRouterChat(prompt) {
-    console.log('🔧 Enviando a OpenRouter...');
-    
-    const response = await fetch('https://api.openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-            'HTTP-Referer': 'https://matymat01.onrender.com',
-            'X-Title': 'MatyMat-01 Tutor Bolivia'
-        },
-        body: JSON.stringify({
-            model: 'google/gemini-pro', // Modelo gratis
-            messages: [{ 
-                role: 'user', 
-                content: `Eres MatyMat-01, un tutor virtual de matemáticas con 15 años de experiencia en Bolivia.
-                
-Características:
-• Explica con paciencia y claridad
-• Usa ejemplos de la vida boliviana
-• Sé motivador y cercano
-• Adapta el lenguaje al nivel del estudiante
+    try {
+        console.log('🔧 Intentando conectar con OpenRouter...');
+        
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
 
-Pregunta: ${prompt}`
-            }],
-            temperature: 0.7,
-            max_tokens: 1500
-        })
-    });
+        const response = await fetch('https://api.openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer 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',
+                'HTTP-Referer': 'https://matymat01.onrender.com',
+                'X-Title': 'MatyMat-01 Tutor'
+            },
+            body: JSON.stringify({
+                model: 'google/gemini-pro',
+                messages: [{ 
+                    role: 'user', 
+                    content: `Eres un tutor de matemáticas. Responde: ${prompt}`
+                }],
+                temperature: 0.7,
+                max_tokens: 1000
+            }),
+            signal: controller.signal
+        });
 
-    console.log('📊 Status OpenRouter:', response.status);
-    
-    if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(`OpenRouter error: ${response.status} - ${errorData}`);
+        clearTimeout(timeout);
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.choices[0].message.content;
+
+    } catch (error) {
+        console.error('❌ Error de conexión:', error.message);
+        // Respuesta de respaldo amigable
+        return respuestasRespaldo[Math.floor(Math.random() * respuestasRespaldo.length)];
     }
-
-    const data = await response.json();
-    return data.choices[0].message.content;
 }
 
-// ================= RUTAS =================
+// Rutas
 app.get('/', (req, res) => {
     res.json({
         status: 'OK',
         message: 'Tutor MatyMat-01 funcionando',
-        servicio: 'openrouter',
-        modelo: 'google/gemini-pro'
+        servicio: 'openrouter'
     });
 });
 
@@ -79,23 +84,20 @@ app.post('/analizar', async (req, res) => {
         
         res.json({ 
             respuesta: respuesta,
-            servicio: 'openrouter',
-            modelo: 'google/gemini-pro'
+            servicio: 'openrouter'
         });
 
     } catch (error) {
-        console.error('❌ Error:', error.message);
-        res.status(500).json({ 
-            error: 'No pude procesar tu pregunta. Intenta de nuevo.',
-            detalle: process.env.NODE_ENV === 'development' ? error.message : undefined
+        console.error('❌ Error en /analizar:', error.message);
+        res.json({ 
+            respuesta: respuestasRespaldo[0],
+            servicio: 'modo_respaldo'
         });
     }
 });
 
-// ================= INICIAR SERVIDOR =================
 app.listen(PORT, () => {
     console.log(`✅ Servidor MatyMat-01 en puerto ${PORT}`);
     console.log(`🤖 Servicio: OpenRouter`);
-    console.log(`🎯 Modelo: google/gemini-pro`);
-    console.log(`🔑 API Key: ${OPENROUTER_API_KEY ? '✅ Configurada' : '⚠️ Usando key pública'}`);
+    console.log(`🚀 Listo para recibir preguntas...`);
 });
