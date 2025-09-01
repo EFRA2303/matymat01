@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import fetch from 'node-fetch';
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -10,135 +10,124 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static('.'));
 
-// 🔐 Validación de API Key
-const API_KEY = process.env.GEMINI_API_KEY;
-if (!API_KEY || API_KEY.includes('AIzaSyA37Nj5pShHLDCKiPwlLzQ-UTqMsSU3VHE')) {
-    console.error('❌ ERROR: API Key no configurada o es la ejemplo');
-    console.error('❌ Configura GEMINI_API_KEY en Render con tu key real');
-}
+// 🔐 Configuración de APIs
+const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+const AI_SERVICE = process.env.AI_SERVICE || 'deepseek';
 
-const genAI = new GoogleGenerativeAI(API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+// ================= FUNCIONES DE IA =================
 
-// ================= MANEJO DE PROMPT.JS =================
-let crearPrompt, limpiarTexto;
+// 1. DeepSeek AI (GRATIS y FUNCIONAL)
+async function deepSeekChat(prompt) {
+    if (!DEEPSEEK_API_KEY) {
+        throw new Error('❌ DeepSeek API Key no configurada. Ve a https://platform.deepseek.com/ para conseguir una gratis');
+    }
 
-try {
-    const promptModule = await import('./prompt.js');
-    crearPrompt = promptModule.crearPrompt;
-    limpiarTexto = promptModule.limpiarTexto;
-    console.log('✅ prompt.js cargado correctamente');
-} catch (error) {
-    console.warn('⚠️ prompt.js no encontrado, usando funciones alternativas');
+    console.log('🔧 Enviando solicitud a DeepSeek...');
     
-    // Funciones de respaldo
-    crearPrompt = (texto, tieneImagen = false) => 
-        `Eres un tutor de matemáticas. Responde: ${texto}${tieneImagen ? ' (incluye imagen)' : ''}`;
-    
-    limpiarTexto = (texto) => texto || '';
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            model: 'deepseek-chat',
+            messages: [{ 
+                role: 'user', 
+                content: `Eres MatyMat-01, un tutor virtual de matemáticas para estudiantes bolivianos. 
+                Explica con claridad y paciencia. Responde en español.
+                
+                Pregunta del estudiante: ${prompt}`
+            }],
+            temperature: 0.7,
+            max_tokens: 2000
+        })
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`DeepSeek API error: ${errorData.message || response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.choices[0].message.content;
 }
 
 // ================= RUTAS =================
 
-// 🏠 Health Check para Render
 app.get('/', (req, res) => {
     res.json({
         status: 'OK',
         message: 'Tutor MatyMat-01 funcionando',
-        hasValidApiKey: !!API_KEY && !API_KEY.includes('AIzaSyA37Nj5pShHLDCKiPwlLzQ-UTqMsSU3VHE'),
-        timestamp: new Date().toISOString()
+        ai_service: AI_SERVICE,
+        has_deepseek_key: !!DEEPSEEK_API_KEY,
+        tutorial: 'Visita /prueba-ia para probar el chatbot'
     });
 });
 
-// 🔍 Ruta para probar Gemini
-app.get('/prueba-gemini', async (req, res) => {
+app.get('/prueba-ia', async (req, res) => {
     try {
-        const result = await model.generateContent("Responde 'OK' si estás funcionando");
-        const response = await result.response;
-        res.json({
-            status: 'OK',
-            message: 'Conexión con Gemini exitosa',
-            response: response.text()
+        const respuesta = await deepSeekChat('Hola, ¿puedes explicarme el teorema de Pitágoras?');
+        res.json({ 
+            status: '✅ CONEXIÓN EXITOSA',
+            respuesta: respuesta,
+            servicio: AI_SERVICE
         });
     } catch (error) {
-        res.status(500).json({
-            status: 'ERROR',
-            message: 'Error con Gemini API',
+        res.status(500).json({ 
+            status: '❌ ERROR',
             error: error.message,
-            apiKeyConfigured: !!API_KEY
+            solucion: 'Configura DEEPSEEK_API_KEY en Render con tu key de https://platform.deepseek.com/'
         });
     }
 });
 
-// 📨 Ruta principal del chatbot
 app.post('/analizar', async (req, res) => {
-    console.log('📨 Solicitud recibida en /analizar');
+    const { text, image } = req.body;
     
-    const { text, image, mimeType = 'image/jpeg' } = req.body;
-    
-    // Validación básica
     if (!text || typeof text !== 'string') {
         return res.status(400).json({ error: 'Consulta inválida o vacía' });
     }
     
     try {
-        console.log('🔧 Procesando pregunta:', text.substring(0, 50) + '...');
+        console.log('📨 Pregunta recibida:', text.substring(0, 50) + '...');
         
-        const prompt = crearPrompt(text, !!image);
-        let result;
+        let respuesta;
         
-        if (image && typeof image === 'string') {
-            console.log('🖼️ Procesando con imagen...');
-            const imgData = { inlineData: { image, mimeType } };
-            result = await model.generateContent([prompt, imgData]);
-        } else {
-            console.log('📝 Procesando solo texto...');
-            result = await model.generateContent(prompt);
+        switch (AI_SERVICE) {
+            case 'deepseek':
+            default:
+                respuesta = await deepSeekChat(text);
         }
         
-        const response = await result.response;
-        let respuesta = response.text();
-        
-        console.log('✅ Respuesta recibida de Gemini');
-        
         // Limpiar y estructurar respuesta
-        respuesta = limpiarTexto(respuesta);
-        const pasos = respuesta.split(/\n(?=Paso \d+:|\[CONCLUSION\])/);
+        const pasos = respuesta.split(/\n\n/).filter(paso => paso.trim().length > 0);
         
-        res.json({
+        res.json({ 
             pasos: pasos.map(paso => paso.trim()),
-            tema: detectarTema(text) // Función simplificada aquí mismo
+            tema: 'Matemáticas',
+            ai_service: AI_SERVICE
         });
         
     } catch (error) {
-        console.error('❌ Error con Gemini:', error.message);
+        console.error('❌ Error:', error.message);
         res.status(500).json({ 
-            error: 'No pude procesar tu pregunta. Intenta de nuevo.'
+            error: 'No pude procesar tu pregunta. Intenta de nuevo.',
+            detalles: error.message
         });
     }
 });
 
-// ================= FUNCIONES AUXILIARES =================
-
-// 🎯 Función simplificada para detectar tema (evita duplicación)
-function detectarTema(texto) {
-    if (!texto) return 'Matemáticas generales';
-    const textoLower = texto.toLowerCase();
-    
-    if (textoLower.includes('sen') || textoLower.includes('cos') || textoLower.includes('tan')) return 'Trigonometría';
-    if (textoLower.includes('límite') || textoLower.includes('derivada') || textoLower.includes('integral')) return 'Cálculo';
-    if (textoLower.includes('triángulo') || textoLower.includes('círculo') || textoLower.includes('área')) return 'Geometría';
-    if (textoLower.includes('ecuación') || textoLower.includes('función') || textoLower.includes('variable')) return 'Álgebra';
-    
-    return 'Matemáticas generales';
-}
-
 // ================= INICIAR SERVIDOR =================
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ Servidor en http://0.0.0.0:${PORT}`);
-    console.log(`🔧 Entorno: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🔑 API Key configurada: ${!!API_KEY}`);
-    console.log(`🔑 API Key válida: ${!!API_KEY && !API_KEY.includes('AIzaSyA37Nj5pShHLDCKiPwlLzQ-UTqMsSU3VHE')}`);
+    console.log(`✅ Servidor MatyMat-01 en http://0.0.0.0:${PORT}`);
+    console.log(`🤖 Usando servicio: ${AI_SERVICE}`);
+    console.log(`🔑 DeepSeek API Key configurada: ${!!DEEPSEEK_API_KEY}`);
+    
+    if (!DEEPSEEK_API_KEY) {
+        console.log('❌ IMPORTANTE: Configura DEEPSEEK_API_KEY en Render');
+        console.log('👉 Ve a: https://platform.deepseek.com/ para conseguir API Key gratis');
+    }
 });
 
 
