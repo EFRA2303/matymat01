@@ -8,7 +8,10 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 10000;
 
-// ✅ PROMPT INTEGRADO DIRECTAMENTE EN EL SERVER.JS (funciona al 100%)
+// Inicializar Gemini con tu API Key
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+
+// PROMPT INTEGRADO DIRECTAMENTE EN EL SERVER.JS (funcionaba)
 const promptBase = `
 Eres un tutor de matemáticas. Resuelve inmediatamente cualquier problema matemático que el estudiante te envíe.
 Nunca preguntes "¿cuál es tu pregunta?" o pidas aclaraciones.
@@ -19,11 +22,7 @@ Paso 2: [Explicación clara]
 Solución final: [Respuesta]
 
 Si la consulta no es matemática, responde: "Solo ayudo con problemas de matemáticas."
-
-Consulta del estudiante: 
 `;
-
-const genAI = new GoogleGenerativeAI(process.env.API_KEY);
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
@@ -41,37 +40,24 @@ app.post('/analizar', async (req, res) => {
 
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     
-    // ✅ ESTRUCTURA MÍNIMA Y CLARA (SOLO PROMPT + CONSULTA)
-    const fullPrompt = promptBase + `"${consulta.trim()}"`;
+    // ✅ ESTRUCTURA QUE FUNCIONABA: PROMPT + CONSULTA
+    const fullPrompt = promptBase + "\n\nConsulta del estudiante: " + consulta;
     
     const result = await model.generateContent(fullPrompt);
     const response = await result.response;
-    let text = response.text();
-
-    // Limpieza mínima para evitar problemas en el frontend
-    text = text.replace(/\*\*/g, '').replace(/#/g, '').replace(/```/g, '');
+    const text = response.text();
 
     res.json({ respuesta: text });
   } catch (error) {
     console.error('Error con Gemini:', error);
-    
-    // Manejo específico de errores
-    if (error.message && error.message.includes('429')) {
-      return res.status(429).json({ 
-        respuesta: "Demasiadas solicitudes. Por favor, espera unos minutos e intenta de nuevo." 
-      });
-    }
-    
     res.status(500).json({ 
       respuesta: "No pude procesar tu pregunta. Intenta de nuevo." 
     });
   }
 });
 
-// ✅ Escucha en 0.0.0.0 (REQUISITO DE RENDER.COM)
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Servidor listo en http://localhost:${PORT}`);
 });
 
 module.exports = app;
-
