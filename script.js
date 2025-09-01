@@ -1,4 +1,4 @@
-// script.js - Versión corregida (sin módulos, compatible con tu backend)
+// script.js - Versión corregida (sin módulos, compatible con backend)
 
 document.addEventListener('DOMContentLoaded', () => {
     // Elementos del DOM
@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const mathToolbar = document.getElementById('mathToolbar');
     const closeGraph = document.getElementById('closeGraph');
     const graphContainer = document.getElementById('graphContainer');
+    const graphCanvas = document.getElementById('graphCanvas');
 
     // Verificación de elementos
     if (!userInput || !sendBtn || !chatContainer) {
@@ -27,8 +28,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let isDarkMode = localStorage.getItem('darkMode') === 'true';
     let isVoiceEnabled = localStorage.getItem('isVoiceEnabled') !== 'false';
     let isSending = false;
+    let selectedImage = null;
+    let graphChart = null;
 
-    // Aplicar modo oscuro
+    // Aplicar modo oscuro al cargar
     if (isDarkMode) {
         document.body.classList.add('dark-mode');
     }
@@ -90,11 +93,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/analizar', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ consulta: text }) // ✅ CLAVE: "consulta", no "text"
+                body: JSON.stringify({ consulta: text })
             });
 
             const data = await response.json();
-            typing.remove(); // Quitar "Pensando..."
+            typing.remove();
 
             if (data.respuesta) {
                 addMessage(data.respuesta, 'bot');
@@ -149,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    // === SÍNTESIS DE VOZ (sin importar módulos) ===
+    // === SÍNTESIS DE VOZ ===
     function speakText(texto) {
         if ('speechSynthesis' in window) {
             const utterance = new SpeechSynthesisUtterance(texto);
@@ -164,16 +167,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (menuToggle && menuPanel && closeMenu) {
         menuToggle.addEventListener('click', (e) => {
             e.stopPropagation();
-            menuPanel.style.display = 'block';
+            menuPanel.classList.add('show');
         });
 
         closeMenu.addEventListener('click', () => {
-            menuPanel.style.display = 'none';
+            menuPanel.classList.remove('show');
         });
 
         document.addEventListener('click', (e) => {
             if (!menuPanel.contains(e.target) && !menuToggle.contains(e.target)) {
-                menuPanel.style.display = 'none';
+                menuPanel.classList.remove('show');
             }
         });
 
