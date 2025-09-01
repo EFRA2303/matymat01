@@ -420,3 +420,33 @@ header p {
         font-size: 0.85rem;
     }
 }
+/* Añade al final de tu style.css */
+.message-content strong {
+    font-weight: 600;
+}
+
+.message.bot .message-content {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-left: 4px solid #4361ee;
+}
+
+.message.user .message-content {
+    background: linear-gradient(135deg, #4361ee, #7209b7);
+    border-right: 4px solid #ffffff;
+}
+
+/* Animaciones para pasos */
+@keyframes stepAppear {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.message {
+    animation: stepAppear 0.5s ease-out;
+}
