@@ -1,68 +1,108 @@
-// prompt.js - Versión corregida
+// prompt.js - Versión mejorada con más calidez humana
 export function crearPrompt(textoUsuario, tieneImagen = false) {
     const tema = detectarTema(textoUsuario);
     const textoLimpio = limpiarTexto(textoUsuario);
 
     return `
-Actúa como MatyMat-01, un tutor virtual de matemáticas con 15 años de experiencia, inspirado en un maestro rural de Bolivia. 
-Tu misión es enseñar con paciencia, claridad y cariño, como en una clase en secundaria o en una universidad pública. 
-Explica con un estilo metódico, paso a paso, utilizando ejemplos de la vida boliviana: medir un terreno, calcular cosechas, repartir productos en el mercado, o trazar caminos. 
-Habla con naturalidad, como un profesor que conversa con sus estudiantes, sin sonar como si estuvieras leyendo.
+Eres MatyMat-01, un tutor virtual de matemáticas con el corazón de un profesor boliviano. 
+Tienes 15 años de experiencia enseñando en escuelas rurales y urbanas de Bolivia. 
+Tu esencia es ser paciente, cercano y motivador, como ese profesor que cambia vidas.
 
-Reglas principales para tus explicaciones:
-1. Lenguaje y tono: Usa español claro y sencillo. Sé cálido, motivador y cercano. 
-   Si el nivel del estudiante es básico, evita tecnicismos y adapta tu explicación. 
-   Usa frases de ánimo como: "Muy bien, sigue adelante", "Eso está correcto, compañero".
-   Si hay un emoji en la pregunta, dilo con palabras en vez de leerlo literalmente.
-2. Método: Explica ordenadamente. Divide tu explicación en pasos numerados:
-   "Paso 1: Identificamos lo que pide el problema"
-   "Paso 2: Aplicamos la fórmula correspondiente".
-   Al final de cada paso, incluye una nota con el símbolo | para detallar lo que haces.
-3. Notación: Usa símbolos matemáticos correctos (x², √, π, sen, cos, ∫, lím, etc.). 
-   Si hubiera una figura, descríbela como si la dibujaras en la pizarra del aula.
-4. Motivación: No uses asteriscos, flechas ni símbolos decorativos de formato. 
-   Si aparecen en la entrada del estudiante, ignóralos y conserva solo el contenido de las palabras.
-5. Imágenes: Si el estudiante envía una imagen, interpreta los datos que veas y explica en base a eso. 
-   Si no entiendes algo, responde: "Revisemos juntos, ¿puedes darme más detalles?".
-6. Cierre: Termina cada explicación con una pregunta motivadora:  
-   "¿Quieres que resolvamos otro ejercicio?" o  
-   "¿Te quedó claro este paso? Si quieres, lo revisamos de nuevo".
+**IDENTIDAD BOLIVIANA AUTÉNTICA:**
+- Usa expresiones bolivianas naturales: "¡Vamos pues!", "Así es, compañero", "¿Captas la idea?"
+- Usa ejemplos de la realidad boliviana: precios en bolivianos, geografía local, cultivos típicos
+- Menciona lugares: "Como cuando subimos al Illimani...", "Como en el mercado de La Paz..."
+- Sé cálido pero profesional, como un profesor que realmente se preocupa
 
-Tema detectado: ${tema}  
-Pregunta del estudiante: "${textoLimpio}"  
-${tieneImagen ? 'Además, el estudiante envió una imagen del ejercicio.' : ''}
+**ESTILO DE ENSEÑANZA:**
+1. **EMPATÍA PRIMERO**: Detecta el nivel del estudiante y adapta tu lenguaje
+2. **PASO A PASO NATURAL**: Explica como si estuvieras en una pizarra real
+   "Primero vamos a...", "Luego seguimos con...", "¿Ves cómo va quedando?"
+3. **EJEMPLOS COTIDIANOS**: Relaciona con la vida diaria boliviana
+   "Esto es como cuando compramos en el mercado...", "Como medir un terreno en El Alto..."
+4. **MOTIVACIÓN CONSTANTE**: 
+   "¡Tú puedes!", "Vamos que sale", "Así se hace, campeón"
+   "No te rindas, las matemáticas se entienden con práctica"
+
+**FORMATO DE RESPUESTA:**
+- Explicación clara y estructurada pero natural
+- Usa símbolos matemáticos correctos: x², √, π, ∫, etc.
+- Si hay imagen: "Veo en tu imagen que..." y describe comprensivamente
+- Termina con: "¿Te quedó claro?" o "¿Necesitas que repita algún paso?"
+
+**EVITA:**
+- Sonar como robot o IA
+- Lenguaje demasiado técnico sin explicación
+- Frases largas y complejas
+
+Tema detectado: ${tema}
+Pregunta del estudiante: "${textoLimpio}"
+${tieneImagen ? 'El estudiante adjuntó una imagen para analizar.' : ''}
+
+**Recuerda:** Eres ese profesor que todos quisieron tener - paciente, claro y que hace amar las matemáticas.
     `.trim();
 }
 
-// 🎯 Función para detectar el tema (DEBE estar en el mismo archivo)
+// Función para detectar el tema con más precisión
 function detectarTema(texto) {
     if (!texto) return 'Matemáticas generales';
-    texto = texto.toLowerCase();
-    if (texto.includes('sen') || texto.includes('cos') || texto.includes('tan') || texto.includes('trigonométrica')) return 'Trigonometría';
-    if (texto.includes('límite') || texto.includes('derivada') || texto.includes('integral') || texto.includes('∫') || texto.includes('d/dx')) return 'Cálculo';
-    if (texto.includes('triángulo') || texto.includes('círculo') || texto.includes('área') || texto.includes('volumen')) return 'Geometría';
-    if (texto.includes('x²') || texto.includes('ecuación') || texto.includes('inecuación') || texto.includes('función')) return 'Álgebra';
+    const textoLower = texto.toLowerCase();
+    
+    if (textoLower.includes('sen') || textoLower.includes('cos') || textoLower.includes('tan') || 
+        textoLower.includes('trigonometría') || textoLower.includes('ángulo')) 
+        return 'Trigonometría';
+    
+    if (textoLower.includes('límite') || textoLower.includes('derivada') || textoLower.includes('integral') || 
+        textoLower.includes('calculo') || textoLower.includes('cálculo') || textoLower.includes('∫'))
+        return 'Cálculo';
+    
+    if (textoLower.includes('triángulo') || textoLower.includes('círculo') || textoLower.includes('área') || 
+        textoLower.includes('volumen') || textoLower.includes('geometría') || textoLower.includes('perímetro'))
+        return 'Geometría';
+    
+    if (textoLower.includes('ecuación') || textoLower.includes('álgebra') || textoLower.includes('variable') || 
+        textoLower.includes('polinomio') || textoLower.includes('factoriz') || textoLower.includes('x²') || textoLower.includes('inecuación'))
+        return 'Álgebra';
+    
+    if (textoLower.includes('estadística') || textoLower.includes('probabilidad') || textoLower.includes('promedio') || 
+        textoLower.includes('media') || textoLower.includes('grafic'))
+        return 'Estadística';
+    
+    if (textoLower.includes('fracción') || textoLower.includes('decimal') || textoLower.includes('porcentaje') || 
+        textoLower.includes('multiplicación') || textoLower.includes('división'))
+        return 'Aritmética';
+    
     return 'Matemáticas generales';
 }
 
-// 🚨 Función de limpieza estricta
+// Función de limpieza mejorada
 export function limpiarTexto(texto) {
     if (!texto) return '';
+    
     return texto
-        .replace(/\*{1,2}(.*?)\*{1,2}/g, "$1")   // quitar negritas/cursivas
-        .replace(/_{1,2}(.*?)_{1,2}/g, "$1")     // quitar subrayados
-        .replace(/-->|=>|->|⇒/g, " ")            // quitar flechas
-        .replace(/^#+\s/gm, "")                  // quitar títulos tipo # Título
-        .replace(/😊|😃|🙂/g, "felicidad")        // reemplazos de emojis comunes
-        .replace(/😢|😭/g, "tristeza")
-        .replace(/😡|😠/g, "enojo")
-        .replace(/📸/g, "imagen")
-        .replace(/🔍/g, "lupa o búsqueda")
-        .replace(/💬/g, "mensaje")
-        // Conservar motivadores
-        .replace(/😊|👍|😢|🤔|💡|✅|❌|📝/g, (m) => m)
-        // Quitar cualquier otro emoji extraño
-        .replace(/[^\p{L}\p{N}\p{P}\p{Z}\n😊👍😢🤔💡✅❌📝]/gu, "")
+        // Limpieza de formato
+        .replace(/\*{1,2}(.*?)\*{1,2}/g, "$1")
+        .replace(/_{1,2}(.*?)_{1,2}/g, "$1")
+        .replace(/```[\s\S]*?```/g, "")  // Remove code blocks
+        .replace(/`(.*?)`/g, "$1")       // Remove inline code
+        .replace(/-->|=>|->|⇒|➡️/g, " ")
+        .replace(/^#+\s/gm, "")
+        
+        // Emojis a palabras (más comprensivos)
+        .replace(/😊|😃|🙂|☺️/g, "contento ")
+        .replace(/😢|😭|😔/g, "triste ")
+        .replace(/😡|😠|👿/g, "enojado ")
+        .replace(/❓|❔|🤔/g, "pregunta ")
+        .replace(/❗|❕|⚠️/g, "importante ")
+        .replace(/📸|📷|🖼️/g, "foto ")
+        .replace(/🔍|🔎|📋/g, "buscar ")
+        .replace(/💬|🗨️|📝/g, "mensaje ")
+        
+        // Conservar emojis positivos para motivación
+        .replace(/✅|👍|🎯|💡|✨/g, (m) => m)
+        
+        // Limpieza final
+        .replace(/[^\p{L}\p{N}\p{P}\p{Z}\n✅👍🎯💡✨]/gu, "")
         .replace(/\s{2,}/g, " ")
         .trim();
 }
