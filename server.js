@@ -26,26 +26,19 @@ app.post('/analizar', async (req, res) => {
 
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     
-    // ✅ ESTRUCTURA CRÍTICA - SOLO EL PROMPT Y LA CONSULTA
+    // ✅ ESTRUCTURA CRÍTICA: PROMPT + CONSULTA
     const fullPrompt = crearPrompt(consulta);
     
     const result = await model.generateContent(fullPrompt);
     const response = await result.response;
     let text = response.text();
 
-    // Limpieza mínima de la respuesta
+    // Limpieza mínima
     text = text.replace(/\*\*/g, '').replace(/#/g, '');
 
     res.json({ respuesta: text });
   } catch (error) {
     console.error('Error con Gemini:', error);
-    
-    if (error.message && error.message.includes('429')) {
-      return res.status(429).json({ 
-        respuesta: "Demasiadas solicitudes. Espera unos minutos e intenta de nuevo." 
-      });
-    }
-    
     res.status(500).json({ 
       respuesta: "No pude procesar tu pregunta. Intenta de nuevo." 
     });
