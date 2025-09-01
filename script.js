@@ -1,5 +1,4 @@
-// script.js - Versión corregida (sin módulos, compatible con backend)
-
+// script.js - Versión corregida CON VOZ ACTIVADA
 document.addEventListener('DOMContentLoaded', () => {
     // Elementos del DOM
     const userInput = document.getElementById('userInput');
@@ -14,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Estados
     let isSending = false;
+    window.voiceEnabled = true; // VOZ ACTIVADA POR DEFECTO
 
     // === ENVIAR MENSAJE ===
     async function sendMessage() {
@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/analizar', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: text }) // ✅ Enviando "text"
+                body: JSON.stringify({ text: text })
             });
 
             const data = await response.json();
@@ -51,6 +51,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (data.respuesta) {
                 addMessage(data.respuesta, 'bot');
+                // ✅ ACTIVAR VOZ CON LA RESPUESTA DEL BOT
+                if (window.voiceEnabled) {
+                    speakText(data.respuesta);
+                }
             } else {
                 addMessage("⚠️ No pude procesar tu pregunta.", 'bot');
             }
@@ -99,18 +103,52 @@ document.addEventListener('DOMContentLoaded', () => {
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    // === SÍNTESIS DE VOZ ===
+    // === SÍNTESIS DE VOZ MEJORADA ===
     function speakText(texto) {
         if ('speechSynthesis' in window) {
+            // Detener cualquier voz anterior
+            window.speechSynthesis.cancel();
+            
             const utterance = new SpeechSynthesisUtterance(texto);
             utterance.lang = 'es-ES';
-            utterance.rate = 0.9;
+            utterance.rate = 0.9; // Velocidad adecuada para tutor
             utterance.pitch = 1;
-            speechSynthesis.speak(utterance);
+            utterance.volume = 1;
+
+            // Seleccionar voz en español si está disponible
+            const voices = window.speechSynthesis.getVoices();
+            const spanishVoice = voices.find(voice => 
+                voice.lang.includes('es') || voice.lang.includes('ES')
+            );
+            
+            if (spanishVoice) {
+                utterance.voice = spanishVoice;
+            }
+
+            // Manejar caso cuando las voces no están cargadas
+            if (voices.length === 0) {
+                window.speechSynthesis.onvoiceschanged = () => {
+                    const newVoices = window.speechSynthesis.getVoices();
+                    const newSpanishVoice = newVoices.find(voice => 
+                        voice.lang.includes('es') || voice.lang.includes('ES')
+                    );
+                    if (newSpanishVoice) {
+                        utterance.voice = newSpanishVoice;
+                    }
+                    window.speechSynthesis.speak(utterance);
+                };
+            } else {
+                window.speechSynthesis.speak(utterance);
+            }
+
+            // Manejar errores de voz
+            utterance.onerror = (event) => {
+                console.error('Error en síntesis de voz:', event.error);
+            };
         }
     }
 
-    // === MENÚ DE CONFIGURACIÓN ===
+    // === MENÚ DE CONFIGURACIÓN MEJORADO ===
     const menuToggle = document.getElementById('menuToggle');
     const menuPanel = document.getElementById('menuPanel');
     const closeMenu = document.getElementById('closeMenu');
@@ -135,10 +173,64 @@ document.addEventListener('DOMContentLoaded', () => {
 
         themeOption.addEventListener('click', () => {
             document.body.classList.toggle('dark-mode');
+            // Guardar preferencia
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
         });
 
+        // ✅ CONFIGURACIÓN DE VOZ MEJORADA
         audioOption.addEventListener('click', () => {
-            // Implementar lógica de voz si se necesita
+            window.voiceEnabled = !window.voiceEnabled;
+            const audioText = audioOption.querySelector('span');
+            const audioIcon = audioOption.querySelector('i');
+            
+            if (window.voiceEnabled) {
+                audioText.textContent = 'Voz Activada';
+                audioIcon.className = 'fas fa-volume-up';
+                // Probar la voz al activar
+                speakText('Voz activada');
+            } else {
+                audioText.textContent = 'Voz Desactivada';
+                audioIcon.className = 'fas fa-volume-mute';
+                // Detener voz al desactivar
+                window.speechSynthesis.cancel();
+            }
+            
+            // Guardar preferencia
+            localStorage.setItem('voiceEnabled', window.voiceEnabled);
         });
+
+        // Cargar preferencias guardadas
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+        
+        if (localStorage.getItem('voiceEnabled') === 'false') {
+            window.voiceEnabled = false;
+            const audioText = audioOption.querySelector('span');
+            const audioIcon = audioOption.querySelector('i');
+            audioText.textContent = 'Voz Desactivada';
+            audioIcon.className = 'fas fa-volume-mute';
+        }
+    }
+
+    // === FUNCIONES MATEMÁTICAS (si las necesitas) ===
+    window.insertAtCursor = function(value) {
+        const input = document.getElementById('userInput');
+        const start = input.selectionStart;
+        const end = input.selectionEnd;
+        input.value = input.value.substring(0, start) + value + input.value.substring(end);
+        input.selectionStart = input.selectionEnd = start + value.length;
+        input.focus();
+    };
+
+    window.clearInput = function() {
+        document.getElementById('userInput').value = '';
+        document.getElementById('userInput').focus();
+    };
+
+    // Inicializar voces al cargar
+    if ('speechSynthesis' in window) {
+        // Forzar la carga de voces
+        window.speechSynthesis.getVoices();
     }
 });
