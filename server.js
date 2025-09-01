@@ -1,6 +1,6 @@
 const express = require('express');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const { crearPrompt } = require('./prompt.js'); // ✅ Importa el prompt
+const { crearPrompt } = require('./prompt.js');
 require('dotenv').config();
 
 const app = express();
@@ -8,7 +8,6 @@ app.use(express.static('.'));
 app.use(express.json());
 
 const PORT = process.env.PORT || 10000;
-
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
 
 app.get('/', (req, res) => {
@@ -27,15 +26,15 @@ app.post('/analizar', async (req, res) => {
 
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     
-    // ✅ Usa el prompt especializado desde prompt.js
+    // ✅ ESTRUCTURA CRÍTICA - SOLO EL PROMPT Y LA CONSULTA
     const fullPrompt = crearPrompt(consulta);
     
     const result = await model.generateContent(fullPrompt);
     const response = await result.response;
     let text = response.text();
 
-    // Limpieza de formato para evitar problemas en el frontend
-    text = text.replace(/\*\*/g, '').replace(/#/g, '').replace(/```/g, '');
+    // Limpieza mínima de la respuesta
+    text = text.replace(/\*\*/g, '').replace(/#/g, '');
 
     res.json({ respuesta: text });
   } catch (error) {
@@ -43,7 +42,7 @@ app.post('/analizar', async (req, res) => {
     
     if (error.message && error.message.includes('429')) {
       return res.status(429).json({ 
-        respuesta: "Demasiadas solicitudes. Por favor, espera unos minutos e intenta de nuevo." 
+        respuesta: "Demasiadas solicitudes. Espera unos minutos e intenta de nuevo." 
       });
     }
     
@@ -58,3 +57,4 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 module.exports = app;
+
