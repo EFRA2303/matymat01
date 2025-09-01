@@ -1,4 +1,4 @@
-// script.js - Versión corregida CON VOZ ACTIVADA
+// script.js - Versión con PASOS SECUENCIALES ANIMADOS
 document.addEventListener('DOMContentLoaded', () => {
     // Elementos del DOM
     const userInput = document.getElementById('userInput');
@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Estados
     let isSending = false;
-    window.voiceEnabled = true; // VOZ ACTIVADA POR DEFECTO
+    window.voiceEnabled = true;
 
     // === ENVIAR MENSAJE ===
     async function sendMessage() {
@@ -50,11 +50,8 @@ document.addEventListener('DOMContentLoaded', () => {
             typing.remove();
 
             if (data.respuesta) {
-                addMessage(data.respuesta, 'bot');
-                // ✅ ACTIVAR VOZ CON LA RESPUESTA DEL BOT
-                if (window.voiceEnabled) {
-                    speakText(data.respuesta);
-                }
+                // ✅ MOSTRAR PASOS SECUENCIALMENTE
+                await showStepsSequentially(data.respuesta);
             } else {
                 addMessage("⚠️ No pude procesar tu pregunta.", 'bot');
             }
@@ -67,19 +64,80 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    sendBtn.addEventListener('click', sendMessage);
-
-    userInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
+    // === MOSTRAR PASOS SECUENCIALMENTE ===
+    async function showStepsSequentially(fullResponse) {
+        // Detectar y separar los pasos
+        const steps = extractSteps(fullResponse);
+        
+        if (steps.length > 0) {
+            // Mostrar cada paso con delay
+            for (let i = 0; i < steps.length; i++) {
+                await addMessageWithDelay(steps[i], 'bot', i * 800); // 800ms entre pasos
+                
+                // Leer cada paso con voz (opcional)
+                if (window.voiceEnabled && i === steps.length - 1) {
+                    speakText(steps[i]); // Leer solo el último paso o todo
+                }
+            }
+        } else {
+            // Si no detecta pasos, mostrar respuesta completa
+            addMessage(fullResponse, 'bot');
+            if (window.voiceEnabled) {
+                speakText(fullResponse);
+            }
         }
-    });
+    }
 
-    // === AÑADIR MENSAJE AL CHAT ===
+    // === EXTRAER PASOS DE LA RESPUESTA ===
+    function extractSteps(text) {
+        const steps = [];
+        
+        // Patrones para detectar pasos
+        const patterns = [
+            /Paso \d+:([^Paso]+)(?=Paso|Solución|$)/gi,
+            /Paso \d+[\.\:]?([^Paso]+)(?=Paso|Solución|$)/gi,
+            /\d+[\.\)] ([^0-9]+)(?=\d+[\.\)]|Solución|$)/gi,
+            /• ([^\n]+)/gi,
+            /- ([^\n]+)/gi
+        ];
+
+        for (const pattern of patterns) {
+            const matches = text.match(pattern);
+            if (matches && matches.length > 1) {
+                return matches.map(step => step.trim());
+            }
+        }
+
+        // Si no encuentra patrones, dividir por líneas que contengan números
+        const lines = text.split('\n').filter(line => 
+            line.trim() && /^(\d+[\.\)]|Paso|•|-)/i.test(line.trim())
+        );
+
+        if (lines.length > 1) {
+            return lines;
+        }
+
+        // Si todo falla, devolver la respuesta completa como un solo "paso"
+        return [text];
+    }
+
+    // === AÑADIR MENSAJE CON RETRASO ===
+    function addMessageWithDelay(text, sender, delay) {
+        return new Promise(resolve => {
+            setTimeout(() => {
+                addMessage(text, sender);
+                resolve();
+            }, delay);
+        });
+    }
+
+    // === AÑADIR MENSAJE AL CHAT (MODIFICADA) ===
     function addMessage(text, sender) {
         const div = document.createElement('div');
         div.className = `message ${sender}`;
+        div.style.opacity = '0';
+        div.style.transform = 'translateY(20px)';
+        div.style.transition = 'all 0.5s ease';
 
         const avatar = document.createElement('div');
         avatar.className = `avatar ${sender}-avatar`;
@@ -95,27 +153,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const content = document.createElement('div');
         content.className = 'message-content';
-        content.textContent = text;
+        
+        // Formatear texto para mejor visualización
+        content.innerHTML = formatText(text);
 
         div.appendChild(avatar);
         div.appendChild(content);
         chatContainer.appendChild(div);
+        
+        // Animación de entrada
+        setTimeout(() => {
+            div.style.opacity = '1';
+            div.style.transform = 'translateY(0)';
+        }, 50);
+
         chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    // === FORMATEAR TEXTO PARA MEJOR VISUALIZACIÓN ===
+    function formatText(text) {
+        // Resaltar "Paso X:", "Solución final:", etc.
+        let formatted = text
+            .replace(/(Paso \d+:)/gi, '<strong style="color: #4361ee;">$1</strong>')
+            .replace(/(Solución final:)/gi, '<strong style="color: #00c853;">$1</strong>')
+            .replace(/\n/g, '<br>');
+        
+        return formatted;
     }
 
     // === SÍNTESIS DE VOZ MEJORADA ===
     function speakText(texto) {
-        if ('speechSynthesis' in window) {
-            // Detener cualquier voz anterior
+        if ('speechSynthesis' in window && window.voiceEnabled) {
             window.speechSynthesis.cancel();
             
             const utterance = new SpeechSynthesisUtterance(texto);
             utterance.lang = 'es-ES';
-            utterance.rate = 0.9; // Velocidad adecuada para tutor
+            utterance.rate = 0.9;
             utterance.pitch = 1;
             utterance.volume = 1;
 
-            // Seleccionar voz en español si está disponible
             const voices = window.speechSynthesis.getVoices();
             const spanishVoice = voices.find(voice => 
                 voice.lang.includes('es') || voice.lang.includes('ES')
@@ -125,7 +201,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 utterance.voice = spanishVoice;
             }
 
-            // Manejar caso cuando las voces no están cargadas
             if (voices.length === 0) {
                 window.speechSynthesis.onvoiceschanged = () => {
                     const newVoices = window.speechSynthesis.getVoices();
@@ -140,15 +215,20 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 window.speechSynthesis.speak(utterance);
             }
-
-            // Manejar errores de voz
-            utterance.onerror = (event) => {
-                console.error('Error en síntesis de voz:', event.error);
-            };
         }
     }
 
-    // === MENÚ DE CONFIGURACIÓN MEJORADO ===
+    // === RESTANTE DEL CÓDIGO (menú, eventos, etc.) ===
+    sendBtn.addEventListener('click', sendMessage);
+
+    userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    // Menú de configuración (mantener igual)
     const menuToggle = document.getElementById('menuToggle');
     const menuPanel = document.getElementById('menuPanel');
     const closeMenu = document.getElementById('closeMenu');
@@ -173,11 +253,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         themeOption.addEventListener('click', () => {
             document.body.classList.toggle('dark-mode');
-            // Guardar preferencia
             localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
         });
 
-        // ✅ CONFIGURACIÓN DE VOZ MEJORADA
         audioOption.addEventListener('click', () => {
             window.voiceEnabled = !window.voiceEnabled;
             const audioText = audioOption.querySelector('span');
@@ -186,20 +264,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (window.voiceEnabled) {
                 audioText.textContent = 'Voz Activada';
                 audioIcon.className = 'fas fa-volume-up';
-                // Probar la voz al activar
-                speakText('Voz activada');
             } else {
                 audioText.textContent = 'Voz Desactivada';
                 audioIcon.className = 'fas fa-volume-mute';
-                // Detener voz al desactivar
                 window.speechSynthesis.cancel();
             }
             
-            // Guardar preferencia
             localStorage.setItem('voiceEnabled', window.voiceEnabled);
         });
 
-        // Cargar preferencias guardadas
         if (localStorage.getItem('darkMode') === 'true') {
             document.body.classList.add('dark-mode');
         }
@@ -213,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // === FUNCIONES MATEMÁTICAS (si las necesitas) ===
+    // Funciones matemáticas
     window.insertAtCursor = function(value) {
         const input = document.getElementById('userInput');
         const start = input.selectionStart;
@@ -228,9 +301,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('userInput').focus();
     };
 
-    // Inicializar voces al cargar
+    // Inicializar voces
     if ('speechSynthesis' in window) {
-        // Forzar la carga de voces
         window.speechSynthesis.getVoices();
     }
 });
