@@ -12,8 +12,8 @@ const PORT = process.env.PORT || 10000;
 // ✅ Inicializa Gemini con tu API Key
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
 
-// ✅ PROMPT MÍNIMO, CLARO Y OBLIGATORIO (funciona en producción)
-const promptBase = `
+// ✅ PROMPT INTEGRADO DIRECTAMENTE (funciona en producción)
+const crearPrompt = (consulta) => `
 Eres un tutor de matemáticas. Resuelve inmediatamente cualquier problema matemático que el estudiante te envíe.
 Nunca preguntes "¿cuál es tu pregunta?" o pidas aclaraciones.
 Siempre responde paso a paso:
@@ -22,8 +22,10 @@ Paso 2: [Explicación clara]
 ...
 Solución final: [Respuesta]
 
-Si la consulta no es matemática, responde: "Solo ayudo con problemas de matemáticas."
-`;
+Si la consulta no es matemática, responde: Solo ayudo con problemas de matemáticas.
+
+Consulta del estudiante: "${consulta.trim()}"
+`.trim();
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
@@ -41,8 +43,8 @@ app.post('/analizar', async (req, res) => {
 
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     
-    // ✅ ESTRUCTURA CRÍTICA: PROMPT + CONSULTA
-    const fullPrompt = promptBase + "\n\nConsulta del estudiante: " + consulta;
+    // ✅ ESTRUCTURA CLAVE: PROMPT + CONSULTA
+    const fullPrompt = crearPrompt(consulta);
     
     const result = await model.generateContent(fullPrompt);
     const response = await result.response;
@@ -54,6 +56,13 @@ app.post('/analizar', async (req, res) => {
     res.json({ respuesta: text });
   } catch (error) {
     console.error('Error con Gemini:', error);
+    
+    if (error.message && error.message.includes('429')) {
+      return res.status(429).json({ 
+        respuesta: "Demasiadas solicitudes. Por favor, espera unos minutos e intenta de nuevo." 
+      });
+    }
+    
     res.status(500).json({ 
       respuesta: "No pude procesar tu pregunta. Intenta de nuevo." 
     });
