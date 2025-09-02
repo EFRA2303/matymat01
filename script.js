@@ -1,9 +1,13 @@
-// script.js - Versión con VOZ EN CADA PASO y MEJOR VISIBILIDAD
+// script.js - VERSIÓN COMPLETA CON TECLADO MATEMÁTICO Y CÁMARA
 document.addEventListener('DOMContentLoaded', () => {
     // Elementos del DOM
     const userInput = document.getElementById('userInput');
     const sendBtn = document.getElementById('sendBtn');
     const chatContainer = document.getElementById('chatContainer');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const fileInput = document.getElementById('fileInput');
+    const toggleMathBtn = document.getElementById('toggleMathBtn');
+    const mathToolbar = document.getElementById('mathToolbar');
 
     // Verificación de elementos
     if (!userInput || !sendBtn || !chatContainer) {
@@ -15,6 +19,29 @@ document.addEventListener('DOMContentLoaded', () => {
     let isSending = false;
     window.voiceEnabled = true;
 
+    // === ACTIVAR CÁMARA ===
+    if (uploadBtn && fileInput) {
+        uploadBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        fileInput.addEventListener('change', (event) => {
+            if (event.target.files.length > 0) {
+                const file = event.target.files[0];
+                addMessage('📸 Imagen enviada para análisis...', 'user');
+                simulateImageAnalysis(file);
+            }
+        });
+    }
+
+    // === TOGGLE TECLADO MATEMÁTICO ===
+    if (toggleMathBtn && mathToolbar) {
+        toggleMathBtn.addEventListener('click', () => {
+            const isVisible = mathToolbar.style.display === 'block';
+            mathToolbar.style.display = isVisible ? 'none' : 'block';
+        });
+    }
+
     // === ENVIAR MENSAJE ===
     async function sendMessage() {
         if (isSending) return;
@@ -22,8 +49,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!text) return;
 
         isSending = true;
-
-        // Mostrar mensaje del usuario
         addMessage(text, 'user');
         userInput.value = '';
 
@@ -50,7 +75,6 @@ document.addEventListener('DOMContentLoaded', () => {
             typing.remove();
 
             if (data.respuesta) {
-                // ✅ MOSTRAR PASOS SECUENCIALMENTE CON VOZ
                 await showStepsSequentially(data.respuesta);
             } else {
                 addMessage("⚠️ No pude procesar tu pregunta.", 'bot');
@@ -66,21 +90,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === MOSTRAR PASOS SECUENCIALMENTE CON VOZ ===
     async function showStepsSequentially(fullResponse) {
-        // Detectar y separar los pasos
         const steps = extractSteps(fullResponse);
         
         if (steps.length > 0) {
-            // Mostrar cada paso con delay
             for (let i = 0; i < steps.length; i++) {
-                await addMessageWithDelay(steps[i], 'bot', i * 1500); // 1500ms entre pasos
+                await addMessageWithDelay(steps[i], 'bot', i * 1500);
                 
-                // ✅ LEER CADA PASO CON VOZ (no solo el último)
                 if (window.voiceEnabled) {
-                    // Pequeña pausa antes de hablar
                     await new Promise(resolve => setTimeout(resolve, 300));
                     speakText(cleanTextForSpeech(steps[i]));
                     
-                    // Esperar a que termine de hablar antes del siguiente paso
                     if (i < steps.length - 1) {
                         await new Promise(resolve => {
                             const checkSpeaking = setInterval(() => {
@@ -92,12 +111,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                     }
                 } else {
-                    // Espera normal si no hay voz
                     await new Promise(resolve => setTimeout(resolve, 1500));
                 }
             }
         } else {
-            // Si no detecta pasos, mostrar respuesta completa
             addMessage(fullResponse, 'bot');
             if (window.voiceEnabled) {
                 speakText(fullResponse);
@@ -105,66 +122,54 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // === LIMPIAR TEXTO PARA VOZ (MEJORADO PARA MATEMÁTICAS) ===
-function cleanTextForSpeech(text) {
-    let cleanText = text
-        // Primero: convertir variables matemáticas
-        .replace(/(\d+)x/gi, '$1 equis') // 3x → "3 equis"
-        .replace(/(\d+)y/gi, '$1 ye')    // 2y → "2 ye"
-        .replace(/(\d+)z/gi, '$1 zeta')  // 5z → "5 zeta"
-        .replace(/\bx\b/gi, 'equis')     // x sola → "equis"
-        .replace(/\by\b/gi, 'ye')        // y sola → "ye"
-        .replace(/\bz\b/gi, 'zeta')      // z sola → "zeta"
+    // === LIMPIAR TEXTO PARA VOZ ===
+    function cleanTextForSpeech(text) {
+        let cleanText = text
+            .replace(/(\d+)x/gi, '$1 equis')
+            .replace(/(\d+)y/gi, '$1 ye')
+            .replace(/(\d+)z/gi, '$1 zeta')
+            .replace(/\bx\b/gi, 'equis')
+            .replace(/\by\b/gi, 'ye')
+            .replace(/\bz\b/gi, 'zeta')
+            .replace(/\+/g, ' más ')
+            .replace(/\-/g, ' menos ')
+            .replace(/\*/g, ' por ')
+            .replace(/\//g, ' entre ')
+            .replace(/\=/g, ' igual a ')
+            .replace(/\^/g, ' elevado a ')
+            .replace(/sin\(/gi, 'seno de ')
+            .replace(/cos\(/gi, 'coseno de ')
+            .replace(/tan\(/gi, 'tangente de ')
+            .replace(/sqrt\(/gi, 'raíz cuadrada de ')
+            .replace(/π/gi, 'pi')
+            .replace(/θ/gi, 'theta')
+            .replace(/\([^)]*\)/g, '')
+            .replace(/[\(\)\[\]\{\}]/g, '')
+            .replace(/\\/g, '')
+            .replace(/\$/g, '')
+            .replace(/#/g, '')
+            .replace(/\s+/g, ' ')
+            .replace(/\s\./g, '.')
+            .replace(/\s\,/g, ',')
+            .trim();
         
-        // Símbolos matemáticos
-        .replace(/\+/g, ' más ')
-        .replace(/\-/g, ' menos ')
-        .replace(/\*/g, ' por ')
-        .replace(/\//g, ' entre ')
-        .replace(/\=/g, ' igual a ')
-        .replace(/\^/g, ' elevado a ')
+        cleanText = cleanText
+            .replace(/equis/gi, ' equis ')
+            .replace(/ye/gi, ' ye ')
+            .replace(/zeta/gi, ' zeta ')
+            .replace(/\s+/g, ' ')
+            .replace(/^Paso\s*\d+[:\-\.]\s*/i, '')
+            .trim();
         
-        // Expresiones comunes
-        .replace(/sin\(/gi, 'seno de ')
-        .replace(/cos\(/gi, 'coseno de ')
-        .replace(/tan\(/gi, 'tangente de ')
-        .replace(/sqrt\(/gi, 'raíz cuadrada de ')
-        .replace(/π/gi, 'pi')
-        .replace(/θ/gi, 'theta')
+        if (cleanText.length > 0) {
+            cleanText = cleanText.charAt(0).toUpperCase() + cleanText.slice(1);
+        }
         
-        // Limpieza general
-        .replace(/\([^)]*\)/g, '') // Remover contenido entre paréntesis
-        .replace(/[\(\)\[\]\{\}]/g, '') // Remover paréntesis y brackets
-        .replace(/\\/g, '') // Remover backslashes
-        .replace(/\$/g, '') // Remover símbolos $
-        .replace(/#/g, '')  // Remover numerales
-        
-        // Mejorar fluidez
-        .replace(/\s+/g, ' ') // Múltiples espacios a uno
-        .replace(/\s\./g, '.') // Espacio antes de punto
-        .replace(/\s\,/g, ',') // Espacio antes de coma
-        .trim();
-    
-    // Asegurar que suene natural como un maestro
-    cleanText = cleanText
-        .replace(/equis/gi, ' equis ') // Espacios alrededor de variables
-        .replace(/ye/gi, ' ye ')
-        .replace(/zeta/gi, ' zeta ')
-        .replace(/\s+/g, ' ') // Limpiar espacios again
-        .replace(/^Paso\s*\d+[:\-\.]\s*/i, '') // Remover "Paso X:" al inicio
-        .trim();
-    
-    // Capitalizar primera letra
-    if (cleanText.length > 0) {
-        cleanText = cleanText.charAt(0).toUpperCase() + cleanText.slice(1);
+        return cleanText;
     }
-    
-    return cleanText;
-}
 
-    // === EXTRACT STEPS MEJORADA ===
+    // === EXTRAER PASOS ===
     function extractSteps(text) {
-        // Primero intentar con el formato "Paso X:"
         const stepPattern = /(Paso\s*\d+[:\-\.]\s*[^Paso]+)(?=Paso|Solución|$)/gi;
         let matches = text.match(stepPattern);
         
@@ -172,7 +177,6 @@ function cleanTextForSpeech(text) {
             return matches.map(step => step.trim());
         }
         
-        // Intentar con números seguidos de punto
         const numberPattern = /\d+[\.\)]\s*([^\n]+)/g;
         matches = [];
         let match;
@@ -185,7 +189,6 @@ function cleanTextForSpeech(text) {
             return matches;
         }
         
-        // Si todo falla, dividir por líneas significativas
         const lines = text.split('\n').filter(line => 
             line.trim().length > 10 && 
             !line.includes('¡Hola!') && 
@@ -205,7 +208,7 @@ function cleanTextForSpeech(text) {
         });
     }
 
-    // === AÑADIR MENSAJE AL CHAT (MODIFICADA) ===
+    // === AÑADIR MENSAJE AL CHAT ===
     function addMessage(text, sender) {
         const div = document.createElement('div');
         div.className = `message ${sender}`;
@@ -227,15 +230,12 @@ function cleanTextForSpeech(text) {
 
         const content = document.createElement('div');
         content.className = 'message-content';
-        
-        // Formatear texto para mejor visualización
         content.innerHTML = formatText(text);
 
         div.appendChild(avatar);
         div.appendChild(content);
         chatContainer.appendChild(div);
         
-        // Animación de entrada
         setTimeout(() => {
             div.style.opacity = '1';
             div.style.transform = 'translateY(0)';
@@ -244,19 +244,18 @@ function cleanTextForSpeech(text) {
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    // === FORMATEAR TEXTO MEJORADO ===
+    // === FORMATEAR TEXTO ===
     function formatText(text) {
-        // Resaltar más intensamente los pasos
         let formatted = text
             .replace(/(Paso\s*\d+[:\.\-])/gi, '<strong style="color: #1565c0; font-size: 1.1em;">$1</strong>')
             .replace(/(Solución final[:\.\-])/gi, '<strong style="color: #2e7d32; font-size: 1.1em;">$1</strong>')
             .replace(/\n/g, '<br>')
-            .replace(/\b(\d+[\.\)])/g, '<strong>$1</strong>'); // Resaltar números de paso
+            .replace(/\b(\d+[\.\)])/g, '<strong>$1</strong>');
         
         return formatted;
     }
 
-    // === SÍNTESIS DE VOZ MEJORADA ===
+    // === SÍNTESIS DE VOZ ===
     function speakText(texto) {
         if ('speechSynthesis' in window && window.voiceEnabled) {
             window.speechSynthesis.cancel();
@@ -293,7 +292,14 @@ function cleanTextForSpeech(text) {
         }
     }
 
-    // === RESTANTE DEL CÓDIGO ===
+    // === SIMULAR ANÁLISIS DE IMAGEN ===
+    function simulateImageAnalysis(file) {
+        setTimeout(() => {
+            addMessage('🔍 He detectado un problema matemático en la imagen. Por favor describe qué necesitas resolver.', 'bot');
+        }, 2000);
+    }
+
+    // === EVENTOS ===
     sendBtn.addEventListener('click', sendMessage);
 
     userInput.addEventListener('keypress', (e) => {
@@ -303,7 +309,61 @@ function cleanTextForSpeech(text) {
         }
     });
 
-    // Menú de configuración
+    // === FUNCIONES MATEMÁTICAS GLOBALES ===
+    window.insertAtCursor = function(value) {
+        const input = document.getElementById('userInput');
+        const start = input.selectionStart;
+        const end = input.selectionEnd;
+        input.value = input.value.substring(0, start) + value + input.value.substring(end);
+        input.selectionStart = input.selectionEnd = start + value.length;
+        input.focus();
+    };
+
+    window.insertFunction = function(funcName) {
+        const input = document.getElementById('userInput');
+        const start = input.selectionStart;
+        const end = input.selectionEnd;
+        input.value = input.value.substring(0, start) + funcName + '()' + input.value.substring(end);
+        input.selectionStart = input.selectionEnd = start + funcName.length + 1;
+        input.focus();
+    };
+
+    window.insertFraction = function() {
+        const input = document.getElementById('userInput');
+        const start = input.selectionStart;
+        const end = input.selectionEnd;
+        input.value = input.value.substring(0, start) + '(a)/(b)' + input.value.substring(end);
+        input.selectionStart = start + 1;
+        input.selectionEnd = start + 2;
+        input.focus();
+    };
+
+    window.insertLimit = function() {
+        const input = document.getElementById('userInput');
+        const start = input.selectionStart;
+        const end = input.selectionEnd;
+        input.value = input.value.substring(0, start) + 'lim_(x→0)' + input.value.substring(end);
+        input.selectionStart = start + 5;
+        input.selectionEnd = start + 6;
+        input.focus();
+    };
+
+    window.insertIntegral = function() {
+        const input = document.getElementById('userInput');
+        const start = input.selectionStart;
+        const end = input.selectionEnd;
+        input.value = input.value.substring(0, start) + '∫_a^b f(x)dx' + input.value.substring(end);
+        input.selectionStart = start + 7;
+        input.selectionEnd = start + 8;
+        input.focus();
+    };
+
+    window.clearInput = function() {
+        document.getElementById('userInput').value = '';
+        document.getElementById('userInput').focus();
+    };
+
+    // === MENÚ CONFIGURACIÓN ===
     const menuToggle = document.getElementById('menuToggle');
     const menuPanel = document.getElementById('menuPanel');
     const closeMenu = document.getElementById('closeMenu');
@@ -361,23 +421,9 @@ function cleanTextForSpeech(text) {
         }
     }
 
-    window.insertAtCursor = function(value) {
-        const input = document.getElementById('userInput');
-        const start = input.selectionStart;
-        const end = input.selectionEnd;
-        input.value = input.value.substring(0, start) + value + input.value.substring(end);
-        input.selectionStart = input.selectionEnd = start + value.length;
-        input.focus();
-    };
-
-    window.clearInput = function() {
-        document.getElementById('userInput').value = '';
-        document.getElementById('userInput').focus();
-    };
-
+    // === INICIALIZAR ===
     if ('speechSynthesis' in window) {
         window.speechSynthesis.getVoices();
     }
 });
-
 
