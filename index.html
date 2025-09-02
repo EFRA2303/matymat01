@@ -140,16 +140,25 @@
         </div>
     </div>
 
-    <!-- Contenedor de gráfica -->
-    <div class="graph-container" id="graphContainer" style="display: none;">
-        <div class="panel-header">
-            <h3>📈 Gráfica de Función</h3>
-            <button id="closeGraph">×</button>
-        </div>
-        <canvas id="graphCanvas"></canvas>
+    <!-- Contenedor de gráfica MEJORADO -->
+<div class="graph-container" id="graphContainer" style="display: none;">
+    <div class="panel-header">
+        <h3>📈 Gráfica de Función</h3>
+        <button id="closeGraph">×</button>
     </div>
-
+    <div class="graph-controls">
+        <button onclick="zoomIn()">🔍+</button>
+        <button onclick="zoomOut()">🔍-</button>
+        <button onclick="resetZoom()">↺</button>
+    </div>
+    <canvas id="graphCanvas" width="400" height="300"></canvas>
+    <div class="graph-actions">
+        <button onclick="descargarGrafica()">💾 Guardar</button>
+        <button onclick="compartirGrafica()">📤 Compartir</button>
+    </div>
+</div>
     <script src="script.js"></script>
 </body>
 </html>
+
 
