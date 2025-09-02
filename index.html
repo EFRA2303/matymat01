@@ -5,28 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#121212">
     <meta name="description" content="Tutor inteligente de matemáticas con IA, teclado y gráficas">
-
     <title>MatyMat-01 - Tu Tutor de Matemáticas</title>
-
     <!-- CSS y Fuentes -->
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     <!-- Manifest y PWA -->
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="tutor-avatar.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="MatyMat-01">
-
     <!-- Preload de ícono -->
     <link rel="preload" href="tutor-avatar.png" as="image">
-
     <!-- Favicon -->
     <link rel="icon" href="tutor-avatar.png" type="image/png" sizes="192x192">
-
-    <!-- Chart.js -->
+    <!-- Math.js y Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -35,7 +30,6 @@
             <h1><i class="fas fa-robot"></i> MatyMat-01</h1>
             <p>Te ayudaré a resolver ejercicios con texto, foto y apoyo emocional</p>
         </header>
-
         <div class="chat-container" id="chatContainer">
             <div class="message bot">
                 <div class="avatar bot-avatar">
@@ -46,13 +40,11 @@
                 </div>
             </div>
         </div>
-
         <div class="input-section">
             <div class="input-wrapper">
                 <button class="btn upload-btn" id="uploadBtn" title="Subir foto o tomar">
                     <i class="fas fa-camera-retro"></i>
                 </button>
-
                 <div class="math-input-container">
                     <textarea id="userInput" placeholder="Escribe tu pregunta o función..." rows="1"></textarea>
                     <div class="math-toolbar" id="mathToolbar" style="display: none;">
@@ -91,11 +83,9 @@
                         <button class="tool-btn" onclick="insertAtCursor('-')">-</button>
                         <button class="tool-btn" onclick="insertAtCursor('*')">×</button>
                         <button class="tool-btn" onclick="insertAtCursor('/')">÷</button>
-
                         <!-- Logaritmos -->
                         <button class="tool-btn" onclick="insertFunction('log')">log</button>
                         <button class="tool-btn" onclick="insertFunction('ln')">ln</button>
-
                         <!-- Grado -->
                         <button class="tool-btn" onclick="insertAtCursor('°')">°</button>
                         
@@ -103,26 +93,21 @@
                         <button class="tool-btn clear" onclick="clearInput()">C</button>
                     </div>
                 </div>
-
                 <button class="btn math-toggle-btn" id="toggleMathBtn" title="Símbolos matemáticos">
                     <i class="fas fa-square-root-alt"></i>
                 </button>
-
                 <button class="btn send-btn" id="sendBtn">
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
         </div>
     </div>
-
     <!-- Input oculto para cámara -->
     <input type="file" id="fileInput" accept="image/*" capture="environment" style="display: none;">
-
     <!-- Menú de Configuración -->
     <button id="menuToggle" class="btn menu-toggle" title="Configuración">
         <i class="fas fa-ellipsis-v"></i>
     </button>
-
     <div class="menu-panel" id="menuPanel">
         <div class="panel-header">
             <h3>⚙️ Configuración</h3>
@@ -139,24 +124,23 @@
             </div>
         </div>
     </div>
-
-    <!-- Contenedor de gráfica MEJORADO -->
-<div class="graph-container" id="graphContainer" style="display: none;">
-    <div class="panel-header">
-        <h3>📈 Gráfica de Función</h3>
-        <button id="closeGraph">×</button>
+    <!-- Contenedor de gráfica -->
+    <div class="graph-container" id="graphContainer" style="display: none;">
+        <div class="panel-header">
+            <h3>📈 Gráfica de Función</h3>
+            <button id="closeGraph">×</button>
+        </div>
+        <div class="graph-controls">
+            <button onclick="zoomIn()">🔍+</button>
+            <button onclick="zoomOut()">🔍-</button>
+            <button onclick="resetZoom()">↺</button>
+        </div>
+        <canvas id="graphCanvas" width="400" height="300"></canvas>
+        <div class="graph-actions">
+            <button onclick="descargarGrafica()">💾 Guardar</button>
+            <button onclick="compartirGrafica()">📤 Compartir</button>
+        </div>
     </div>
-    <div class="graph-controls">
-        <button onclick="zoomIn()">🔍+</button>
-        <button onclick="zoomOut()">🔍-</button>
-        <button onclick="resetZoom()">↺</button>
-    </div>
-    <canvas id="graphCanvas" width="400" height="300"></canvas>
-    <div class="graph-actions">
-        <button onclick="descargarGrafica()">💾 Guardar</button>
-        <button onclick="compartirGrafica()">📤 Compartir</button>
-    </div>
-</div>
     <script src="script.js"></script>
 </body>
 </html>
