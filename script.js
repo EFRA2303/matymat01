@@ -426,4 +426,142 @@ document.addEventListener('DOMContentLoaded', () => {
         window.speechSynthesis.getVoices();
     }
 });
+// === FUNCIONES PARA GRÁFICAS ===
+async function graficarFuncion(funcionTexto) {
+    try {
+        // Mostrar mensaje de carga
+        addMessage(`📈 Generando gráfica de: ${funcionTexto}`, 'bot');
+        
+        const response = await fetch('/graficar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                funcion: funcionTexto,
+                xMin: -10,
+                xMax: 10
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            mostrarGrafica(data.datos, data.funcion);
+        } else {
+            addMessage("❌ No pude generar la gráfica. Verifica la función.", 'bot');
+        }
+    } catch (error) {
+        console.error('Error al graficar:', error);
+        addMessage("❌ Error al generar la gráfica.", 'bot');
+    }
+}
+
+function mostrarGrafica(datos, funcion) {
+    // Mostrar contenedor de gráfica
+    const graphContainer = document.getElementById('graphContainer');
+    const graphCanvas = document.getElementById('graphCanvas');
+    
+    graphContainer.style.display = 'block';
+
+    // Configurar Chart.js
+    const ctx = graphCanvas.getContext('2d');
+    
+    // Destruir gráfica anterior si existe
+    if (window.graficaActual) {
+        window.graficaActual.destroy();
+    }
+
+    window.graficaActual = new Chart(ctx, {
+        type: 'line',
+        data: {
+            datasets: [{
+                label: `f(x) = ${funcion}`,
+                data: datos,
+                borderColor: '#4361ee',
+                backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                borderWidth: 3,
+                pointRadius: 0,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    type: 'linear',
+                    position: 'bottom',
+                    title: {
+                        display: true,
+                        text: 'Eje X'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Eje Y'
+                    }
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: `Gráfica de: ${funcion}`,
+                    font: {
+                        size: 16
+                    }
+                },
+                legend: {
+                    position: 'top'
+                }
+            }
+        }
+    });
+
+    // Añadir botón de cerrar
+    document.getElementById('closeGraph').onclick = () => {
+        graphContainer.style.display = 'none';
+    };
+}
+
+// === DETECTAR FUNCIONES EN MENSAJES ===
+function detectarYGraficarFuncion(texto) {
+    const patronesFuncion = [
+        /graficar\s+(.*)/i,
+        /gráfica\s+de\s+(.*)/i,
+        /dibujar\s+(.*)/i,
+        /f\(x\)\s*=\s*(.*)/i,
+        /plot\s+(.*)/i
+    ];
+
+    for (const patron of patronesFuncion) {
+        const match = texto.match(patron);
+        if (match && match[1]) {
+            return match[1].trim();
+        }
+    }
+
+    // Detectar funciones matemáticas comunes
+    const esFuncionMatematica = /(sin|cos|tan|log|ln|sqrt|∫|lim|x\^|x\*\*)/i.test(texto) && 
+                               texto.length > 5 && 
+                               !texto.includes('?') &&
+                               !texto.includes('cómo') &&
+                               !texto.includes('como');
+
+    return esFuncionMatematica ? texto : null;
+}
+
+// === MODIFICAR sendMessage PARA DETECTAR GRÁFICAS ===
+// En la función sendMessage, después de recibir la respuesta:
+if (data.respuesta) {
+    // Verificar si el usuario pidió una gráfica
+    const funcionAGraficar = detectarYGraficarFuncion(text);
+    
+    if (funcionAGraficar) {
+        // Si detecta función, graficar en lugar de mostrar pasos
+        await graficarFuncion(funcionAGraficar);
+    } else {
+        await showStepsSequentially(data.respuesta);
+    }
+}
+
 
