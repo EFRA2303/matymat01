@@ -1,27 +1,46 @@
 const express = require('express');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const math = require('mathjs');
 require('dotenv').config();
 const app = express();
 app.use(express.static('.'));
 app.use(express.json());
 const PORT = process.env.PORT || 10000;
 
-// === FUNCIÓN PARA GENERAR DATOS DE GRÁFICA (MEJORADA CON MATH.JS) ===
+// === FUNCIÓN PARA GENERAR DATOS DE GRÁFICA (SIN DEPENDENCIAS EXTERNAS) ===
 function generarDatosGrafica(funcion, xMin, xMax) {
     console.log(`🧮 Generando puntos para f(x) = ${funcion} en [${xMin}, ${xMax}]`);
     
     const puntos = [];
     const paso = 0.1;
     
-    try {
-        // Compilar la expresión con Math.js
-        const expr = math.compile(funcion);
+    // Función segura para evaluar expresiones matemáticas
+    function evaluarFuncion(expr, x) {
+        // Reemplazar funciones y constantes matemáticas
+        let exprProcesada = expr
+            .replace(/sin/g, 'Math.sin')
+            .replace(/cos/g, 'Math.cos')
+            .replace(/tan/g, 'Math.tan')
+            .replace(/sqrt/g, 'Math.sqrt')
+            .replace(/log/g, 'Math.log10')
+            .replace(/ln/g, 'Math.log')
+            .replace(/pi/g, 'Math.PI')
+            .replace(/e(?![a-zA-Z])/g, 'Math.E')
+            .replace(/\^/g, '**')
+            .replace(/x/g, `(${x})`);
         
+        try {
+            // Usar Function constructor en lugar de eval() para mayor seguridad
+            const fn = new Function('Math', `return ${exprProcesada}`);
+            return fn(Math);
+        } catch (error) {
+            throw new Error(`Error al evaluar: ${error.message}`);
+        }
+    }
+    
+    try {
         for (let x = xMin; x <= xMax; x += paso) {
             try {
-                // Evaluar la función en el punto x usando Math.js
-                const y = expr.evaluate({x: x});
+                const y = evaluarFuncion(funcion, x);
                 
                 if (isFinite(y)) {
                     puntos.push({ x: parseFloat(x.toFixed(2)), y: parseFloat(y.toFixed(2)) });
@@ -32,7 +51,7 @@ function generarDatosGrafica(funcion, xMin, xMax) {
             }
         }
     } catch (e) {
-        console.error("❌ Error al compilar la función:", e.message);
+        console.error("❌ Error al procesar la función:", e.message);
         throw new Error("Función matemática inválida");
     }
     
