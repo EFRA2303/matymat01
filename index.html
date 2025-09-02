@@ -56,19 +56,37 @@
                 <div class="math-input-container">
                     <textarea id="userInput" placeholder="Escribe tu pregunta o función..." rows="1"></textarea>
                     <div class="math-toolbar" id="mathToolbar" style="display: none;">
-                        <button class="tool-btn" onclick="insertAtCursor('²')">x²</button>
-                        <button class="tool-btn" onclick="insertAtCursor('³')">x³</button>
-                        <button class="tool-btn" onclick="insertAtCursor('√')">√</button>
-                        <button class="tool-btn" onclick="insertAtCursor('π')">π</button>
-                        <button class="tool-btn" onclick="insertAtCursor('θ')">θ</button>
+                        <!-- Variables -->
                         <button class="tool-btn" onclick="insertAtCursor('x')">x</button>
                         <button class="tool-btn" onclick="insertAtCursor('y')">y</button>
                         <button class="tool-btn" onclick="insertAtCursor('z')">z</button>
-                        <button class="tool-btn" onclick="insertAtCursor('sin()')">sin()</button>
-                        <button class="tool-btn" onclick="insertAtCursor('cos()')">cos()</button>
-                        <button class="tool-btn" onclick="insertAtCursor('tan()')">tan()</button>
-                        <button class="tool-btn" onclick="insertAtCursor('½')">½</button>
-                        <button class="tool-btn" onclick="insertAtCursor('=')">=</button>
+                        
+                        <!-- Exponentes -->
+                        <button class="tool-btn" onclick="insertAtCursor('²')">x²</button>
+                        <button class="tool-btn" onclick="insertAtCursor('³')">x³</button>
+                        <button class="tool-btn" onclick="insertAtCursor('^')">xⁿ</button>
+                        
+                        <!-- Operaciones avanzadas -->
+                        <button class="tool-btn" onclick="insertAtCursor('√')">√</button>
+                        <button class="tool-btn" onclick="insertAtCursor('∛')">∛</button>
+                        <button class="tool-btn" onclick="insertFraction()">a/b</button>
+                        
+                        <!-- Funciones -->
+                        <button class="tool-btn" onclick="insertFunction('sin')">sin</button>
+                        <button class="tool-btn" onclick="insertFunction('cos')">cos</button>
+                        <button class="tool-btn" onclick="insertFunction('tan')">tan</button>
+                        
+                        <!-- Cálculo -->
+                        <button class="tool-btn" onclick="insertAtCursor('lim')">lim</button>
+                        <button class="tool-btn" onclick="insertAtCursor('∫')">∫</button>
+                        <button class="tool-btn" onclick="insertAtCursor('∂')">∂</button>
+                        
+                        <!-- Constantes -->
+                        <button class="tool-btn" onclick="insertAtCursor('π')">π</button>
+                        <button class="tool-btn" onclick="insertAtCursor('θ')">θ</button>
+                        <button class="tool-btn" onclick="insertAtCursor('∞')">∞</button>
+                        
+                        <!-- Borrar -->
                         <button class="tool-btn clear" onclick="clearInput()">C</button>
                     </div>
                 </div>
