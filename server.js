@@ -8,6 +8,8 @@ const PORT = process.env.PORT || 10000;
 
 // === FUNCIÓN PARA GENERAR DATOS DE GRÁFICA ===
 function generarDatosGrafica(funcion, xMin, xMax) {
+    console.log(`🧮 Generando puntos para f(x) = ${funcion} en [${xMin}, ${xMax}]`);
+    
     const puntos = [];
     const paso = 0.1;
     
@@ -23,20 +25,24 @@ function generarDatosGrafica(funcion, xMin, xMax) {
                 .replace(/ln\(/gi, 'Math.log(')
                 .replace(/π/gi, 'Math.PI')
                 .replace(/e\^/gi, 'Math.exp(')
-                .replace(/\^/g, '**');
+                .replace(/\^/g, '**')
+                .replace(/x/g, `(${x})`);  // Reemplazar x por el valor actual
             
-            // Evaluar la función en el punto x
-            const y = eval(expr.replace(/x/g, `(${x})`));
+            console.log(`🔍 Evaluando en x=${x}: ${expr}`);
+            
+            // Evaluar la función
+            const y = eval(expr);
             
             if (isFinite(y)) {
                 puntos.push({ x: parseFloat(x.toFixed(2)), y: parseFloat(y.toFixed(2)) });
             }
         } catch (e) {
-            // Continuar con el siguiente punto si hay error
-            continue;
+            console.warn(`⚠️ Error al evaluar en x=${x}:`, e.message);
+            // Continuar con el siguiente punto
         }
     }
     
+    console.log(`✅ Se generaron ${puntos.length} puntos válidos`);
     return puntos;
 }
 
@@ -90,13 +96,20 @@ app.post('/analizar', async (req, res) => {
 app.post('/graficar', async (req, res) => {
     try {
         const { funcion, xMin = -10, xMax = 10 } = req.body;
+        console.log("📥 Solicitud de gráfica recibida:", { funcion, xMin, xMax });
+        
         if (!funcion) {
+            console.log("❌ No se proporcionó función");
             return res.status(400).json({ 
                 error: "Por favor, proporciona una función para graficar" 
             });
         }
+        
         // Generar datos para la gráfica
+        console.log("🔄 Generando datos de la gráfica...");
         const datos = generarDatosGrafica(funcion, parseFloat(xMin), parseFloat(xMax));
+        
+        console.log("✅ Datos generados:", datos.length, "puntos");
         
         res.json({
             success: true,
@@ -104,7 +117,7 @@ app.post('/graficar', async (req, res) => {
             funcion: funcion
         });
     } catch (error) {
-        console.error('Error al generar gráfica:', error);
+        console.error('🔥 Error al generar gráfica:', error);
         res.status(500).json({ 
             error: "No pude generar la gráfica. Verifica la función." 
         });
