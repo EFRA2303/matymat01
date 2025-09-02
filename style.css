@@ -485,3 +485,91 @@ header p {
 .dark-mode .message-content strong {
     color: #90cdf4 !important;
 }
+
+/* ===== TECLADO MATEMÁTICO MEJORADO ===== */
+.math-toolbar {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 5px;
+    padding: 10px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin: 8px 0;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+.tool-btn {
+    padding: 8px 5px;
+    font-size: 0.8rem;
+    min-width: 35px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.tool-btn:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.tool-btn.clear {
+    background: #ff4757;
+    color: white;
+    grid-column: span 2;
+}
+
+/* ===== CÁMARA RESPONSIVE ===== */
+#fileInput {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+.upload-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+/* Mejora para móviles */
+@media (max-width: 480px) {
+    .math-toolbar {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 4px;
+        padding: 8px;
+    }
+    
+    .tool-btn {
+        padding: 6px 4px;
+        font-size: 0.75rem;
+        min-width: 30px;
+    }
+}
+
+/* Soporte para iOS/Safari */
+@supports (-webkit-touch-callout: none) {
+    .upload-btn {
+        cursor: pointer;
+    }
+    
+    input[type="file"] {
+        font-size: 16px; /* Evita zoom en iOS */
+    }
+}
+
+/* Soporte para Android/Chrome */
+@media (max-width: 768px) {
+    .upload-btn:active {
+        transform: scale(0.95);
+    }
+}
