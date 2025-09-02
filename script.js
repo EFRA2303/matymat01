@@ -51,8 +51,11 @@ document.addEventListener('DOMContentLoaded', () => {
         addMessage(text, 'user');
         userInput.value = '';
         
+        console.log("🔍 Mensaje enviado:", text);
+        
         // Detectar si es una solicitud de gráfica
         const funcionAGraficar = detectarYGraficarFuncion(text);
+        console.log("📊 Función a graficar:", funcionAGraficar);
         
         if (funcionAGraficar) {
             // Es una gráfica, no enviamos a /analizar
@@ -456,6 +459,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // === FUNCIONES PARA GRÁFICAS ===
 async function graficarFuncion(funcionTexto) {
     try {
+        console.log("🚀 Iniciando generación de gráfica para:", funcionTexto);
+        
         // Mostrar mensaje de carga
         addMessage(`📈 Generando gráfica de: ${funcionTexto}`, 'bot');
         
@@ -469,22 +474,39 @@ async function graficarFuncion(funcionTexto) {
             })
         });
         
+        console.log("📡 Respuesta del servidor:", response.status);
+        
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log("📊 Datos recibidos:", data);
+        
         if (data.success) {
+            console.log("✅ Gráfica generada con éxito");
             mostrarGrafica(data.datos, data.funcion);
         } else {
-            addMessage("❌ No pude generar la gráfica. Verifica la función.", 'bot');
+            console.error("❌ Error en la respuesta:", data.error);
+            addMessage(`❌ Error: ${data.error}`, 'bot');
         }
     } catch (error) {
-        console.error('Error al graficar:', error);
-        addMessage("❌ Error al generar la gráfica.", 'bot');
+        console.error('🔥 Error al graficar:', error);
+        addMessage("❌ Error al generar la gráfica. Verifica la función.", 'bot');
     }
 }
 
 function mostrarGrafica(datos, funcion) {
+    console.log("🎨 Mostrando gráfica con", datos.length, "puntos");
+    
     // Mostrar contenedor de gráfica
     const graphContainer = document.getElementById('graphContainer');
     const graphCanvas = document.getElementById('graphCanvas');
+    
+    if (!graphContainer || !graphCanvas) {
+        console.error("❌ No se encontraron los elementos de la gráfica");
+        return;
+    }
     
     graphContainer.style.display = 'block';
     
@@ -495,6 +517,8 @@ function mostrarGrafica(datos, funcion) {
     if (window.graficaActual) {
         window.graficaActual.destroy();
     }
+    
+    console.log("📊 Creando nueva gráfica con Chart.js");
     
     window.graficaActual = new Chart(ctx, {
         type: 'line',
@@ -547,10 +571,14 @@ function mostrarGrafica(datos, funcion) {
             }
         }
     });
+    
+    console.log("✅ Gráfica creada exitosamente");
 }
 
 // === DETECTAR FUNCIONES EN MENSAJES ===
 function detectarYGraficarFuncion(texto) {
+    console.log("Detectando función en:", texto);
+    
     // Patrones para detectar solicitudes de gráfica
     const patronesFuncion = [
         /graficar\s+(.+)/i,
@@ -558,36 +586,43 @@ function detectarYGraficarFuncion(texto) {
         /dibujar\s+(.+)/i,
         /plot\s+(.+)/i,
         /generar\s+gráfica\s+de\s+(.+)/i,
-        /muestra\s+la\s+gráfica\s+de\s+(.+)/i
+        /muestra\s+la\s+gráfica\s+de\s+(.+)/i,
+        /representar\s+gráficamente\s+(.+)/i
     ];
     
     // Verificar patrones explícitos
     for (const patron of patronesFuncion) {
         const match = texto.match(patron);
         if (match && match[1]) {
+            console.log("✅ Detectado por patrón:", match[1].trim());
             return match[1].trim();
         }
     }
     
     // Detectar funciones matemáticas comunes
-    const esFuncionMatematica = /(sin|cos|tan|log|ln|sqrt|∫|lim|x\^|x\*\*|f\(x\))/i.test(texto) && 
-                               texto.length > 5 && 
+    const esFuncionMatematica = /(sin|cos|tan|log|ln|sqrt|∫|lim|x\^|x\*\*|f\(x\)|\^|\*\*|x\s*\+\s*\d|x\s*-\s*\d)/i.test(texto) && 
+                               texto.length > 3 && 
                                !texto.includes('?') &&
                                !texto.includes('cómo') &&
                                !texto.includes('como') &&
                                !texto.includes('explica') &&
-                               !texto.includes('resuelve');
+                               !texto.includes('resuelve') &&
+                               !texto.includes('ayuda') &&
+                               !texto.includes('ejemplo');
     
     if (esFuncionMatematica) {
         // Extraer la función si está en formato f(x) = ...
         const matchFunc = texto.match(/f\(x\)\s*=\s*(.+)/i);
         if (matchFunc) {
+            console.log("✅ Detectado f(x) =", matchFunc[1].trim());
             return matchFunc[1].trim();
         }
         // Si no, asumir que toda la cadena es la función
+        console.log("✅ Detectado como función matemática:", texto);
         return texto;
     }
     
+    console.log("❌ No se detectó función");
     return null;
 }
 
