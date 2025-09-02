@@ -1,6 +1,5 @@
-// script.js - VERSIÓN COMPLETA CON TECLADO MATEMÁTICO, CÁMARA Y GRÁFICAS
+// script.js - VERSIÓN CORREGIDA
 document.addEventListener('DOMContentLoaded', () => {
-    // Elementos del DOM
     const userInput = document.getElementById('userInput');
     const sendBtn = document.getElementById('sendBtn');
     const chatContainer = document.getElementById('chatContainer');
@@ -9,27 +8,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleMathBtn = document.getElementById('toggleMathBtn');
     const mathToolbar = document.getElementById('mathToolbar');
     
-    // Verificación de elementos
     if (!userInput || !sendBtn || !chatContainer) {
         console.error('❌ No se encontraron elementos del DOM');
         return;
     }
     
-    // Estados
     let isSending = false;
     window.voiceEnabled = true;
     
     // === ACTIVAR CÁMARA ===
     if (uploadBtn && fileInput) {
-        uploadBtn.addEventListener('click', () => {
-            fileInput.click();
-        });
-        
+        uploadBtn.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', (event) => {
             if (event.target.files.length > 0) {
-                const file = event.target.files[0];
                 addMessage('📸 Imagen enviada para análisis...', 'user');
-                simulateImageAnalysis(file);
+                simulateImageAnalysis(event.target.files[0]);
             }
         });
     }
@@ -37,12 +30,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // === TOGGLE TECLADO MATEMÁTICO ===
     if (toggleMathBtn && mathToolbar) {
         toggleMathBtn.addEventListener('click', () => {
-            const isVisible = mathToolbar.style.display === 'block';
-            mathToolbar.style.display = isVisible ? 'none' : 'block';
+            mathToolbar.style.display = mathToolbar.style.display === 'block' ? 'none' : 'block';
         });
     }
     
-    // === ENVIAR MENSAJE (MODIFICADO PARA DETECTAR GRÁFICAS) ===
+    // === ENVIAR MENSAJE ===
     async function sendMessage() {
         if (isSending) return;
         const text = userInput.value.trim();
@@ -53,29 +45,16 @@ document.addEventListener('DOMContentLoaded', () => {
         
         console.log("🔍 Mensaje enviado:", text);
         
-        // Detectar si es una solicitud de gráfica
+        // Detectar si es una solicitud de gráfica EXPLÍCITA
         const funcionAGraficar = detectarYGraficarFuncion(text);
         console.log("📊 Función a graficar:", funcionAGraficar);
         
         if (funcionAGraficar) {
-            // Es una gráfica, no enviamos a /analizar
             try {
-                // Mostrar indicador de "pensando"
-                const typing = document.createElement('div');
-                typing.className = 'message bot';
-                typing.innerHTML = `
-                    <div class="avatar bot-avatar">
-                        <img src="tutor-avatar.png" alt="Tutor">
-                    </div>
-                    <div class="message-content">Generando gráfica...</div>
-                `;
-                chatContainer.appendChild(typing);
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-                
+                const typing = createTypingMessage("Generando gráfica...");
                 await graficarFuncion(funcionAGraficar);
-                typing.remove();
+                removeTypingMessage(typing);
             } catch (error) {
-                typing.remove();
                 addMessage("❌ Error al generar la gráfica.", 'bot');
                 console.error('Error al graficar:', error);
             } finally {
@@ -84,19 +63,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        // Si no es una gráfica, continuar con el flujo normal
-        // Mostrar indicador de "pensando"
-        const typing = document.createElement('div');
-        typing.className = 'message bot';
-        typing.innerHTML = `
-            <div class="avatar bot-avatar">
-                <img src="tutor-avatar.png" alt="Tutor">
-            </div>
-            <div class="message-content">Pensando...</div>
-        `;
-        chatContainer.appendChild(typing);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-        
+        // Flujo normal para consultas matemáticas
+        const typing = createTypingMessage("Pensando...");
         try {
             const response = await fetch('/analizar', {
                 method: 'POST',
@@ -104,14 +72,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ text: text })
             });
             const data = await response.json();
-            typing.remove();
+            removeTypingMessage(typing);
+            
             if (data.respuesta) {
                 await showStepsSequentially(data.respuesta);
             } else {
                 addMessage("⚠️ No pude procesar tu pregunta.", 'bot');
             }
         } catch (err) {
-            typing.remove();
+            removeTypingMessage(typing);
             addMessage("🔴 Error de conexión. Intenta recargar.", 'bot');
             console.error('Error:', err);
         } finally {
@@ -119,7 +88,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // === MOSTRAR PASOS SECUENCIALMENTE CON VOZ ===
+    function createTypingMessage(text) {
+        const typing = document.createElement('div');
+        typing.className = 'message bot';
+        typing.innerHTML = `
+            <div class="avatar bot-avatar">
+                <img src="tutor-avatar.png" alt="Tutor">
+            </div>
+            <div class="message-content">${text}</div>
+        `;
+        chatContainer.appendChild(typing);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        return typing;
+    }
+    
+    function removeTypingMessage(typing) {
+        if (typing && typing.parentNode) {
+            typing.remove();
+        }
+    }
+    
+    // === MOSTRAR PASOS SECUENCIALMENTE ===
     async function showStepsSequentially(fullResponse) {
         const steps = extractSteps(fullResponse);
         
@@ -132,14 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     speakText(cleanTextForSpeech(steps[i]));
                     
                     if (i < steps.length - 1) {
-                        await new Promise(resolve => {
-                            const checkSpeaking = setInterval(() => {
-                                if (!window.speechSynthesis.speaking) {
-                                    clearInterval(checkSpeaking);
-                                    resolve();
-                                }
-                            }, 100);
-                        });
+                        await waitForSpeechEnd();
                     }
                 } else {
                     await new Promise(resolve => setTimeout(resolve, 1500));
@@ -153,9 +135,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    function waitForSpeechEnd() {
+        return new Promise(resolve => {
+            const checkSpeaking = setInterval(() => {
+                if (!window.speechSynthesis.speaking) {
+                    clearInterval(checkSpeaking);
+                    resolve();
+                }
+            }, 100);
+        });
+    }
+    
     // === LIMPIAR TEXTO PARA VOZ ===
     function cleanTextForSpeech(text) {
-        let cleanText = text
+        return text
             .replace(/(\d+)x/gi, '$1 equis')
             .replace(/(\d+)y/gi, '$1 ye')
             .replace(/(\d+)z/gi, '$1 zeta')
@@ -182,21 +175,12 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/\s+/g, ' ')
             .replace(/\s\./g, '.')
             .replace(/\s\,/g, ',')
-            .trim();
-        
-        cleanText = cleanText
-            .replace(/equis/gi, ' equis ')
-            .replace(/ye/gi, ' ye ')
-            .replace(/zeta/gi, ' zeta ')
-            .replace(/\s+/g, ' ')
+            .trim()
             .replace(/^Paso\s*\d+[:\-\.]\s*/i, '')
-            .trim();
-        
-        if (cleanText.length > 0) {
-            cleanText = cleanText.charAt(0).toUpperCase() + cleanText.slice(1);
-        }
-        
-        return cleanText;
+            .replace(/^equis/gi, ' equis ')
+            .replace(/^ye/gi, ' ye ')
+            .replace(/^zeta/gi, ' zeta ')
+            .replace(/\s+/g, ' ');
     }
     
     // === EXTRAER PASOS ===
@@ -276,13 +260,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // === FORMATEAR TEXTO ===
     function formatText(text) {
-        let formatted = text
+        return text
             .replace(/(Paso\s*\d+[:\.\-])/gi, '<strong style="color: #1565c0; font-size: 1.1em;">$1</strong>')
             .replace(/(Solución final[:\.\-])/gi, '<strong style="color: #2e7d32; font-size: 1.1em;">$1</strong>')
             .replace(/\n/g, '<br>')
             .replace(/\b(\d+[\.\)])/g, '<strong>$1</strong>');
-        
-        return formatted;
     }
     
     // === SÍNTESIS DE VOZ ===
@@ -460,8 +442,6 @@ document.addEventListener('DOMContentLoaded', () => {
 async function graficarFuncion(funcionTexto) {
     try {
         console.log("🚀 Iniciando generación de gráfica para:", funcionTexto);
-        
-        // Mostrar mensaje de carga
         addMessage(`📈 Generando gráfica de: ${funcionTexto}`, 'bot');
         
         const response = await fetch('/graficar', {
@@ -499,7 +479,6 @@ async function graficarFuncion(funcionTexto) {
 function mostrarGrafica(datos, funcion) {
     console.log("🎨 Mostrando gráfica con", datos.length, "puntos");
     
-    // Mostrar contenedor de gráfica
     const graphContainer = document.getElementById('graphContainer');
     const graphCanvas = document.getElementById('graphCanvas');
     
@@ -510,10 +489,8 @@ function mostrarGrafica(datos, funcion) {
     
     graphContainer.style.display = 'block';
     
-    // Configurar Chart.js
     const ctx = graphCanvas.getContext('2d');
     
-    // Destruir gráfica anterior si existe
     if (window.graficaActual) {
         window.graficaActual.destroy();
     }
@@ -541,18 +518,12 @@ function mostrarGrafica(datos, funcion) {
                 x: {
                     type: 'linear',
                     position: 'bottom',
-                    title: {
-                        display: true,
-                        text: 'Eje X'
-                    },
+                    title: { display: true, text: 'Eje X' },
                     min: -10,
                     max: 10
                 },
                 y: {
-                    title: {
-                        display: true,
-                        text: 'Eje Y'
-                    },
+                    title: { display: true, text: 'Eje Y' },
                     min: -10,
                     max: 10
                 }
@@ -561,13 +532,9 @@ function mostrarGrafica(datos, funcion) {
                 title: {
                     display: true,
                     text: `Gráfica de: ${funcion}`,
-                    font: {
-                        size: 16
-                    }
+                    font: { size: 16 }
                 },
-                legend: {
-                    position: 'top'
-                }
+                legend: { position: 'top' }
             }
         }
     });
@@ -575,12 +542,12 @@ function mostrarGrafica(datos, funcion) {
     console.log("✅ Gráfica creada exitosamente");
 }
 
-// === DETECTAR FUNCIONES EN MENSAJES ===
+// === DETECTOR DE GRÁFICAS CORREGIDO ===
 function detectarYGraficarFuncion(texto) {
     console.log("Detectando función en:", texto);
     
-    // Patrones para detectar solicitudes de gráfica
-    const patronesFuncion = [
+    // 1. Patrones EXPLÍCITOS de graficación
+    const patronesExplicitos = [
         /graficar\s+(.+)/i,
         /gráfica\s+de\s+(.+)/i,
         /dibujar\s+(.+)/i,
@@ -590,39 +557,33 @@ function detectarYGraficarFuncion(texto) {
         /representar\s+gráficamente\s+(.+)/i
     ];
     
-    // Verificar patrones explícitos
-    for (const patron of patronesFuncion) {
+    for (const patron of patronesExplicitos) {
         const match = texto.match(patron);
         if (match && match[1]) {
-            console.log("✅ Detectado por patrón:", match[1].trim());
+            console.log("✅ Detectado por patrón explícito:", match[1].trim());
             return match[1].trim();
         }
     }
     
-    // Detectar funciones matemáticas comunes
-    const esFuncionMatematica = /(sin|cos|tan|log|ln|sqrt|∫|lim|x\^|x\*\*|f\(x\)|\^|\*\*|x\s*\+\s*\d|x\s*-\s*\d)/i.test(texto) && 
-                               texto.length > 3 && 
-                               !texto.includes('?') &&
-                               !texto.includes('cómo') &&
-                               !texto.includes('como') &&
-                               !texto.includes('explica') &&
-                               !texto.includes('resuelve') &&
-                               !texto.includes('ayuda') &&
-                               !texto.includes('ejemplo');
+    // 2. Funciones matemáticas puras (solo si son cortas y no contienen palabras de consulta)
+    const esFuncionPura = 
+        // Debe ser corto (menos de 30 caracteres)
+        texto.length <= 30 &&
+        // Debe contener al menos un operador matemático
+        (/[\^\+\-\*\/\(\)]/.test(texto) || /f\(x\)/i.test(texto)) &&
+        // No debe contener palabras que indiquen consulta
+        !/(resolver|calcular|explicar|ayuda|ejemplo|problema|ejercicio|derivada|integral|límite|ecuación|despejar|simplificar)/i.test(texto) &&
+        // No debe contener signos de interrogación
+        !/\?/.test(texto) &&
+        // No debe ser solo un número
+        !/^\d+$/.test(texto);
     
-    if (esFuncionMatematica) {
-        // Extraer la función si está en formato f(x) = ...
-        const matchFunc = texto.match(/f\(x\)\s*=\s*(.+)/i);
-        if (matchFunc) {
-            console.log("✅ Detectado f(x) =", matchFunc[1].trim());
-            return matchFunc[1].trim();
-        }
-        // Si no, asumir que toda la cadena es la función
-        console.log("✅ Detectado como función matemática:", texto);
+    if (esFuncionPura) {
+        console.log("✅ Detectado como función matemática pura:", texto);
         return texto;
     }
     
-    console.log("❌ No se detectó función");
+    console.log("❌ No se detectó solicitud de gráfica");
     return null;
 }
 
@@ -694,4 +655,3 @@ function compartirGrafica() {
         alert('Tu navegador no soporta la función de compartir');
     }
 }
-
