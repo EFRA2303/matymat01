@@ -1,45 +1,39 @@
 const express = require('express');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const math = require('mathjs');
 require('dotenv').config();
 const app = express();
 app.use(express.static('.'));
 app.use(express.json());
 const PORT = process.env.PORT || 10000;
 
-// === FUNCIÓN PARA GENERAR DATOS DE GRÁFICA ===
+// === FUNCIÓN PARA GENERAR DATOS DE GRÁFICA (MEJORADA CON MATH.JS) ===
 function generarDatosGrafica(funcion, xMin, xMax) {
     console.log(`🧮 Generando puntos para f(x) = ${funcion} en [${xMin}, ${xMax}]`);
     
     const puntos = [];
     const paso = 0.1;
     
-    for (let x = xMin; x <= xMax; x += paso) {
-        try {
-            // Reemplazar expresiones matemáticas para evaluación segura
-            let expr = funcion
-                .replace(/sin\(/gi, 'Math.sin(')
-                .replace(/cos\(/gi, 'Math.cos(')
-                .replace(/tan\(/gi, 'Math.tan(')
-                .replace(/sqrt\(/gi, 'Math.sqrt(')
-                .replace(/log\(/gi, 'Math.log10(')
-                .replace(/ln\(/gi, 'Math.log(')
-                .replace(/π/gi, 'Math.PI')
-                .replace(/e\^/gi, 'Math.exp(')
-                .replace(/\^/g, '**')
-                .replace(/x/g, `(${x})`);  // Reemplazar x por el valor actual
-            
-            console.log(`🔍 Evaluando en x=${x}: ${expr}`);
-            
-            // Evaluar la función
-            const y = eval(expr);
-            
-            if (isFinite(y)) {
-                puntos.push({ x: parseFloat(x.toFixed(2)), y: parseFloat(y.toFixed(2)) });
+    try {
+        // Compilar la expresión con Math.js
+        const expr = math.compile(funcion);
+        
+        for (let x = xMin; x <= xMax; x += paso) {
+            try {
+                // Evaluar la función en el punto x usando Math.js
+                const y = expr.evaluate({x: x});
+                
+                if (isFinite(y)) {
+                    puntos.push({ x: parseFloat(x.toFixed(2)), y: parseFloat(y.toFixed(2)) });
+                }
+            } catch (e) {
+                console.warn(`⚠️ Error al evaluar en x=${x}:`, e.message);
+                // Continuar con el siguiente punto
             }
-        } catch (e) {
-            console.warn(`⚠️ Error al evaluar en x=${x}:`, e.message);
-            // Continuar con el siguiente punto
         }
+    } catch (e) {
+        console.error("❌ Error al compilar la función:", e.message);
+        throw new Error("Función matemática inválida");
     }
     
     console.log(`✅ Se generaron ${puntos.length} puntos válidos`);
@@ -66,7 +60,6 @@ app.get('/', (req, res) => {
 
 app.post('/analizar', async (req, res) => {
   try {
-    // ✅ Acepta ambos nombres: "text" (frontend) y "consulta" (backend)
     const { text, consulta } = req.body;
     const input = (text || consulta || '').trim();
     if (!input) {
@@ -81,7 +74,6 @@ app.post('/analizar', async (req, res) => {
     const result = await model.generateContent(fullPrompt);
     const response = await result.response;
     let textResponse = response.text();
-    // ✅ Limpieza mínima
     textResponse = textResponse.replace(/\*\*/g, '').replace(/#/g, '');
     res.json({ respuesta: textResponse });
   } catch (error) {
@@ -99,13 +91,11 @@ app.post('/graficar', async (req, res) => {
         console.log("📥 Solicitud de gráfica recibida:", { funcion, xMin, xMax });
         
         if (!funcion) {
-            console.log("❌ No se proporcionó función");
             return res.status(400).json({ 
                 error: "Por favor, proporciona una función para graficar" 
             });
         }
         
-        // Generar datos para la gráfica
         console.log("🔄 Generando datos de la gráfica...");
         const datos = generarDatosGrafica(funcion, parseFloat(xMin), parseFloat(xMax));
         
@@ -119,7 +109,7 @@ app.post('/graficar', async (req, res) => {
     } catch (error) {
         console.error('🔥 Error al generar gráfica:', error);
         res.status(500).json({ 
-            error: "No pude generar la gráfica. Verifica la función." 
+            error: error.message || "No pude generar la gráfica. Verifica la función." 
         });
     }
 });
