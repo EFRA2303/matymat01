@@ -53,9 +53,11 @@ Solución final: [Respuesta]
 Si la consulta no es matemática, responde: Solo ayudo con problemas de matemáticas.
 `;
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
+
 app.post('/analizar', async (req, res) => {
   try {
     // ✅ Acepta ambos nombres: "text" (frontend) y "consulta" (backend)
@@ -112,4 +114,6 @@ app.post('/graficar', async (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Servidor listo en http://localhost:${PORT}`);
 });
+
 module.exports = app;
+
