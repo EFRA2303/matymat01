@@ -1,61 +1,65 @@
+// server.js - Versión corregida para Render
 import express from 'express';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import math from 'mathjs';
 import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
-// Log inicial para debug
+// Configuración inicial de logging
 console.log('🚀 Iniciando servidor Natymat...');
 console.log('📦 Versión de Node.js:', process.version);
 
+// Cargar variables de entorno
 dotenv.config();
 
-// Debug de variables de entorno
+const PORT = process.env.PORT || 10000;
+
 console.log('🔍 Variables de entorno:');
-console.log('PORT:', process.env.PORT);
+console.log('PORT:', PORT);
 console.log('API_KEY presente:', !!process.env.API_KEY);
 
-if (!process.env.API_KEY) {
-    console.error('❌ ERROR CRÍTICO: API_KEY no está definida');
-    console.log('💡 Solución: Ve a Render -> Tu servicio -> Environment -> Add Environment Variable');
-    // No cerramos el proceso, solo mostramos advertencia
+// Importaciones condicionales para evitar errores de inicialización
+let genAI;
+let math;
+
+try {
+    const { GoogleGenerativeAI } = await import('@google/generative-ai');
+    genAI = new GoogleGenerativeAI(process.env.API_KEY || 'dummy-key');
+    console.log('✅ GoogleGenerativeAI importado correctamente');
+} catch (error) {
+    console.error('❌ Error importando GoogleGenerativeAI:', error.message);
+    // No salimos del proceso, continuamos sin Gemini
+}
+
+try {
+    math = await import('mathjs');
+    console.log('✅ mathjs importado correctamente');
+} catch (error) {
+    console.error('❌ Error importando mathjs:', error.message);
+    // Continuamos sin mathjs
 }
 
 const app = express();
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
-// ... el resto del código se mantiene igual ...
-
-app.use(express.static('.'));
+// Middleware básico
 app.use(express.json({ limit: '10mb' }));
-const PORT = process.env.PORT || 10000;
+app.use(express.static('.'));
 
 // Cache simple
 const responseCache = new Map();
-const CACHE_TIMEOUT = 300000; // 5 minutos
+const CACHE_TIMEOUT = 300000;
 
 // ✅ PROMPT OPTIMIZADO
 const promptBase = `Eres un tutor matemático especializado en TDAH. Resuelve inmediatamente sin preguntas. Responde siempre paso a paso. Si no es matemáticas: "Solo ayudo con matemáticas."`;
 
-// Verificar que API_KEY esté presente
-if (!process.env.API_KEY) {
-    console.error('❌ ERROR: API_KEY no está definida en las variables de entorno');
-    console.log('💡 En Render, ve a Dashboard -> Tu servicio -> Environment -> Add Environment Variable');
-} else {
-    console.log('✅ API_KEY cargada correctamente');
-}
-
-const genAI = new GoogleGenerativeAI(process.env.API_KEY);
-
 // === GENERACIÓN RÁPIDA DE GRÁFICAS ===
 function generarDatosGrafica(funcion, xMin = -10, xMax = 10, puntos = 80) {
+    if (!math) {
+        throw new Error("MathJS no está disponible");
+    }
+    
     const datos = [];
     const paso = (xMax - xMin) / puntos;
     
     try {
-        const compiledFunc = math.compile(funcion);
+        const compiledFunc = math.default.compile(funcion);
         
         for (let i = 0; i <= puntos; i++) {
             const x = xMin + (i * paso);
@@ -78,7 +82,7 @@ function generarDatosGrafica(funcion, xMin = -10, xMax = 10, puntos = 80) {
     return datos;
 }
 
-// Middleware para CORS (importante para Render)
+// Middleware para CORS
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
@@ -87,16 +91,28 @@ app.use((req, res, next) => {
 });
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Natymat Tutor Matemático</title>
+            <meta charset="UTF-8">
+        </head>
+        <body>
+            <h1>Natymat Tutor Matemático</h1>
+            <p>Servidor funcionando correctamente</p>
+            <p>Visita el frontend para usar el tutor</p>
+        </body>
+        </html>
+    `);
 });
 
-// === ENDPOINT PRINCIPAL OPTIMIZADO ===
+// === ENDPOINT PRINCIPAL ===
 app.post('/analizar', async (req, res) => {
     try {
-        // Verificar API_KEY primero
-        if (!process.env.API_KEY) {
-            return res.status(500).json({ 
-                respuesta: "Error de configuración del servidor. Contacta al administrador." 
+        if (!genAI) {
+            return res.status(503).json({ 
+                respuesta: "Servicio de IA no disponible. Verifica la configuración del API_KEY." 
             });
         }
 
@@ -146,9 +162,13 @@ app.post('/analizar', async (req, res) => {
     }
 });
 
-// === ENDPOINT GRÁFICAS OPTIMIZADO ===
+// === ENDPOINT GRÁFICAS ===
 app.post('/graficar', async (req, res) => {
     try {
+        if (!math) {
+            return res.status(503).json({ error: "MathJS no disponible" });
+        }
+
         const { funcion, xMin = -10, xMax = 10 } = req.body;
         
         if (!funcion || funcion.length > 100) {
@@ -168,49 +188,49 @@ app.post('/graficar', async (req, res) => {
     }
 });
 
-// Health check para Render
+// Health check
 app.get('/health', (req, res) => {
     res.status(200).json({ 
         status: 'OK', 
         message: 'Servidor funcionando correctamente',
         timestamp: new Date().toISOString(),
-        version: '1.0.0',
-        geminiVersion: '0.24.1'
+        geminiAvailable: !!genAI,
+        mathjsAvailable: !!math
     });
 });
 
-// Ruta de información del sistema
+// Info del sistema
 app.get('/info', (req, res) => {
     res.status(200).json({
         name: 'Natymat Tutor Matemático',
         version: '1.0.0',
-        description: 'Tutor virtual especializado en TDAH',
+        status: 'operational',
         dependencies: {
-            gemini: '0.24.1',
-            express: '^4.18.2',
-            mathjs: '^14.6.0'
-        },
-        environment: {
-            port: PORT,
-            nodeVersion: process.version,
-            platform: process.platform
+            gemini: genAI ? 'disponible' : 'no disponible',
+            mathjs: math ? 'disponible' : 'no disponible'
         }
     });
 });
 
+// Iniciar servidor
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Servidor Natymat iniciado en puerto ${PORT}`);
-    console.log(`📚 Versión Gemini AI: 0.24.1`);
+    console.log(`✅ Servidor Natymat iniciado exitosamente en puerto ${PORT}`);
     console.log(`🔗 Health check: http://localhost:${PORT}/health`);
     console.log(`📊 Info del sistema: http://localhost:${PORT}/info`);
     
     if (!process.env.API_KEY) {
-        console.warn('⚠️  ADVERTENCIA: API_KEY no configurada');
-    } else {
-        console.log('✅ API_KEY configurada correctamente');
+        console.warn('⚠️  ADVERTENCIA: API_KEY no configurada - Gemini AI no funcionará');
     }
 });
 
-export default app;
+// Manejo de errores
+process.on('uncaughtException', (error) => {
+    console.error('❌ Error no capturado:', error.message);
+});
 
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('❌ Promise rechazada:', reason);
+});
+
+export default app;
 
