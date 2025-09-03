@@ -1,11 +1,13 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-const express = require('express');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-require('dotenv').config();
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+// Configurar dotenv
+dotenv.config();
+
 const app = express();
-app.use(cors()); // 
+app.use(cors());
 app.use(express.static('.'));
 app.use(express.json());
 const PORT = process.env.PORT || 10000;
@@ -75,10 +77,11 @@ Paso 2: [Explicación clara]
 Solución final: [Respuesta]
 Si la consulta no es matemática, responde: Solo ayudo con problemas de matemáticas.
 `;
+
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
 
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html');
+  res.sendFile(process.cwd() + '/index.html');
 });
 
 app.post('/analizar', async (req, res) => {
@@ -141,7 +144,6 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Servidor listo en http://localhost:${PORT}`);
 });
 
-module.exports = app;
-
+export default app;
 
 
