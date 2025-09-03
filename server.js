@@ -1,69 +1,33 @@
-// server.js - Versión corregida para archivos estáticos
 import express from 'express';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import math from 'mathjs';
 import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import cors from 'cors';
 
-// Configuración inicial
-console.log('🚀 Iniciando servidor Natymat...');
-console.log('📦 Versión de Node.js:', process.version);
-
-// Configurar __dirname para ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Cargar variables de entorno
 dotenv.config();
 
-const PORT = process.env.PORT || 10000;
-
-console.log('🔍 Variables de entorno:');
-console.log('PORT:', PORT);
-console.log('API_KEY presente:', !!process.env.API_KEY);
-
-// Importaciones condicionales
-let genAI;
-let math;
-
-try {
-    const { GoogleGenerativeAI } = await import('@google/generative-ai');
-    genAI = new GoogleGenerativeAI(process.env.API_KEY || 'dummy-key');
-    console.log('✅ GoogleGenerativeAI importado correctamente');
-} catch (error) {
-    console.error('❌ Error importando GoogleGenerativeAI:', error.message);
-}
-
-try {
-    math = await import('mathjs');
-    console.log('✅ mathjs importado correctamente');
-} catch (error) {
-    console.error('❌ Error importando mathjs:', error.message);
-}
-
 const app = express();
-
-// Middleware para archivos estáticos (CORREGIDO)
-app.use(express.static(path.join(__dirname)));
+app.use(cors());
+app.use(express.static('.'));
 app.use(express.json({ limit: '10mb' }));
+const PORT = process.env.PORT || 10000;
 
 // Cache simple
 const responseCache = new Map();
-const CACHE_TIMEOUT = 300000;
+const CACHE_TIMEOUT = 300000; // 5 minutos
 
 // ✅ PROMPT OPTIMIZADO
 const promptBase = `Eres un tutor matemático especializado en TDAH. Resuelve inmediatamente sin preguntas. Responde siempre paso a paso. Si no es matemáticas: "Solo ayudo con matemáticas."`;
 
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+
 // === GENERACIÓN RÁPIDA DE GRÁFICAS ===
 function generarDatosGrafica(funcion, xMin = -10, xMax = 10, puntos = 80) {
-    if (!math) {
-        throw new Error("MathJS no está disponible");
-    }
-    
     const datos = [];
     const paso = (xMax - xMin) / puntos;
     
     try {
-        const compiledFunc = math.default.compile(funcion);
+        const compiledFunc = math.compile(funcion);
         
         for (let i = 0; i <= puntos; i++) {
             const x = xMin + (i * paso);
@@ -86,48 +50,13 @@ function generarDatosGrafica(funcion, xMin = -10, xMax = 10, puntos = 80) {
     return datos;
 }
 
-// Middleware para CORS
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    if (req.method === 'OPTIONS') {
-        return res.sendStatus(200);
-    }
-    next();
-});
-
-// Ruta principal - sirve index.html
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(process.cwd() + '/index.html');
 });
 
-// Rutas para archivos estáticos específicos
-app.get('/style.css', (req, res) => {
-    res.sendFile(path.join(__dirname, 'style.css'), {
-        headers: {
-            'Content-Type': 'text/css'
-        }
-    });
-});
-
-app.get('/script.js', (req, res) => {
-    res.sendFile(path.join(__dirname, 'script.js'), {
-        headers: {
-            'Content-Type': 'application/javascript'
-        }
-    });
-});
-
-// === ENDPOINTS API ===
+// === ENDPOINT PRINCIPAL OPTIMIZADO ===
 app.post('/analizar', async (req, res) => {
     try {
-        if (!genAI) {
-            return res.status(503).json({ 
-                respuesta: "Servicio de IA no disponible. Verifica la configuración del API_KEY." 
-            });
-        }
-
         const { text, consulta } = req.body;
         const input = (text || consulta || '').trim().substring(0, 500);
         
@@ -146,11 +75,8 @@ app.post('/analizar', async (req, res) => {
         }
 
         const model = genAI.getGenerativeModel({ 
-            model: 'gemini-1.5-flash',
-            generationConfig: { 
-                maxOutputTokens: 1024, 
-                temperature: 0.7 
-            }
+            model: 'gemini-pro',
+            generationConfig: { maxOutputTokens: 1024, temperature: 0.7 }
         });
         
         const result = await model.generateContent(promptBase + "\n\nConsulta: " + input);
@@ -167,19 +93,14 @@ app.post('/analizar', async (req, res) => {
         
         res.json(respuesta);
     } catch (error) {
-        console.error('Error en /analizar:', error.message);
-        res.status(500).json({ 
-            respuesta: "Error procesando tu pregunta. Intenta nuevamente." 
-        });
+        console.error('Error optimizado:', error.message);
+        res.status(500).json({ respuesta: "Error procesando tu pregunta." });
     }
 });
 
+// === ENDPOINT GRÁFICAS OPTIMIZADO ===
 app.post('/graficar', async (req, res) => {
     try {
-        if (!math) {
-            return res.status(503).json({ error: "MathJS no disponible" });
-        }
-
         const { funcion, xMin = -10, xMax = 10 } = req.body;
         
         if (!funcion || funcion.length > 100) {
@@ -194,55 +115,14 @@ app.post('/graficar', async (req, res) => {
             funcion: funcion
         });
     } catch (error) {
-        console.error('Error en /graficar:', error.message);
-        res.status(500).json({ error: "Error generando gráfica. Verifica la función." });
+        res.status(500).json({ error: "Error generando gráfica" });
     }
 });
 
-// Health check
-app.get('/health', (req, res) => {
-    res.status(200).json({ 
-        status: 'OK', 
-        message: 'Servidor funcionando correctamente',
-        timestamp: new Date().toISOString(),
-        geminiAvailable: !!genAI,
-        mathjsAvailable: !!math
-    });
-});
-
-// Ruta para verificar archivos estáticos
-app.get('/check-files', (req, res) => {
-    const fs = await import('fs');
-    const files = ['index.html', 'style.css', 'script.js'];
-    const results = {};
-    
-    files.forEach(file => {
-        results[file] = fs.existsSync(path.join(__dirname, file));
-    });
-    
-    res.json(results);
-});
-
-// Iniciar servidor
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ Servidor Natymat iniciado exitosamente en puerto ${PORT}`);
-    console.log(`🌐 Frontend disponible en: http://localhost:${PORT}`);
-    console.log(`🔗 Health check: http://localhost:${PORT}/health`);
-    console.log(`📁 Check archivos: http://localhost:${PORT}/check-files`);
-    
-    if (!process.env.API_KEY) {
-        console.warn('⚠️  ADVERTENCIA: API_KEY no configurada - Gemini AI no funcionará');
-    }
-});
-
-// Manejo de errores
-process.on('uncaughtException', (error) => {
-    console.error('❌ Error no capturado:', error.message);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('❌ Promise rechazada:', reason);
+app.listen(PORT, () => {
+    console.log(`🚀 Servidor optimizado en puerto ${PORT}`);
 });
 
 export default app;
+
 
