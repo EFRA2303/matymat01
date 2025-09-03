@@ -1,9 +1,16 @@
-const express = require('express');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+import express from 'express';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import math from 'mathjs';
-require('dotenv').config();
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+dotenv.config();
 
 const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 app.use(express.static('.'));
 app.use(express.json({ limit: '10mb' }));
 const PORT = process.env.PORT || 10000;
@@ -47,7 +54,7 @@ function generarDatosGrafica(funcion, xMin = -10, xMax = 10, puntos = 80) {
 }
 
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // === ENDPOINT PRINCIPAL OPTIMIZADO ===
@@ -119,6 +126,5 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Servidor optimizado en puerto ${PORT}`);
 });
 
-module.exports = app;
-
+export default app;
 
