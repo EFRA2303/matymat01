@@ -1,6 +1,6 @@
 const express = require('express');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const math = require('mathjs');
+import math from 'mathjs';
 require('dotenv').config();
 
 const app = express();
@@ -120,4 +120,5 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 module.exports = app;
+
 
