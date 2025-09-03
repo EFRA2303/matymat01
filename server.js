@@ -1,16 +1,10 @@
-import express from 'express';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import * as math from 'mathjs'; // Corregida la importación
-import dotenv from 'dotenv';
-import cors from 'cors';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-
-dotenv.config();
+const express = require('express');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+import math from 'mathjs';
+require('dotenv').config();
 
 const app = express();
-app.use(cors());
-app.use(express.static('.')); // Sirve archivos estáticos desde el directorio actual
+app.use(express.static('.'));
 app.use(express.json({ limit: '10mb' }));
 const PORT = process.env.PORT || 10000;
 
@@ -52,12 +46,8 @@ function generarDatosGrafica(funcion, xMin = -10, xMax = 10, puntos = 80) {
     return datos;
 }
 
-// Obtener ruta del directorio actual para ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
 app.get('/', (req, res) => {
-    res.sendFile(join(__dirname, 'index.html'));
+    res.sendFile(__dirname + '/index.html');
 });
 
 // === ENDPOINT PRINCIPAL OPTIMIZADO ===
@@ -81,7 +71,7 @@ app.post('/analizar', async (req, res) => {
         }
 
         const model = genAI.getGenerativeModel({ 
-            model: 'gemini-pro',
+            model: 'gemini-1.5-flash',
             generationConfig: { maxOutputTokens: 1024, temperature: 0.7 }
         });
         
@@ -125,10 +115,10 @@ app.post('/graficar', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Servidor optimizado en puerto ${PORT}`);
 });
 
-export default app;
+module.exports = app;
 
 
