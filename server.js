@@ -5,11 +5,28 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+// Log inicial para debug
+console.log('🚀 Iniciando servidor Natymat...');
+console.log('📦 Versión de Node.js:', process.version);
+
 dotenv.config();
+
+// Debug de variables de entorno
+console.log('🔍 Variables de entorno:');
+console.log('PORT:', process.env.PORT);
+console.log('API_KEY presente:', !!process.env.API_KEY);
+
+if (!process.env.API_KEY) {
+    console.error('❌ ERROR CRÍTICO: API_KEY no está definida');
+    console.log('💡 Solución: Ve a Render -> Tu servicio -> Environment -> Add Environment Variable');
+    // No cerramos el proceso, solo mostramos advertencia
+}
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// ... el resto del código se mantiene igual ...
 
 app.use(express.static('.'));
 app.use(express.json({ limit: '10mb' }));
@@ -195,4 +212,5 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 export default app;
+
 
