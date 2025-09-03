@@ -1,6 +1,6 @@
 import express from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { compile } from 'mathjs'; // Importación CORRECTA de mathjs
+import math from 'mathjs'; // Cambiado a importación correcta
 import dotenv from 'dotenv';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
@@ -9,14 +9,18 @@ import { dirname, join } from 'path';
 dotenv.config();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST'],
+    credentials: true
+}));
 app.use(express.static('.'));
 app.use(express.json({ limit: '10mb' }));
 const PORT = process.env.PORT || 10000;
 
 // Cache simple
 const responseCache = new Map();
-const CACHE_TIMEOUT = 300000; // 5 minutos
+const CACHE_TIMEOUT = 300000;
 
 // ✅ PROMPT OPTIMIZADO
 const promptBase = `Eres un tutor matemático especializado en TDAH. Resuelve inmediatamente sin preguntas. Responde siempre paso a paso. Si no es matemáticas: "Solo ayudo con matemáticas."`;
@@ -29,7 +33,7 @@ function generarDatosGrafica(funcion, xMin = -10, xMax = 10, puntos = 80) {
     const paso = (xMax - xMin) / puntos;
     
     try {
-        const compiledFunc = compile(funcion); // Usamos la función importada directamente
+        const compiledFunc = math.compile(funcion);
         
         for (let i = 0; i <= puntos; i++) {
             const x = xMin + (i * paso);
@@ -52,7 +56,7 @@ function generarDatosGrafica(funcion, xMin = -10, xMax = 10, puntos = 80) {
     return datos;
 }
 
-// Obtener ruta del directorio actual para ES modules
+// Obtener ruta del directorio actual
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
