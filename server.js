@@ -1,10 +1,16 @@
-// server.js - Versión corregida para Render
+// server.js - Versión corregida para archivos estáticos
 import express from 'express';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-// Configuración inicial de logging
+// Configuración inicial
 console.log('🚀 Iniciando servidor Natymat...');
 console.log('📦 Versión de Node.js:', process.version);
+
+// Configurar __dirname para ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Cargar variables de entorno
 dotenv.config();
@@ -15,7 +21,7 @@ console.log('🔍 Variables de entorno:');
 console.log('PORT:', PORT);
 console.log('API_KEY presente:', !!process.env.API_KEY);
 
-// Importaciones condicionales para evitar errores de inicialización
+// Importaciones condicionales
 let genAI;
 let math;
 
@@ -25,7 +31,6 @@ try {
     console.log('✅ GoogleGenerativeAI importado correctamente');
 } catch (error) {
     console.error('❌ Error importando GoogleGenerativeAI:', error.message);
-    // No salimos del proceso, continuamos sin Gemini
 }
 
 try {
@@ -33,14 +38,13 @@ try {
     console.log('✅ mathjs importado correctamente');
 } catch (error) {
     console.error('❌ Error importando mathjs:', error.message);
-    // Continuamos sin mathjs
 }
 
 const app = express();
 
-// Middleware básico
+// Middleware para archivos estáticos (CORREGIDO)
+app.use(express.static(path.join(__dirname)));
 app.use(express.json({ limit: '10mb' }));
-app.use(express.static('.'));
 
 // Cache simple
 const responseCache = new Map();
@@ -85,29 +89,37 @@ function generarDatosGrafica(funcion, xMin = -10, xMax = 10, puntos = 80) {
 // Middleware para CORS
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
     next();
 });
 
+// Ruta principal - sirve index.html
 app.get('/', (req, res) => {
-    res.send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Natymat Tutor Matemático</title>
-            <meta charset="UTF-8">
-        </head>
-        <body>
-            <h1>Natymat Tutor Matemático</h1>
-            <p>Servidor funcionando correctamente</p>
-            <p>Visita el frontend para usar el tutor</p>
-        </body>
-        </html>
-    `);
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// === ENDPOINT PRINCIPAL ===
+// Rutas para archivos estáticos específicos
+app.get('/style.css', (req, res) => {
+    res.sendFile(path.join(__dirname, 'style.css'), {
+        headers: {
+            'Content-Type': 'text/css'
+        }
+    });
+});
+
+app.get('/script.js', (req, res) => {
+    res.sendFile(path.join(__dirname, 'script.js'), {
+        headers: {
+            'Content-Type': 'application/javascript'
+        }
+    });
+});
+
+// === ENDPOINTS API ===
 app.post('/analizar', async (req, res) => {
     try {
         if (!genAI) {
@@ -162,7 +174,6 @@ app.post('/analizar', async (req, res) => {
     }
 });
 
-// === ENDPOINT GRÁFICAS ===
 app.post('/graficar', async (req, res) => {
     try {
         if (!math) {
@@ -199,24 +210,25 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Info del sistema
-app.get('/info', (req, res) => {
-    res.status(200).json({
-        name: 'Natymat Tutor Matemático',
-        version: '1.0.0',
-        status: 'operational',
-        dependencies: {
-            gemini: genAI ? 'disponible' : 'no disponible',
-            mathjs: math ? 'disponible' : 'no disponible'
-        }
+// Ruta para verificar archivos estáticos
+app.get('/check-files', (req, res) => {
+    const fs = await import('fs');
+    const files = ['index.html', 'style.css', 'script.js'];
+    const results = {};
+    
+    files.forEach(file => {
+        results[file] = fs.existsSync(path.join(__dirname, file));
     });
+    
+    res.json(results);
 });
 
 // Iniciar servidor
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Servidor Natymat iniciado exitosamente en puerto ${PORT}`);
+    console.log(`🌐 Frontend disponible en: http://localhost:${PORT}`);
     console.log(`🔗 Health check: http://localhost:${PORT}/health`);
-    console.log(`📊 Info del sistema: http://localhost:${PORT}/info`);
+    console.log(`📁 Check archivos: http://localhost:${PORT}/check-files`);
     
     if (!process.env.API_KEY) {
         console.warn('⚠️  ADVERTENCIA: API_KEY no configurada - Gemini AI no funcionará');
