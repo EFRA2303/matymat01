@@ -264,4 +264,72 @@ function detectarYGraficarFuncion(texto) {
     
     return esFuncionPura ? texto : null;
 }
+// Funciones para el teclado matemático
+function insertAtCursor(text) {
+    const input = document.getElementById('userInput');
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    input.value = input.value.substring(0, start) + text + input.value.substring(end);
+    input.selectionStart = input.selectionEnd = start + text.length;
+    input.focus();
+}
+
+function insertFunction(funcName) {
+    insertAtCursor(funcName + '()');
+    const input = document.getElementById('userInput');
+    input.selectionStart = input.selectionEnd = input.selectionStart - 1;
+    input.focus();
+}
+
+function insertFraction() {
+    insertAtCursor('(/)');
+    const input = document.getElementById('userInput');
+    input.selectionStart = input.selectionEnd = input.selectionStart - 2;
+    input.focus();
+}
+
+function clearInput() {
+    document.getElementById('userInput').value = '';
+}
+
+function formatText(text) {
+    // Formatear texto para mostrar correctamente en el chat
+    return text.replace(/\n/g, '<br>')
+               .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+               .replace(/_([^_]+)_/g, '<em>$1</em>');
+}
+
+function cleanTextForSpeech(text) {
+    // Limpiar texto para síntesis de voz
+    return text.replace(/\*/g, '')
+               .replace(/#/g, '')
+               .replace(/\//g, ' dividido por ')
+               .replace(/\*/g, ' por ')
+               .replace(/\(/g, '')
+               .replace(/\)/g, '')
+               .replace(/\[/g, '')
+               .replace(/\]/g, '');
+}
+
+// Toggle para teclado matemático
+document.getElementById('toggleMathBtn').addEventListener('click', function() {
+    const mathToolbar = document.getElementById('mathToolbar');
+    mathToolbar.style.display = mathToolbar.style.display === 'none' ? 'grid' : 'none';
+});
+
+// Funciones para la cámara
+document.getElementById('uploadBtn').addEventListener('click', function() {
+    document.getElementById('fileInput').click();
+});
+
+document.getElementById('fileInput').addEventListener('change', function(e) {
+    if (e.target.files && e.target.files[0]) {
+        // Aquí puedes procesar la imagen
+        addMessage('📷 Imagen recibida. Procesando...', 'user');
+        // Simular procesamiento
+        setTimeout(() => {
+            addMessage('He recibido tu imagen. Por favor, describe el problema matemático que necesitas resolver.', 'bot');
+        }, 2000);
+    }
+});
 
