@@ -620,3 +620,43 @@ header p {
     border-radius: 5px;
     cursor: pointer;
 }
+/* === OPTIMIZACIONES CSS === */
+.message {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    will-change: opacity, transform;
+}
+
+.message.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Hardware acceleration */
+.avatar, .message-content {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* Mejor rendimiento en animaciones */
+.math-toolbar {
+    transform: translateZ(0);
+}
+
+/* Optimizar scroll */
+.chat-container {
+    overflow-anchor: none;
+}
+
+/* Mensaje de typing optimizado */
+.typing .message-content::after {
+    content: '...';
+    animation: typing 1.5s infinite;
+}
+
+@keyframes typing {
+    0%, 20% { content: '.'; }
+    40% { content: '..'; }
+    60%, 100% { content: '...'; }
+}
