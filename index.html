@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- GeoGebra para gráficas -->
+    <script src="https://www.geogebra.org/apps/deployggb.js"></script>
     <!-- Manifest y PWA -->
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="tutor-avatar.png">
@@ -20,9 +22,6 @@
     <link rel="preload" href="tutor-avatar.png" as="image">
     <!-- Favicon -->
     <link rel="icon" href="tutor-avatar.png" type="image/png" sizes="192x192">
-    <!-- Math.js y Chart.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <!-- Contenedor para efectos de confeti -->
@@ -127,24 +126,23 @@
             </div>
         </div>
     </div>
-    <!-- Contenedor de gráfica -->
+    <!-- Contenedor de gráfica con GeoGebra -->
     <div class="graph-container" id="graphContainer" style="display: none;">
         <div class="panel-header">
             <h3>📈 Gráfica de Función</h3>
-            <button id="closeGraph">×</button>
+            <button onclick="cerrarGrafica()">×</button>
         </div>
         <div class="graph-controls">
-            <button onclick="zoomIn()">🔍+</button>
-            <button onclick="zoomOut()">🔍-</button>
-            <button onclick="resetZoom()">↺</button>
+            <button onclick="zoomInGeoGebra()">🔍+</button>
+            <button onclick="zoomOutGeoGebra()">🔍-</button>
+            <button onclick="resetZoomGeoGebra()">↺</button>
         </div>
-        <canvas id="graphCanvas" width="400" height="300"></canvas>
+        <div id="ggb-element" style="width: 100%; height: 400px;"></div>
         <div class="graph-actions">
-            <button onclick="descargarGrafica()">💾 Guardar</button>
-            <button onclick="compartirGrafica()">📤 Compartir</button>
+            <button onclick="descargarGraficaGeoGebra()">💾 Guardar</button>
         </div>
     </div>
-    <!-- Sistema de Opciones y Estrellas (VERSIÓN MEJORADA) -->
+    <!-- Sistema de Opciones y Estrellas -->
     <div class="opciones-container" id="opcionesContainer" style="display: none;">
         <div class="opciones-header">
             <h4>🎯 Elige una opción:</h4>
@@ -158,7 +156,7 @@
         </div>
     </div>
 
-    <!-- Loading de estrellas (mejorado para animaciones) -->
+    <!-- Loading de estrellas -->
     <div id="loadingEstrella" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 1000;">
         <div class="estrella-loading" style="font-size: 3rem; animation: starWin 1s ease-in-out infinite;">⭐</div>
         <p style="color: white; text-shadow: 0 0 5px black; font-weight: bold;">¡Ganaste una estrella!</p>
@@ -167,4 +165,5 @@
     <script src="script.js"></script>
 </body>   
 </html>
+
 
