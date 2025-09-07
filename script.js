@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     setTimeout(() => {
                         mostrarOpcionesInteractivo(data.opciones);
                         if (window.voiceEnabled) {
-                            narrarOpciones(data.opciones, data.respuestaCorrecta);
+                            narrarPasoCompleto(data.respuesta, data.opciones, data.respuestaCorrecta);
                         }
                     }, 500);
                 } else {
@@ -176,6 +176,28 @@ document.addEventListener('DOMContentLoaded', () => {
                         botonCorrecto.innerHTML += ' ✓';
                     }
                 }
+                
+                // Explicación vocal del error
+                if (window.voiceEnabled) {
+                    const explicacionError = `Incorrecto. La opción correcta es la ${opcionCorrecta.letra}. ` +
+                                           `Recuerda que: ${pasoActual.explicacionError || 'revisa los conceptos básicos.'}`;
+                    
+                    // Esperar un momento antes de explicar el error
+                    setTimeout(() => {
+                        speakText(explicacionError);
+                        
+                        // Después de explicar el error, repetir las opciones
+                        setTimeout(() => {
+                            let textoOpciones = " Las opciones disponibles son: ";
+                            window.opcionesActuales.forEach((opcion, index) => {
+                                const letra = String.fromCharCode(65 + index);
+                                textoOpciones += `Opción ${letra}. `;
+                            });
+                            textoOpciones += "Elige de nuevo.";
+                            speakText(textoOpciones);
+                        }, 4000);
+                    }, 2000);
+                }
             }
         }
         
@@ -204,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => {
                     mostrarOpcionesInteractivo(data.opciones);
                     if (window.voiceEnabled) {
-                        narrarOpciones(data.opciones, data.respuestaCorrecta);
+                        narrarPasoCompleto(data.respuesta, data.opciones, data.respuestaCorrecta);
                     }
                 }, 1500);
             } else {
@@ -228,30 +250,84 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // === NARRAR OPCIONES POR VOZ ===
-function narrarOpciones(opciones, respuestaCorrecta) {
-    if (!window.voiceEnabled) return;
+    // === NARRAR EXPLICACIÓN COMPLETA DEL PASO MEJORADA ===
+    function narrarPasoCompleto(respuestaCompleta, opciones, respuestaCorrecta) {
+        if (!window.voiceEnabled) return;
+        
+        // Extraer solo la explicación del paso (sin opciones)
+        const lineas = respuestaCompleta.split('\n');
+        const explicacionPaso = lineas[0].replace(/\*\*/g, '').replace(/📝\s*\*?\*?Paso\s*\d+[:\.\-]\s*\*?\*?/i, '');
+        
+        // Narra la explicación del paso
+        speakText(explicacionPaso);
+        
+        // Después de la explicación, narrar las opciones
+        setTimeout(() => {
+            let textoOpciones = " Ahora tienes estas opciones: ";
+            opciones.forEach((opcion, index) => {
+                const letra = String.fromCharCode(65 + index);
+                textoOpciones += `Opción ${letra}. `;
+            });
+            textoOpciones += "¿Cuál eliges?";
+            speakText(textoOpciones);
+        }, 4000); // Tiempo suficiente para que termine la explicación
+    }
     
-    let textoOpciones = "Opciones disponibles: ";
-    opciones.forEach((opcion, index) => {
-        const letra = String.fromCharCode(65 + index);
-        textoOpciones += `Opción ${letra}. `;
-    });
-    
-    setTimeout(() => {
-        speakText(textoOpciones);
-    }, 1000);
-}
-    
-    // === ACTUALIZAR ESTRELLAS CON ANIMACIÓN ===
+    // === ACTUALIZAR ESTRELLAS CON EFECTOS MEJORADOS ===
     function actualizarEstrellas(cantidad) {
         window.estrellasTotales = cantidad;
         const contador = document.getElementById('contadorEstrellas');
+        
         if (contador) {
-            contador.textContent = cantidad;
+            // Efecto de conteo animado
+            let currentCount = parseInt(contador.textContent) || 0;
+            const increment = cantidad > currentCount ? 1 : -1;
+            
+            const animateCount = () => {
+                currentCount += increment;
+                contador.textContent = currentCount;
+                
+                // Efecto de confeti cuando se gana una estrella
+                if (increment > 0) {
+                    crearConfeti();
+                }
+                
+                if ((increment > 0 && currentCount < cantidad) || 
+                    (increment < 0 && currentCount > cantidad)) {
+                    requestAnimationFrame(animateCount);
+                }
+            };
+            
+            animateCount();
+            
+            // Animación de pulso mejorada
             contador.classList.add('star-pulse');
-            setTimeout(() => contador.classList.remove('star-pulse'), 1000);
+            setTimeout(() => {
+                contador.classList.remove('star-pulse');
+            }, 1000);
         }
+    }
+
+    // === CREAR EFECTO CONFETI ===
+    function crearConfeti() {
+        const confettiContainer = document.createElement('div');
+        confettiContainer.className = 'star-confetti';
+        
+        for (let i = 0; i < 30; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti-piece';
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.animationDelay = Math.random() * 2 + 's';
+            confetti.style.background = ['#FFD700', '#FF8C00', '#FF6347', '#00CED1', '#9370DB'][Math.floor(Math.random() * 5)];
+            confettiContainer.appendChild(confetti);
+        }
+        
+        document.body.appendChild(confettiContainer);
+        
+        // Remover después de la animación
+        setTimeout(() => {
+            confettiContainer.remove();
+        }, 3000);
     }
     
     function createTypingMessage(text) {
@@ -722,4 +798,5 @@ function compartirGrafica() {
         alert('Tu navegador no soporta la función de compartir');
     }
 }
+
 
