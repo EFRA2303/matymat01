@@ -78,6 +78,15 @@ document.addEventListener('DOMContentLoaded', () => {
             removeTypingMessage(typing);
             
             if (data.respuesta) {
+                // Si el servidor indica que generó una gráfica, mostrarla
+                if (data.necesitaGrafica && data.graficaData && data.graficaData.puntos) {
+                    addMessage(data.respuesta, 'bot');
+                    // el servidor devuelve puntos en graficaData.puntos
+                    mostrarGrafica(data.graficaData.puntos, data.graficaData.funcion);
+                    isSending = false;
+                    return;
+                }
+
                 // VERIFICAR SI ES MODO INTERACTIVO
                 if (data.tipo === "interactivo" && data.tieneOpciones) {
                     window.sesionActual = data.sesionId;
@@ -86,7 +95,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     // Mostrar opciones después de un breve delay
                     setTimeout(() => {
-                        document.getElementById('opcionesContainer').style.display = 'block';
+                        const opcionesContainer = document.getElementById('opcionesContainer');
+                        if (opcionesContainer) opcionesContainer.style.display = 'block';
                     }, 500);
                 } else {
                     // MODO NORMAL (sin opciones)
@@ -109,12 +119,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!window.sesionActual) return;
         
         const opcionesDiv = document.getElementById('opcionesContainer');
-        const botones = opcionesDiv.querySelectorAll('.opcion-btn');
+        const botones = opcionesDiv ? opcionesDiv.querySelectorAll('.opcion-btn') : [];
         
-        // Deshabilitar botones durante la respuesta
         botones.forEach(btn => btn.disabled = true);
-        
-        // Mostrar opción seleccionada
         addMessage(`Elegiste: Opción ${opcion}`, 'user');
         
         try {
@@ -128,36 +135,29 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             const data = await response.json();
-            
-            // Mostrar respuesta del tutor
             addMessage(data.respuesta, 'bot');
             
-            // Actualizar estrellas
             if (data.estrellas !== undefined) {
                 actualizarEstrellas(data.estrellas);
             }
             
             if (data.tieneOpciones && !data.sesionCompletada) {
-                // Mostrar nuevas opciones para el siguiente paso
                 setTimeout(() => {
                     botones.forEach(btn => btn.disabled = false);
                 }, 1000);
             } else {
-                // Ocultar opciones si no hay más pasos
-                opcionesDiv.style.display = 'none';
+                if (opcionesDiv) opcionesDiv.style.display = 'none';
                 botones.forEach(btn => btn.disabled = false);
             }
             
             if (data.sesionExpirada) {
                 window.sesionActual = null;
-                opcionesDiv.style.display = 'none';
+                if (opcionesDiv) opcionesDiv.style.display = 'none';
             }
             
         } catch (error) {
             addMessage("❌ Error al procesar tu respuesta", 'bot');
             console.error('Error:', error);
-            
-            // Rehabilitar botones en caso de error
             botones.forEach(btn => btn.disabled = false);
         }
     }
@@ -165,15 +165,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // === ACTUALIZAR ESTRELLAS ===
     function actualizarEstrellas(cantidad) {
         window.estrellasTotales = cantidad;
-        document.getElementById('contadorEstrellas').textContent = cantidad;
+        const contador = document.getElementById('contadorEstrellas');
+        if (contador) contador.textContent = cantidad;
         
-        // Animación de estrella
         const loading = document.getElementById('loadingEstrella');
-        loading.style.display = 'block';
-        
-        setTimeout(() => {
-            loading.style.display = 'none';
-        }, 2000);
+        if (loading) {
+            loading.style.display = 'block';
+            setTimeout(() => {
+                loading.style.display = 'none';
+            }, 2000);
+        }
     }
     
     function createTypingMessage(text) {
@@ -556,7 +557,7 @@ async function graficarFuncion(funcionTexto) {
             mostrarGrafica(data.datos, data.funcion);
         } else {
             console.error("❌ Error en la respuesta:", data.error);
-            addMessage(`❌ Error: ${data.error}`, 'bot');
+            addMessage(`❌ Error: ${data.error || 'No se pudo generar la gráfica'}`, 'bot');
         }
     } catch (error) {
         console.error('🔥 Error al graficar:', error);
@@ -736,3 +737,4 @@ function compartirGrafica() {
         alert('Tu navegador no soporta la función de compartir');
     }
 }
+
