@@ -1,11 +1,5 @@
-// script.js - VERSIÓN FINAL CON VOZ Y CHAT DESPLEGABLE
+// script.js - VERSIÓN CORREGIDA CON ESTRELLAS, OPCIONES Y CHAT DESPLEGABLE
 document.addEventListener('DOMContentLoaded', () => {
-    // Variables globales
-    let isSending = false;
-    window.voiceEnabled = true;
-    window.sesionActual = null;
-    window.estrellasTotales = 0;
-
     const userInput = document.getElementById('userInput');
     const sendBtn = document.getElementById('sendBtn');
     const chatContainer = document.getElementById('chatContainer');
@@ -27,6 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('❌ No se encontraron elementos del DOM');
         return;
     }
+
+    let isSending = false;
+    window.voiceEnabled = true;
+    window.sesionActual = null;
+    window.estrellasTotales = 0;
 
     // === ACTIVAR CÁMARA ===
     if (uploadBtn && fileInput) {
@@ -56,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addMessage(text, 'user');
         userInput.value = '';
 
+        // Detectar si es una solicitud de gráfica
         const funcionAGraficar = detectarYGraficarFuncion(text);
         if (funcionAGraficar) {
             try {
@@ -70,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Flujo normal
         const typing = createTypingMessage('Pensando...');
         try {
             const response = await fetch('/analizar', {
@@ -81,17 +82,11 @@ document.addEventListener('DOMContentLoaded', () => {
             removeTypingMessage(typing);
 
             if (data.respuesta) {
-                if (data.necesitaGrafica && data.graficaData && data.graficaData.puntos) {
-                    addMessage(data.respuesta, 'bot');
-                    mostrarGrafica(data.graficaData.puntos, data.graficaData.funcion);
-                    isSending = false;
-                    return;
-                }
-
                 if (data.tipo === 'interactivo' && data.tieneOpciones) {
                     window.sesionActual = data.sesionId;
                     actualizarEstrellas(data.estrellas);
                     addMessage(data.respuesta, 'bot');
+                    mostrarOpcionesInteractivo(data.respuesta);
                 } else {
                     await showStepsSequentially(data.respuesta);
                 }
@@ -114,10 +109,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // === MOSTRAR OPCIONES INTERACTIVAS ===
+    function mostrarOpcionesInteractivo(texto) {
+        const opcionesContainer = document.getElementById('opcionesContainer');
+        if (!opcionesContainer) return;
+        opcionesContainer.innerHTML = '';
+        const lineas = texto.split('\n').filter(l => /^[ABC]\)/.test(l.trim()));
+        lineas.forEach(l => {
+            const letra = l.trim()[0];
+            const btn = document.createElement('button');
+            btn.className = 'opcion-btn';
+            btn.textContent = l.trim();
+            btn.onclick = () => elegirOpcion(letra);
+            opcionesContainer.appendChild(btn);
+        });
+        opcionesContainer.style.display = 'block';
+    }
+
     // === FUNCIÓN PARA ELEGIR OPCIÓN ===
     window.elegirOpcion = async function (opcion) {
         if (!window.sesionActual) return;
-
         addMessage(`Elegiste: Opción ${opcion}`, 'user');
 
         try {
@@ -136,11 +147,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.estrellas !== undefined) {
                 actualizarEstrellas(data.estrellas);
             }
-
-            if (data.sesionExpirada) {
+            if (data.sesionExpirada || data.sesionCompletada) {
                 window.sesionActual = null;
+                document.getElementById('opcionesContainer').style.display = 'none';
+            } else if (data.tieneOpciones) {
+                mostrarOpcionesInteractivo(data.respuesta);
             }
-        } catch (error) {
+        } catch {
             addMessage('❌ Error al procesar tu respuesta', 'bot');
         }
     };
@@ -152,37 +165,35 @@ document.addEventListener('DOMContentLoaded', () => {
         if (contador) contador.textContent = cantidad;
     }
 
+    // === CREAR MENSAJES ===
     function createTypingMessage(text) {
         const typing = document.createElement('div');
         typing.className = 'message bot';
-        typing.innerHTML = `<div class="message-content">${text}</div>`;
+        typing.innerHTML = `
+            <div class="avatar bot-avatar">
+                <img src="tutor-avatar.png" alt="Tutor">
+            </div>
+            <div class="message-content">${text}</div>
+        `;
         chatContainer.appendChild(typing);
         chatContainer.scrollTop = chatContainer.scrollHeight;
         return typing;
     }
 
     function removeTypingMessage(typing) {
-        if (typing && typing.parentNode) {
-            typing.remove();
-        }
+        if (typing?.parentNode) typing.remove();
     }
 
     // === MOSTRAR PASOS SECUENCIALMENTE ===
     async function showStepsSequentially(fullResponse) {
         const steps = extractSteps(fullResponse);
-
         if (steps.length > 0) {
             for (let i = 0; i < steps.length; i++) {
                 await addMessageWithDelay(steps[i], 'bot', i * 1500);
-
                 if (window.voiceEnabled) {
-                    await new Promise((resolve) => setTimeout(resolve, 300));
+                    await new Promise(r => setTimeout(r, 300));
                     speakText(cleanTextForSpeech(steps[i]));
-                    if (i < steps.length - 1) {
-                        await waitForSpeechEnd();
-                    }
-                } else {
-                    await new Promise((resolve) => setTimeout(resolve, 1500));
+                    if (i < steps.length - 1) await waitForSpeechEnd();
                 }
             }
         } else {
@@ -192,10 +203,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function waitForSpeechEnd() {
-        return new Promise((resolve) => {
-            const checkSpeaking = setInterval(() => {
+        return new Promise(resolve => {
+            const check = setInterval(() => {
                 if (!window.speechSynthesis.speaking) {
-                    clearInterval(checkSpeaking);
+                    clearInterval(check);
                     resolve();
                 }
             }, 100);
@@ -217,13 +228,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function extractSteps(text) {
         const stepPattern =
             /(Paso\s*\d+[:\-\.]\s*[^Paso]+)(?=Paso|Solución|$)/gi;
-        let matches = text.match(stepPattern);
-        if (matches && matches.length > 1) return matches.map((s) => s.trim());
-        return [text];
+        const matches = text.match(stepPattern);
+        return matches?.length > 0 ? matches.map(s => s.trim()) : [text];
     }
 
     function addMessageWithDelay(text, sender, delay) {
-        return new Promise((resolve) => {
+        return new Promise(resolve => {
             setTimeout(() => {
                 addMessage(text, sender);
                 resolve();
@@ -234,15 +244,47 @@ document.addEventListener('DOMContentLoaded', () => {
     function addMessage(text, sender) {
         const div = document.createElement('div');
         div.className = `message ${sender}`;
+        div.style.opacity = '0';
+        div.style.transform = 'translateY(20px)';
+        div.style.transition = 'all 0.5s ease';
+
+        const avatar = document.createElement('div');
+        avatar.className = `avatar ${sender}-avatar`;
+        if (sender === 'bot') {
+            const img = document.createElement('img');
+            img.src = 'tutor-avatar.png';
+            img.alt = 'Tutor MatyMat-01';
+            avatar.appendChild(img);
+        } else {
+            avatar.innerHTML = '<i class="fas fa-user"></i>';
+        }
+
         const content = document.createElement('div');
         content.className = 'message-content';
-        content.innerHTML = text;
+        content.innerHTML = formatText(text);
+
+        div.appendChild(avatar);
         div.appendChild(content);
         chatContainer.appendChild(div);
+
+        setTimeout(() => {
+            div.style.opacity = '1';
+            div.style.transform = 'translateY(0)';
+        }, 50);
+
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    // === VOZ CORREGIDA ===
+    // === FORMATEAR TEXTO ===
+    function formatText(text) {
+        return text
+            .replace(/(Paso\s*\d+[:\.\-])/gi, '<strong style="color: #1565c0; font-size: 1.1em;">$1</strong>')
+            .replace(/(Solución final[:\.\-])/gi, '<strong style="color: #2e7d32; font-size: 1.1em;">$1</strong>')
+            .replace(/\n/g, '<br>')
+            .replace(/\b(\d+[\.\)])/g, '<strong>$1</strong>');
+    }
+
+    // === SÍNTESIS DE VOZ ===
     function speakText(texto) {
         if ('speechSynthesis' in window && window.voiceEnabled) {
             window.speechSynthesis.cancel();
@@ -254,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             function setVoice() {
                 const voices = window.speechSynthesis.getVoices();
-                const spanishVoice = voices.find((v) => v.lang.startsWith('es'));
+                const spanishVoice = voices.find(v => v.lang.startsWith('es'));
                 if (spanishVoice) utterance.voice = spanishVoice;
                 window.speechSynthesis.speak(utterance);
             }
@@ -267,13 +309,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // === SIMULAR ANÁLISIS DE IMAGEN ===
     function simulateImageAnalysis(file) {
         setTimeout(() => {
-            addMessage(
-                '🔍 He detectado un problema matemático en la imagen. Describe qué necesitas resolver.',
-                'bot'
-            );
+            addMessage('🔍 He detectado un problema matemático en la imagen. Describe qué necesitas resolver.', 'bot');
         }, 2000);
+    }
+
+    // === INICIALIZAR ===
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.getVoices();
     }
 });
 
@@ -283,11 +328,7 @@ async function graficarFuncion(funcionTexto) {
         const response = await fetch('/graficar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                funcion: funcionTexto,
-                xMin: -10,
-                xMax: 10,
-            }),
+            body: JSON.stringify({ funcion: funcionTexto, xMin: -10, xMax: 10 }),
         });
         const data = await response.json();
         if (data.success) {
@@ -295,7 +336,7 @@ async function graficarFuncion(funcionTexto) {
         } else {
             addMessage('❌ No se pudo generar la gráfica', 'bot');
         }
-    } catch (error) {
+    } catch {
         addMessage('❌ Error al generar la gráfica', 'bot');
     }
 }
@@ -310,21 +351,21 @@ function mostrarGrafica(datos, funcion) {
     window.graficaActual = new Chart(ctx, {
         type: 'line',
         data: {
-            datasets: [
-                {
-                    label: `f(x) = ${funcion}`,
-                    data: datos,
-                    borderColor: '#4361ee',
-                    borderWidth: 3,
-                    pointRadius: 0,
-                    tension: 0.4,
-                },
-            ],
+            datasets: [{
+                label: `f(x) = ${funcion}`,
+                data: datos,
+                borderColor: '#4361ee',
+                backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                borderWidth: 3,
+                pointRadius: 0,
+                fill: true,
+                tension: 0.4
+            }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-        },
+        }
     });
 }
 
@@ -336,5 +377,6 @@ function detectarYGraficarFuncion(texto) {
     }
     return null;
 }
+
 
 
