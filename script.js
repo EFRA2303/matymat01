@@ -229,17 +229,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // === NARRAR OPCIONES POR VOZ ===
-    function narrarOpciones(opciones, respuestaCorrecta) {
-        if (!window.voiceEnabled) return;
-        
-        let textoOpciones = "Tienes las siguientes opciones: ";
-        opciones.forEach((opcion, index) => {
-            const letra = String.fromCharCode(65 + index);
-            textoOpciones += `Opción ${letra}: ${opcion.texto}. `;
-        });
-        
+function narrarOpciones(opciones, respuestaCorrecta) {
+    if (!window.voiceEnabled) return;
+    
+    let textoOpciones = "Opciones disponibles: ";
+    opciones.forEach((opcion, index) => {
+        const letra = String.fromCharCode(65 + index);
+        textoOpciones += `Opción ${letra}. `;
+    });
+    
+    setTimeout(() => {
         speakText(textoOpciones);
-    }
+    }, 1000);
+}
     
     // === ACTUALIZAR ESTRELLAS CON ANIMACIÓN ===
     function actualizarEstrellas(cantidad) {
@@ -720,3 +722,4 @@ function compartirGrafica() {
         alert('Tu navegador no soporta la función de compartir');
     }
 }
+
