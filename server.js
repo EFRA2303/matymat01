@@ -37,6 +37,8 @@ EXPLICACIÓN-ERROR: [Explicación si eligen mal]
 FINAL: [Solución final y felicitación]
 
 Si no es matemática: "Solo ayudo con problemas de matemáticas :)"
+
+IMPORTANTE: Para funciones gráficas, responde indicando que se puede graficar pero NO intentes generar datos de gráfica.
 `;
 
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
@@ -63,9 +65,12 @@ function parsearRespuestaConOpciones(texto) {
       const explicacionError = (matchOpciones[4] || '').trim();
       const opcionCorrecta = opciones.find(op => op.correcta)?.letra || 'A';
 
+      // Extraer la explicación del paso (sin las opciones)
+      const explicacionPaso = bloquePaso.replace(regexOpciones, '').trim();
+
       pasos.push({
         numero: numeroPaso,
-        explicacion: bloquePaso.replace(regexOpciones, '').trim(),
+        explicacion: explicacionPaso,
         opciones,
         opcionCorrecta,
         explicacionError
@@ -89,11 +94,34 @@ app.post('/analizar', async (req, res) => {
       });
     }
 
+    // Detectar si es comando de gráfica
     const comandosGrafica = ['gráfica', 'grafica', 'graficar', 'gráficar', 'muéstrame la gráfica', 'mostrar gráfica', 'dibujar'];
     const esComandoGrafica = comandosGrafica.some(c => input.includes(c));
 
     if (esComandoGrafica) {
-      return await manejarSolicitudGrafica(input, res);
+      // Extraer la función del texto
+      const funcionMatch = input.match(/(?:de|la|el|para|graficar|gráficar|grafica)\s+([^\.\?\!]+)/i);
+      let funcion = funcionMatch ? funcionMatch[1].trim() : input;
+
+      funcion = funcion
+        .replace(/(funci[óo]n|gr[áa]fica|grafica|grafica:|de|la|el|mu[ée]strame|quiero|ver|visualizar)/gi, '')
+        .replace(/[^\w\s\-\+\*\/\^\(\)\.\,]/g, '')
+        .trim();
+
+      if (!funcion || funcion.length < 1) {
+        return res.json({
+          respuesta: "¿Qué función matemática te gustaría graficar? Por ejemplo: 'x^2', 'sin(x)', o '2*x + 1'",
+          necesitaGrafica: false
+        });
+      }
+
+      return res.json({
+        respuesta: `✅ ¡Perfecto! Puedo generar la gráfica para **f(x) = ${funcion}**. Usaré GeoGebra para mostrarte una representación visual interactiva.`,
+        necesitaGrafica: true,
+        graficaData: {
+          funcion: funcion
+        }
+      });
     }
 
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
@@ -129,6 +157,7 @@ app.post('/analizar', async (req, res) => {
         tieneOpciones: true,
         opciones: primerPaso.opciones,
         respuestaCorrecta: primerPaso.opcionCorrecta,
+        explicacionError: primerPaso.explicacionError,
         estrellas: 0
       });
     } else {
@@ -203,6 +232,7 @@ app.post('/responder', async (req, res) => {
           tieneOpciones: true,
           opciones: siguientePaso.opciones,
           respuestaCorrecta: siguientePaso.opcionCorrecta,
+          explicacionError: siguientePaso.explicacionError,
           estrellas: sesion.estrellas
         });
       } else {
@@ -220,7 +250,7 @@ app.post('/responder', async (req, res) => {
       }
     } else {
       let respuesta = `❌ **Incorrecto.**\n\n`;
-      respuesta += `**Explicación:** ${pasoActual.explicacionError}\n\n`;
+      respuesta += `**Explicación del error:** ${pasoActual.explicacionError}\n\n`;
       respuesta += `**La opción correcta era:** ${pasoActual.opcionCorrecta}\n\n`;
       respuesta += `**Paso ${pasoActual.numero}:** ${pasoActual.explicacion}\n\n`;
       respuesta += "**Opciones:**\n";
@@ -237,6 +267,7 @@ app.post('/responder', async (req, res) => {
         tieneOpciones: true,
         opciones: pasoActual.opciones,
         respuestaCorrecta: pasoActual.opcionCorrecta,
+        explicacionError: pasoActual.explicacionError,
         estrellas: sesion.estrellas
       });
     }
@@ -249,6 +280,32 @@ app.post('/responder', async (req, res) => {
   }
 });
 
+// Endpoint para graficar (ahora manejado por GeoGebra en frontend)
+app.post('/graficar', async (req, res) => {
+  try {
+    const { funcion } = req.body;
+    if (!funcion) {
+      return res.status(400).json({ error: "Por favor, proporciona una función para graficar" });
+    }
+    
+    // Validar que sea una función matemática válida
+    const funcionValida = /^[a-zA-Z0-9\s\-\+\*\/\^\(\)\.\,]+$/.test(funcion);
+    if (!funcionValida) {
+      return res.status(400).json({ error: "Función matemática inválida" });
+    }
+    
+    res.json({ 
+      success: true, 
+      funcion: funcion,
+      mensaje: "Función lista para ser graficada con GeoGebra" 
+    });
+  } catch (error) {
+    console.error('Error en /graficar:', error);
+    res.status(500).json({ error: error.message || "No pude procesar la función para graficar." });
+  }
+});
+
+// Limpieza de sesiones inactivas
 setInterval(() => {
   const ahora = Date.now();
   for (const [sesionId, sesion] of sesionesActivas.entries()) {
@@ -258,108 +315,8 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000);
 
-function generarDatosGrafica(funcion, xMin, xMax) {
-  console.log(`🧮 Generando puntos para f(x) = ${funcion} en [${xMin}, ${xMax}]`);
-  const puntos = [];
-  const paso = 0.1;
-
-  function evaluarFuncion(expr, x) {
-    let exprProcesada = expr;
-    exprProcesada = exprProcesada.replace(/\b(sin)\b/gi, 'Math.sin');
-    exprProcesada = exprProcesada.replace(/\b(cos)\b/gi, 'Math.cos');
-    exprProcesada = exprProcesada.replace(/\b(tan)\b/gi, 'Math.tan');
-    exprProcesada = exprProcesada.replace(/\b(sqrt)\b/gi, 'Math.sqrt');
-    exprProcesada = exprProcesada.replace(/\b(ln)\b/gi, 'Math.log');
-    exprProcesada = exprProcesada.replace(/\b(log10|log)\b/gi, 'Math.log10');
-    exprProcesada = exprProcesada.replace(/\bpi\b/gi, 'Math.PI');
-    exprProcesada = exprProcesada.replace(/\bE\b/g, 'Math.E');
-    exprProcesada = exprProcesada.replace(/\be\b/g, 'Math.E');
-    exprProcesada = exprProcesada.replace(/\^/g, '**');
-    exprProcesada = exprProcesada.replace(/\bx\b/g, `(${x})`);
-    exprProcesada = exprProcesada.replace(/[^\d\w\.\+\-\*\/\^\(\)\sMathPIE,]/g, '');
-
-    try {
-      const fn = new Function('Math', `return ${exprProcesada}`);
-      return fn(Math);
-    } catch (error) {
-      throw new Error(`Error al evaluar expresión: ${error.message}`);
-    }
-  }
-
-  try {
-    for (let xx = xMin; xx <= xMax + 1e-9; xx = Math.round((xx + paso) * 1000000) / 1000000) {
-      try {
-        const y = evaluarFuncion(funcion, xx);
-        if (isFinite(y)) {
-          puntos.push({ x: parseFloat(xx.toFixed(2)), y: parseFloat(y.toFixed(4)) });
-        }
-      } catch (e) {
-        console.warn(`⚠️ Error en x=${xx}: ${e.message}`);
-      }
-    }
-  } catch (e) {
-    console.error("❌ Error al generar datos de gráfica:", e.message);
-    throw new Error("Función matemática inválida o no evaluable");
-  }
-
-  console.log(`✅ Se generaron ${puntos.length} puntos válidos`);
-  return puntos;
-}
-
-async function manejarSolicitudGrafica(input, res) {
-  try {
-    const funcionMatch = input.match(/(?:de|la|el|para|graficar|gráficar|grafica)\s+([^\.\?\!]+)/i);
-    let funcion = funcionMatch ? funcionMatch[1].trim() : input;
-
-    funcion = funcion
-      .replace(/(funci[óo]n|gr[áa]fica|grafica|grafica:|de|la|el|mu[ée]strame|quiero|ver|visualizar)/gi, '')
-      .replace(/[^\w\s\-\+\*\/\^\(\)\.\,]/g, '')
-      .trim();
-
-    if (!funcion || funcion.length < 1) {
-      return res.json({
-        respuesta: "¿Qué función matemática te gustaría graficar? Por ejemplo: 'x^2', 'sin(x)', o '2*x + 1'",
-        necesitaGrafica: false
-      });
-    }
-
-    const datos = generarDatosGrafica(funcion, -10, 10);
-
-    return res.json({
-      respuesta: `✅ Listo! Generé la gráfica para **f(x) = ${funcion}**.`,
-      necesitaGrafica: true,
-      graficaData: {
-        funcion: funcion,
-        puntos: datos,
-        xMin: -10,
-        xMax: 10
-      }
-    });
-  } catch (error) {
-    console.error('Error en manejarSolicitudGrafica:', error);
-    return res.json({
-      respuesta: "⚠️ No pude generar la gráfica. Asegúrate de escribir una función matemática válida.",
-      necesitaGrafica: false
-    });
-  }
-}
-
 app.get('/', (req, res) => {
   res.sendFile(process.cwd() + '/index.html');
-});
-
-app.post('/graficar', async (req, res) => {
-  try {
-    const { funcion, xMin = -10, xMax = 10 } = req.body;
-    if (!funcion) {
-      return res.status(400).json({ error: "Por favor, proporciona una función para graficar" });
-    }
-    const datos = generarDatosGrafica(funcion, parseFloat(xMin), parseFloat(xMax));
-    res.json({ success: true, datos, funcion });
-  } catch (error) {
-    console.error('Error en /graficar:', error);
-    res.status(500).json({ error: error.message || "No pude generar la gráfica. Verifica la función." });
-  }
 });
 
 app.listen(PORT, '0.0.0.0', () => {
@@ -367,8 +324,6 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 export default app;
-
-
 
 
 
