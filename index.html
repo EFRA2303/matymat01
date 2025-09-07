@@ -141,8 +141,30 @@
             <button onclick="compartirGrafica()">📤 Compartir</button>
         </div>
     </div>
+    <!-- Sistema de Opciones y Estrellas -->
+    <div id="opcionesContainer" style="display: none;">
+        <div class="opciones-header">
+            <h4>🎯 Elige una opción:</h4>
+            <div class="estrellas-container">
+                <span class="estrella">⭐</span>
+                <span id="contadorEstrellas">0</span>
+            </div>
+        </div>
+        <div class="opciones-botones">
+            <button class="opcion-btn" data-opcion="A" onclick="elegirOpcion('A')">A</button>
+            <button class="opcion-btn" data-opcion="B" onclick="elegirOpcion('B')">B</button>
+            <button class="opcion-btn" data-opcion="C" onclick="elegirOpcion('C')">C</button>
+        </div>
+    </div>
+
+    <!-- Loading de estrellas -->
+    <div id="loadingEstrella" style="display: none;">
+        <div class="estrella-loading">⭐</div>
+        <p>¡Ganaste una estrella!</p>
+    </div>
     <script src="script.js"></script>
-</body>
+</body>   
 </html>
+
 
 
