@@ -515,7 +515,208 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.classList.add('dark-mode');
         }
         
-        if (localStorage.getItem('voiceEnabled') === '
+        if (localStorage.getItem('voiceEnabled') === 'false') {
+            window.voiceEnabled = false;
+            const audioText = audioOption.querySelector('span');
+            const audioIcon = audioOption.querySelector('i');
+            audioText.textContent = 'Voz Desactivada';
+            audioIcon.className = 'fas fa-volume-mute';
+        }
+    }
+    
+    // === INICIALIZAR ===
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.getVoices();
+    }
+});
 
+// === FUNCIONES PARA GRÁFICAS ===
+async function graficarFuncion(funcionTexto) {
+    try {
+        const response = await fetch('/graficar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                funcion: funcionTexto,
+                xMin: -10,
+                xMax: 10
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            mostrarGrafica(data.datos, data.funcion);
+        } else {
+            addMessage(`❌ Error: ${data.error || 'No se pudo generar la gráfica'}`, 'bot');
+        }
+    } catch (error) {
+        console.error('Error al graficar:', error);
+        addMessage("❌ Error al generar la gráfica. Verifica la función.", 'bot');
+    }
+}
 
+function mostrarGrafica(datos, funcion) {
+    const graphContainer = document.getElementById('graphContainer');
+    const graphCanvas = document.getElementById('graphCanvas');
+    
+    if (!graphContainer || !graphCanvas) {
+        console.error("❌ No se encontraron los elementos de la gráfica");
+        return;
+    }
+    
+    graphContainer.style.display = 'block';
+    
+    const ctx = graphCanvas.getContext('2d');
+    
+    if (window.graficaActual) {
+        window.graficaActual.destroy();
+    }
+    
+    window.graficaActual = new Chart(ctx, {
+        type: 'line',
+        data: {
+            datasets: [{
+                label: `f(x) = ${funcion}`,
+                data: datos,
+                borderColor: '#4361ee',
+                backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                borderWidth: 3,
+                pointRadius: 0,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    type: 'linear',
+                    position: 'bottom',
+                    title: { display: true, text: 'Eje X' },
+                    min: -10,
+                    max: 10
+                },
+                y: {
+                    title: { display: true, text: 'Eje Y' },
+                    min: -10,
+                    max: 10
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: `Gráfica de: ${funcion}`,
+                    font: { size: 16 }
+                },
+                legend: { position: 'top' }
+            }
+        }
+    });
+}
 
+function detectarYGraficarFuncion(texto) {
+    const patronesExplicitos = [
+        /graficar\s+(.+)/i,
+        /gráfica\s+de\s+(.+)/i,
+        /dibujar\s+(.+)/i,
+        /plot\s+(.+)/i,
+        /generar\s+gráfica\s+de\s+(.+)/i,
+        /muestra\s+la\s+gráfica\s+de\s+(.+)/i,
+        /representar\s+gráficamente\s+(.+)/i
+    ];
+    
+    for (const patron of patronesExplicitos) {
+        const match = texto.match(patron);
+        if (match && match[1]) {
+            return match[1].trim();
+        }
+    }
+    
+    const esFuncionPura = 
+        texto.length <= 30 &&
+        (/[\^\+\-\*\/\(\)]/.test(texto) || /f\(x\)/i.test(texto)) &&
+        !/(resolver|calcular|explicar|ayuda|ejemplo|problema|ejercicio|derivada|integral|límite|ecuación|despejar|simplificar)/i.test(texto) &&
+        !/\?/.test(texto) &&
+        !/^\d+$/.test(texto);
+    
+    if (esFuncionPura) {
+        return texto;
+    }
+    
+    return null;
+}
+
+// === FUNCIONES DE CONTROL DE GRÁFICA ===
+function zoomIn() {
+    if (window.graficaActual) {
+        const chart = window.graficaActual;
+        const xRange = chart.options.scales.x.max - chart.options.scales.x.min;
+        const yRange = chart.options.scales.y.max - chart.options.scales.y.min;
+        
+        chart.options.scales.x.min += xRange * 0.1;
+        chart.options.scales.x.max -= xRange * 0.1;
+        chart.options.scales.y.min += yRange * 0.1;
+        chart.options.scales.y.max -= yRange * 0.1;
+        
+        chart.update();
+    }
+}
+
+function zoomOut() {
+    if (window.graficaActual) {
+        const chart = window.graficaActual;
+        const xRange = chart.options.scales.x.max - chart.options.scales.x.min;
+        const yRange = chart.options.scales.y.max - chart.options.scales.y.min;
+        
+        chart.options.scales.x.min -= xRange * 0.1;
+        chart.options.scales.x.max += xRange * 0.1;
+        chart.options.scales.y.min -= yRange * 0.1;
+        chart.options.scales.y.max += yRange * 0.1;
+        
+        chart.update();
+    }
+}
+
+function resetZoom() {
+    if (window.graficaActual) {
+        const chart = window.graficaActual;
+        chart.options.scales.x.min = -10;
+        chart.options.scales.x.max = 10;
+        chart.options.scales.y.min = -10;
+        chart.options.scales.y.max = 10;
+        chart.update();
+    }
+}
+
+function descargarGrafica() {
+    if (window.graficaActual) {
+        const canvas = document.getElementById('graphCanvas');
+        const url = canvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'grafica.png';
+        a.click();
+    }
+}
+
+function compartirGrafica() {
+    if (navigator.share) {
+        const canvas = document.getElementById('graphCanvas');
+        canvas.toBlob(blob => {
+            const file = new File([blob], 'grafica.png', { type: 'image/png' });
+            navigator.share({
+                title: 'Gráfica Matemática',
+                text: 'Mira esta gráfica que generé',
+                files: [file]
+            }).catch(err => console.error('Error al compartir:', err));
+        });
+    } else {
+        alert('Tu navegador no soporta la función de compartir');
+    }
+}
