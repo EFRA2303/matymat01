@@ -1,4 +1,4 @@
-// script.js - VERSIÓN CORREGIDA Y COMPLETA
+// script.js - VERSIÓN FINAL CON VOZ Y CHAT DESPLEGABLE
 document.addEventListener('DOMContentLoaded', () => {
     // Variables globales
     let isSending = false;
@@ -13,12 +13,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileInput = document.getElementById('fileInput');
     const toggleMathBtn = document.getElementById('toggleMathBtn');
     const mathToolbar = document.getElementById('mathToolbar');
-    
+
+    // === CHAT DESPLEGABLE ===
+    const chatWrapper = document.getElementById('chatWrapper');
+    const chatToggle = document.getElementById('chatToggle');
+    if (chatWrapper && chatToggle) {
+        chatToggle.addEventListener('click', () => {
+            chatWrapper.classList.toggle('open');
+        });
+    }
+
     if (!userInput || !sendBtn || !chatContainer) {
         console.error('❌ No se encontraron elementos del DOM');
         return;
     }
-    
+
     // === ACTIVAR CÁMARA ===
     if (uploadBtn && fileInput) {
         uploadBtn.addEventListener('click', () => fileInput.click());
@@ -29,14 +38,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    
+
     // === TOGGLE TECLADO MATEMÁTICO ===
     if (toggleMathBtn && mathToolbar) {
         toggleMathBtn.addEventListener('click', () => {
-            mathToolbar.style.display = mathToolbar.style.display === 'block' ? 'none' : 'block';
+            mathToolbar.style.display =
+                mathToolbar.style.display === 'block' ? 'none' : 'block';
         });
     }
-    
+
     // === ENVIAR MENSAJE ===
     async function sendMessage() {
         if (isSending) return;
@@ -45,187 +55,144 @@ document.addEventListener('DOMContentLoaded', () => {
         isSending = true;
         addMessage(text, 'user');
         userInput.value = '';
-        
-        console.log("🔍 Mensaje enviado:", text);
-        
-        // Detectar si es una solicitud de gráfica EXPLÍCITA
+
         const funcionAGraficar = detectarYGraficarFuncion(text);
-        console.log("📊 Función a graficar:", funcionAGraficar);
-        
         if (funcionAGraficar) {
             try {
-                const typing = createTypingMessage("Generando gráfica...");
+                const typing = createTypingMessage('Generando gráfica...');
                 await graficarFuncion(funcionAGraficar);
                 removeTypingMessage(typing);
             } catch (error) {
-                addMessage("❌ Error al generar la gráfica.", 'bot');
-                console.error('Error al graficar:', error);
+                addMessage('❌ Error al generar la gráfica.', 'bot');
             } finally {
                 isSending = false;
             }
             return;
         }
-        
-        // Flujo normal para consultas matemáticas
-        const typing = createTypingMessage("Pensando...");
+
+        const typing = createTypingMessage('Pensando...');
         try {
             const response = await fetch('/analizar', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: text })
+                body: JSON.stringify({ text: text }),
             });
             const data = await response.json();
             removeTypingMessage(typing);
-            
+
             if (data.respuesta) {
-                // Si el servidor indica que generó una gráfica, mostrarla
                 if (data.necesitaGrafica && data.graficaData && data.graficaData.puntos) {
                     addMessage(data.respuesta, 'bot');
-                    // el servidor devuelve puntos en graficaData.puntos
                     mostrarGrafica(data.graficaData.puntos, data.graficaData.funcion);
                     isSending = false;
                     return;
                 }
 
-                // VERIFICAR SI ES MODO INTERACTIVO
-                if (data.tipo === "interactivo" && data.tieneOpciones) {
+                if (data.tipo === 'interactivo' && data.tieneOpciones) {
                     window.sesionActual = data.sesionId;
                     actualizarEstrellas(data.estrellas);
                     addMessage(data.respuesta, 'bot');
-                    
-                    // Mostrar opciones después de un breve delay
-                    setTimeout(() => {
-                        const opcionesContainer = document.getElementById('opcionesContainer');
-                        if (opcionesContainer) opcionesContainer.style.display = 'block';
-                    }, 500);
                 } else {
-                    // MODO NORMAL (sin opciones)
                     await showStepsSequentially(data.respuesta);
                 }
             } else {
-                addMessage("⚠️ No pude procesar tu pregunta.", 'bot');
+                addMessage('⚠️ No pude procesar tu pregunta.', 'bot');
             }
         } catch (err) {
             removeTypingMessage(typing);
-            addMessage("🔴 Error de conexión. Intenta recargar.", 'bot');
-            console.error('Error:', err);
+            addMessage('🔴 Error de conexión. Intenta recargar.', 'bot');
         } finally {
             isSending = false;
         }
     }
-    
+
+    sendBtn.addEventListener('click', sendMessage);
+    userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
     // === FUNCIÓN PARA ELEGIR OPCIÓN ===
-    window.elegirOpcion = async function(opcion) {
+    window.elegirOpcion = async function (opcion) {
         if (!window.sesionActual) return;
-        
-        const opcionesDiv = document.getElementById('opcionesContainer');
-        const botones = opcionesDiv ? opcionesDiv.querySelectorAll('.opcion-btn') : [];
-        
-        botones.forEach(btn => btn.disabled = true);
+
         addMessage(`Elegiste: Opción ${opcion}`, 'user');
-        
+
         try {
             const response = await fetch('/responder', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    sesionId: window.sesionActual, 
-                    opcionElegida: opcion 
-                })
+                body: JSON.stringify({
+                    sesionId: window.sesionActual,
+                    opcionElegida: opcion,
+                }),
             });
 
             const data = await response.json();
             addMessage(data.respuesta, 'bot');
-            
+
             if (data.estrellas !== undefined) {
                 actualizarEstrellas(data.estrellas);
             }
-            
-            if (data.tieneOpciones && !data.sesionCompletada) {
-                setTimeout(() => {
-                    botones.forEach(btn => btn.disabled = false);
-                }, 1000);
-            } else {
-                if (opcionesDiv) opcionesDiv.style.display = 'none';
-                botones.forEach(btn => btn.disabled = false);
-            }
-            
+
             if (data.sesionExpirada) {
                 window.sesionActual = null;
-                if (opcionesDiv) opcionesDiv.style.display = 'none';
             }
-            
         } catch (error) {
-            addMessage("❌ Error al procesar tu respuesta", 'bot');
-            console.error('Error:', error);
-            botones.forEach(btn => btn.disabled = false);
+            addMessage('❌ Error al procesar tu respuesta', 'bot');
         }
-    }
+    };
 
     // === ACTUALIZAR ESTRELLAS ===
     function actualizarEstrellas(cantidad) {
         window.estrellasTotales = cantidad;
         const contador = document.getElementById('contadorEstrellas');
         if (contador) contador.textContent = cantidad;
-        
-        const loading = document.getElementById('loadingEstrella');
-        if (loading) {
-            loading.style.display = 'block';
-            setTimeout(() => {
-                loading.style.display = 'none';
-            }, 2000);
-        }
     }
-    
+
     function createTypingMessage(text) {
         const typing = document.createElement('div');
         typing.className = 'message bot';
-        typing.innerHTML = `
-            <div class="avatar bot-avatar">
-                <img src="tutor-avatar.png" alt="Tutor">
-            </div>
-            <div class="message-content">${text}</div>
-        `;
+        typing.innerHTML = `<div class="message-content">${text}</div>`;
         chatContainer.appendChild(typing);
         chatContainer.scrollTop = chatContainer.scrollHeight;
         return typing;
     }
-    
+
     function removeTypingMessage(typing) {
         if (typing && typing.parentNode) {
             typing.remove();
         }
     }
-    
+
     // === MOSTRAR PASOS SECUENCIALMENTE ===
     async function showStepsSequentially(fullResponse) {
         const steps = extractSteps(fullResponse);
-        
+
         if (steps.length > 0) {
             for (let i = 0; i < steps.length; i++) {
                 await addMessageWithDelay(steps[i], 'bot', i * 1500);
-                
+
                 if (window.voiceEnabled) {
-                    await new Promise(resolve => setTimeout(resolve, 300));
+                    await new Promise((resolve) => setTimeout(resolve, 300));
                     speakText(cleanTextForSpeech(steps[i]));
-                    
                     if (i < steps.length - 1) {
                         await waitForSpeechEnd();
                     }
                 } else {
-                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    await new Promise((resolve) => setTimeout(resolve, 1500));
                 }
             }
         } else {
             addMessage(fullResponse, 'bot');
-            if (window.voiceEnabled) {
-                speakText(fullResponse);
-            }
+            if (window.voiceEnabled) speakText(fullResponse);
         }
     }
-    
+
     function waitForSpeechEnd() {
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
             const checkSpeaking = setInterval(() => {
                 if (!window.speechSynthesis.speaking) {
                     clearInterval(checkSpeaking);
@@ -234,507 +201,140 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 100);
         });
     }
-    
+
     // === LIMPIAR TEXTO PARA VOZ ===
     function cleanTextForSpeech(text) {
         return text
-            .replace(/(\d+)x/gi, '$1 equis')
-            .replace(/(\d+)y/gi, '$1 ye')
-            .replace(/(\d+)z/gi, '$1 zeta')
-            .replace(/\bx\b/gi, 'equis')
-            .replace(/\by\b/gi, 'ye')
-            .replace(/\bz\b/gi, 'zeta')
             .replace(/\+/g, ' más ')
             .replace(/\-/g, ' menos ')
             .replace(/\*/g, ' por ')
             .replace(/\//g, ' entre ')
             .replace(/\=/g, ' igual a ')
-            .replace(/\^/g, ' elevado a ')
-            .replace(/sin\(/gi, 'seno de ')
-            .replace(/cos\(/gi, 'coseno de ')
-            .replace(/tan\(/gi, 'tangente de ')
-            .replace(/sqrt\(/gi, 'raíz cuadrada de ')
-            .replace(/π/gi, 'pi')
-            .replace(/θ/gi, 'theta')
-            .replace(/\([^)]*\)/g, '')
-            .replace(/[\(\)\[\]\{\}]/g, '')
-            .replace(/\\/g, '')
-            .replace(/\$/g, '')
-            .replace(/#/g, '')
-            .replace(/\s+/g, ' ')
-            .replace(/\s\./g, '.')
-            .replace(/\s\,/g, ',')
-            .trim()
-            .replace(/^Paso\s*\d+[:\-\.]\s*/i, '')
-            .replace(/^equis/gi, ' equis ')
-            .replace(/^ye/gi, ' ye ')
-            .replace(/^zeta/gi, ' zeta ')
-            .replace(/\s+/g, ' ');
+            .replace(/\^/g, ' elevado a ');
     }
-    
+
     // === EXTRAER PASOS ===
     function extractSteps(text) {
-        const stepPattern = /(Paso\s*\d+[:\-\.]\s*[^Paso]+)(?=Paso|Solución|$)/gi;
+        const stepPattern =
+            /(Paso\s*\d+[:\-\.]\s*[^Paso]+)(?=Paso|Solución|$)/gi;
         let matches = text.match(stepPattern);
-        
-        if (matches && matches.length > 1) {
-            return matches.map(step => step.trim());
-        }
-        
-        const numberPattern = /\d+[\.\)]\s*([^\n]+)/g;
-        matches = [];
-        let match;
-        
-        while ((match = numberPattern.exec(text)) !== null) {
-            matches.push(match[0].trim());
-        }
-        
-        if (matches.length > 1) {
-            return matches;
-        }
-        
-        const lines = text.split('\n').filter(line => 
-            line.trim().length > 10 && 
-            !line.includes('¡Hola!') && 
-            !line.includes('Puedes escribir')
-        );
-        
-        return lines.length > 1 ? lines : [text];
+        if (matches && matches.length > 1) return matches.map((s) => s.trim());
+        return [text];
     }
-    
-    // === AÑADIR MENSAJE CON RETRASO ===
+
     function addMessageWithDelay(text, sender, delay) {
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
             setTimeout(() => {
                 addMessage(text, sender);
                 resolve();
             }, delay);
         });
     }
-    
-    // === AÑADIR MENSAJE AL CHAT ===
+
     function addMessage(text, sender) {
         const div = document.createElement('div');
         div.className = `message ${sender}`;
-        div.style.opacity = '0';
-        div.style.transform = 'translateY(20px)';
-        div.style.transition = 'all 0.5s ease';
-        
-        const avatar = document.createElement('div');
-        avatar.className = `avatar ${sender}-avatar`;
-        if (sender === 'bot') {
-            const img = document.createElement('img');
-            img.src = 'tutor-avatar.png';
-            img.alt = 'Tutor MatyMat-01';
-            avatar.appendChild(img);
-        } else {
-            avatar.innerHTML = '<i class="fas fa-user"></i>';
-        }
-        
         const content = document.createElement('div');
         content.className = 'message-content';
-        content.innerHTML = formatText(text);
-        
-        div.appendChild(avatar);
+        content.innerHTML = text;
         div.appendChild(content);
         chatContainer.appendChild(div);
-        
-        setTimeout(() => {
-            div.style.opacity = '1';
-            div.style.transform = 'translateY(0)';
-        }, 50);
-        
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
-    
-    // === FORMATEAR TEXTO ===
-    function formatText(text) {
-        return text
-            .replace(/(Paso\s*\d+[:\.\-])/gi, '<strong style="color: #1565c0; font-size: 1.1em;">$1</strong>')
-            .replace(/(Solución final[:\.\-])/gi, '<strong style="color: #2e7d32; font-size: 1.1em;">$1</strong>')
-            .replace(/\n/g, '<br>')
-            .replace(/\b(\d+[\.\)])/g, '<strong>$1</strong>');
-    }
-    
-    // === SÍNTESIS DE VOZ ===
+
+    // === VOZ CORREGIDA ===
     function speakText(texto) {
         if ('speechSynthesis' in window && window.voiceEnabled) {
             window.speechSynthesis.cancel();
-            
             const utterance = new SpeechSynthesisUtterance(texto);
             utterance.lang = 'es-ES';
             utterance.rate = 0.9;
             utterance.pitch = 1;
             utterance.volume = 1;
-            
-            const voices = window.speechSynthesis.getVoices();
-            const spanishVoice = voices.find(voice => 
-                voice.lang.includes('es') || voice.lang.includes('ES')
-            );
-            
-            if (spanishVoice) {
-                utterance.voice = spanishVoice;
-            }
-            
-            if (voices.length === 0) {
-                window.speechSynthesis.onvoiceschanged = () => {
-                    const newVoices = window.speechSynthesis.getVoices();
-                    const newSpanishVoice = newVoices.find(voice => 
-                        voice.lang.includes('es') || voice.lang.includes('ES')
-                    );
-                    if (newSpanishVoice) {
-                        utterance.voice = newSpanishVoice;
-                    }
-                    window.speechSynthesis.speak(utterance);
-                };
-            } else {
+
+            function setVoice() {
+                const voices = window.speechSynthesis.getVoices();
+                const spanishVoice = voices.find((v) => v.lang.startsWith('es'));
+                if (spanishVoice) utterance.voice = spanishVoice;
                 window.speechSynthesis.speak(utterance);
             }
+
+            if (window.speechSynthesis.getVoices().length > 0) {
+                setVoice();
+            } else {
+                window.speechSynthesis.onvoiceschanged = setVoice;
+            }
         }
     }
-    
-    // === SIMULAR ANÁLISIS DE IMAGEN ===
+
     function simulateImageAnalysis(file) {
         setTimeout(() => {
-            addMessage('🔍 He detectado un problema matemático en la imagen. Por favor describe qué necesitas resolver.', 'bot');
+            addMessage(
+                '🔍 He detectado un problema matemático en la imagen. Describe qué necesitas resolver.',
+                'bot'
+            );
         }, 2000);
-    }
-    
-    // === EVENTOS ===
-    sendBtn.addEventListener('click', sendMessage);
-    userInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
-    });
-    
-    // === FUNCIONES MATEMÁTICAS GLOBALES ===
-    window.insertAtCursor = function(value) {
-        const input = document.getElementById('userInput');
-        const start = input.selectionStart;
-        const end = input.selectionEnd;
-        input.value = input.value.substring(0, start) + value + input.value.substring(end);
-        input.selectionStart = input.selectionEnd = start + value.length;
-        input.focus();
-    };
-    
-    window.insertFunction = function(funcName) {
-        const input = document.getElementById('userInput');
-        const start = input.selectionStart;
-        const end = input.selectionEnd;
-        input.value = input.value.substring(0, start) + funcName + '()' + input.value.substring(end);
-        input.selectionStart = input.selectionEnd = start + funcName.length + 1;
-        input.focus();
-    };
-    
-    window.insertFraction = function() {
-        const input = document.getElementById('userInput');
-        const start = input.selectionStart;
-        const end = input.selectionEnd;
-        input.value = input.value.substring(0, start) + '(a)/(b)' + input.value.substring(end);
-        input.selectionStart = start + 1;
-        input.selectionEnd = start + 2;
-        input.focus();
-    };
-    
-    window.insertLimit = function() {
-        const input = document.getElementById('userInput');
-        const start = input.selectionStart;
-        const end = input.selectionEnd;
-        input.value = input.value.substring(0, start) + 'lim_(x→0)' + input.value.substring(end);
-        input.selectionStart = start + 5;
-        input.selectionEnd = start + 6;
-        input.focus();
-    };
-    
-    window.insertIntegral = function() {
-        const input = document.getElementById('userInput');
-        const start = input.selectionStart;
-        const end = input.selectionEnd;
-        input.value = input.value.substring(0, start) + '∫_a^b f(x)dx' + input.value.substring(end);
-        input.selectionStart = start + 7;
-        input.selectionEnd = start + 8;
-        input.focus();
-    };
-    
-    window.clearInput = function() {
-        document.getElementById('userInput').value = '';
-        document.getElementById('userInput').focus();
-    };
-    
-    // === MENÚ CONFIGURACIÓN ===
-    const menuToggle = document.getElementById('menuToggle');
-    const menuPanel = document.getElementById('menuPanel');
-    const closeMenu = document.getElementById('closeMenu');
-    const themeOption = document.getElementById('themeOption');
-    const audioOption = document.getElementById('audioOption');
-    
-    if (menuToggle && menuPanel && closeMenu) {
-        menuToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            menuPanel.style.display = 'block';
-        });
-        
-        closeMenu.addEventListener('click', () => {
-            menuPanel.style.display = 'none';
-        });
-        
-        document.addEventListener('click', (e) => {
-            if (!menuPanel.contains(e.target) && !menuToggle.contains(e.target)) {
-                menuPanel.style.display = 'none';
-            }
-        });
-        
-        themeOption.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
-        });
-        
-        audioOption.addEventListener('click', () => {
-            window.voiceEnabled = !window.voiceEnabled;
-            const audioText = audioOption.querySelector('span');
-            const audioIcon = audioOption.querySelector('i');
-            
-            if (window.voiceEnabled) {
-                audioText.textContent = 'Voz Activada';
-                audioIcon.className = 'fas fa-volume-up';
-            } else {
-                audioText.textContent = 'Voz Desactivada';
-                audioIcon.className = 'fas fa-volume-mute';
-                window.speechSynthesis.cancel();
-            }
-            
-            localStorage.setItem('voiceEnabled', window.voiceEnabled);
-        });
-        
-        if (localStorage.getItem('darkMode') === 'true') {
-            document.body.classList.add('dark-mode');
-        }
-        
-        if (localStorage.getItem('voiceEnabled') === 'false') {
-            window.voiceEnabled = false;
-            const audioText = audioOption.querySelector('span');
-            const audioIcon = audioOption.querySelector('i');
-            audioText.textContent = 'Voz Desactivada';
-            audioIcon.className = 'fas fa-volume-mute';
-        }
-    }
-    
-    // === INICIALIZAR ===
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.getVoices();
     }
 });
 
-// === FUNCIONES PARA GRÁFICAS (MANTENER IGUAL) ===
+// === FUNCIONES PARA GRÁFICAS ===
 async function graficarFuncion(funcionTexto) {
     try {
-        console.log("🚀 Iniciando generación de gráfica para:", funcionTexto);
-        addMessage(`📈 Generando gráfica de: ${funcionTexto}`, 'bot');
-        
         const response = await fetch('/graficar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 funcion: funcionTexto,
                 xMin: -10,
-                xMax: 10
-            })
+                xMax: 10,
+            }),
         });
-        
-        console.log("📡 Respuesta del servidor:", response.status);
-        
-        if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
-        }
-        
         const data = await response.json();
-        console.log("📊 Datos recibidos:", data);
-        
         if (data.success) {
-            console.log("✅ Gráfica generada con éxito");
             mostrarGrafica(data.datos, data.funcion);
         } else {
-            console.error("❌ Error en la respuesta:", data.error);
-            addMessage(`❌ Error: ${data.error || 'No se pudo generar la gráfica'}`, 'bot');
+            addMessage('❌ No se pudo generar la gráfica', 'bot');
         }
     } catch (error) {
-        console.error('🔥 Error al graficar:', error);
-        addMessage("❌ Error al generar la gráfica. Verifica la función.", 'bot');
+        addMessage('❌ Error al generar la gráfica', 'bot');
     }
 }
 
 function mostrarGrafica(datos, funcion) {
-    console.log("🎨 Mostrando gráfica con", datos.length, "puntos");
-    
     const graphContainer = document.getElementById('graphContainer');
     const graphCanvas = document.getElementById('graphCanvas');
-    
-    if (!graphContainer || !graphCanvas) {
-        console.error("❌ No se encontraron los elementos de la gráfica");
-        return;
-    }
-    
+    if (!graphContainer || !graphCanvas) return;
     graphContainer.style.display = 'block';
-    
     const ctx = graphCanvas.getContext('2d');
-    
-    if (window.graficaActual) {
-        window.graficaActual.destroy();
-    }
-    
-    console.log("📊 Creando nueva gráfica con Chart.js");
-    
+    if (window.graficaActual) window.graficaActual.destroy();
     window.graficaActual = new Chart(ctx, {
         type: 'line',
         data: {
-            datasets: [{
-                label: `f(x) = ${funcion}`,
-                data: datos,
-                borderColor: '#4361ee',
-                backgroundColor: 'rgba(67, 97, 238, 0.1)',
-                borderWidth: 3,
-                pointRadius: 0,
-                fill: true,
-                tension: 0.4
-            }]
+            datasets: [
+                {
+                    label: `f(x) = ${funcion}`,
+                    data: datos,
+                    borderColor: '#4361ee',
+                    borderWidth: 3,
+                    pointRadius: 0,
+                    tension: 0.4,
+                },
+            ],
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            scales: {
-                x: {
-                    type: 'linear',
-                    position: 'bottom',
-                    title: { display: true, text: 'Eje X' },
-                    min: -10,
-                    max: 10
-                },
-                y: {
-                    title: { display: true, text: 'Eje Y' },
-                    min: -10,
-                    max: 10
-                }
-            },
-            plugins: {
-                title: {
-                    display: true,
-                    text: `Gráfica de: ${funcion}`,
-                    font: { size: 16 }
-                },
-                legend: { position: 'top' }
-            }
-        }
+        },
     });
-    
-    console.log("✅ Gráfica creada exitosamente");
 }
 
-// === DETECTOR DE GRÁFICAS CORREGIDO (MANTENER IGUAL) ===
 function detectarYGraficarFuncion(texto) {
-    console.log("Detectando función en:", texto);
-    
-    const patronesExplicitos = [
-        /graficar\s+(.+)/i,
-        /gráfica\s+de\s+(.+)/i,
-        /dibujar\s+(.+)/i,
-        /plot\s+(.+)/i,
-        /generar\s+gráfica\s+de\s+(.+)/i,
-        /muestra\s+la\s+gráfica\s+de\s+(.+)/i,
-        /representar\s+gráficamente\s+(.+)/i
-    ];
-    
-    for (const patron of patronesExplicitos) {
-        const match = texto.match(patron);
-        if (match && match[1]) {
-            console.log("✅ Detectado por patrón explícito:", match[1].trim());
-            return match[1].trim();
-        }
+    const patrones = [/graficar\s+(.+)/i, /gráfica\s+de\s+(.+)/i];
+    for (const p of patrones) {
+        const m = texto.match(p);
+        if (m && m[1]) return m[1].trim();
     }
-    
-    const esFuncionPura = 
-        texto.length <= 30 &&
-        (/[\^\+\-\*\/\(\)]/.test(texto) || /f\(x\)/i.test(texto)) &&
-        !/(resolver|calcular|explicar|ayuda|ejemplo|problema|ejercicio|derivada|integral|límite|ecuación|despejar|simplificar)/i.test(texto) &&
-        !/\?/.test(texto) &&
-        !/^\d+$/.test(texto);
-    
-    if (esFuncionPura) {
-        console.log("✅ Detectado como función matemática pura:", texto);
-        return texto;
-    }
-    
-    console.log("❌ No se detectó solicitud de gráfica");
     return null;
 }
 
-// === FUNCIONES DE CONTROL DE GRÁFICA (MANTENER IGUAL) ===
-function zoomIn() {
-    if (window.graficaActual) {
-        const chart = window.graficaActual;
-        const xRange = chart.options.scales.x.max - chart.options.scales.x.min;
-        const yRange = chart.options.scales.y.max - chart.options.scales.y.min;
-        
-        chart.options.scales.x.min += xRange * 0.1;
-        chart.options.scales.x.max -= xRange * 0.1;
-        chart.options.scales.y.min += yRange * 0.1;
-        chart.options.scales.y.max -= yRange * 0.1;
-        
-        chart.update();
-    }
-}
-
-function zoomOut() {
-    if (window.graficaActual) {
-        const chart = window.graficaActual;
-        const xRange = chart.options.scales.x.max - chart.options.scales.x.min;
-        const yRange = chart.options.scales.y.max - chart.options.scales.y.min;
-        
-        chart.options.scales.x.min -= xRange * 0.1;
-        chart.options.scales.x.max += xRange * 0.1;
-        chart.options.scales.y.min -= yRange * 0.1;
-        chart.options.scales.y.max += yRange * 0.1;
-        
-        chart.update();
-    }
-}
-
-function resetZoom() {
-    if (window.graficaActual) {
-        const chart = window.graficaActual;
-        chart.options.scales.x.min = -10;
-        chart.options.scales.x.max = 10;
-        chart.options.scales.y.min = -10;
-        chart.options.scales.y.max = 10;
-        chart.update();
-    }
-}
-
-function descargarGrafica() {
-    if (window.graficaActual) {
-        const canvas = document.getElementById('graphCanvas');
-        const url = canvas.toDataURL('image/png');
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'grafica.png';
-        a.click();
-    }
-}
-
-function compartirGrafica() {
-    if (navigator.share) {
-        const canvas = document.getElementById('graphCanvas');
-        canvas.toBlob(blob => {
-            const file = new File([blob], 'grafica.png', { type: 'image/png' });
-            navigator.share({
-                title: 'Gráfica Matemática',
-                text: 'Mira esta gráfica que generé',
-                files: [file]
-            }).catch(err => console.error('Error al compartir:', err));
-        });
-    } else {
-        alert('Tu navegador no soporta la función de compartir');
-    }
-}
 
