@@ -25,6 +25,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+    <!-- Contenedor para efectos de confeti -->
+    <div id="confettiContainer"></div>
+    
     <div class="container">
         <header>
             <h1><i class="fas fa-robot"></i> MatyMat-01</h1>
@@ -141,8 +144,8 @@
             <button onclick="compartirGrafica()">📤 Compartir</button>
         </div>
     </div>
-    <!-- Sistema de Opciones y Estrellas -->
-    <div id="opcionesContainer" style="display: none;">
+    <!-- Sistema de Opciones y Estrellas (VERSIÓN MEJORADA) -->
+    <div class="opciones-container" id="opcionesContainer" style="display: none;">
         <div class="opciones-header">
             <h4>🎯 Elige una opción:</h4>
             <div class="estrellas-container">
@@ -151,20 +154,17 @@
             </div>
         </div>
         <div class="opciones-botones">
-            <button class="opcion-btn" data-opcion="A" onclick="elegirOpcion('A')">A</button>
-            <button class="opcion-btn" data-opcion="B" onclick="elegirOpcion('B')">B</button>
-            <button class="opcion-btn" data-opcion="C" onclick="elegirOpcion('C')">C</button>
+            <!-- Las opciones se generarán dinámicamente con JavaScript -->
         </div>
     </div>
 
-    <!-- Loading de estrellas -->
-    <div id="loadingEstrella" style="display: none;">
-        <div class="estrella-loading">⭐</div>
-        <p>¡Ganaste una estrella!</p>
+    <!-- Loading de estrellas (mejorado para animaciones) -->
+    <div id="loadingEstrella" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 1000;">
+        <div class="estrella-loading" style="font-size: 3rem; animation: starWin 1s ease-in-out infinite;">⭐</div>
+        <p style="color: white; text-shadow: 0 0 5px black; font-weight: bold;">¡Ganaste una estrella!</p>
     </div>
+    
     <script src="script.js"></script>
 </body>   
 </html>
-
-
 
