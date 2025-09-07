@@ -1,5 +1,11 @@
-// script.js - VERSIÓN CORREGIDA
+// script.js - VERSIÓN CORREGIDA Y COMPLETA
 document.addEventListener('DOMContentLoaded', () => {
+    // Variables globales
+    let isSending = false;
+    window.voiceEnabled = true;
+    window.sesionActual = null;
+    window.estrellasTotales = 0;
+
     const userInput = document.getElementById('userInput');
     const sendBtn = document.getElementById('sendBtn');
     const chatContainer = document.getElementById('chatContainer');
@@ -12,9 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('❌ No se encontraron elementos del DOM');
         return;
     }
-    
-    let isSending = false;
-    window.voiceEnabled = true;
     
     // === ACTIVAR CÁMARA ===
     if (uploadBtn && fileInput) {
@@ -75,7 +78,20 @@ document.addEventListener('DOMContentLoaded', () => {
             removeTypingMessage(typing);
             
             if (data.respuesta) {
-                await showStepsSequentially(data.respuesta);
+                // VERIFICAR SI ES MODO INTERACTIVO
+                if (data.tipo === "interactivo" && data.tieneOpciones) {
+                    window.sesionActual = data.sesionId;
+                    actualizarEstrellas(data.estrellas);
+                    addMessage(data.respuesta, 'bot');
+                    
+                    // Mostrar opciones después de un breve delay
+                    setTimeout(() => {
+                        document.getElementById('opcionesContainer').style.display = 'block';
+                    }, 500);
+                } else {
+                    // MODO NORMAL (sin opciones)
+                    await showStepsSequentially(data.respuesta);
+                }
             } else {
                 addMessage("⚠️ No pude procesar tu pregunta.", 'bot');
             }
@@ -86,6 +102,78 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             isSending = false;
         }
+    }
+    
+    // === FUNCIÓN PARA ELEGIR OPCIÓN ===
+    window.elegirOpcion = async function(opcion) {
+        if (!window.sesionActual) return;
+        
+        const opcionesDiv = document.getElementById('opcionesContainer');
+        const botones = opcionesDiv.querySelectorAll('.opcion-btn');
+        
+        // Deshabilitar botones durante la respuesta
+        botones.forEach(btn => btn.disabled = true);
+        
+        // Mostrar opción seleccionada
+        addMessage(`Elegiste: Opción ${opcion}`, 'user');
+        
+        try {
+            const response = await fetch('/responder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    sesionId: window.sesionActual, 
+                    opcionElegida: opcion 
+                })
+            });
+
+            const data = await response.json();
+            
+            // Mostrar respuesta del tutor
+            addMessage(data.respuesta, 'bot');
+            
+            // Actualizar estrellas
+            if (data.estrellas !== undefined) {
+                actualizarEstrellas(data.estrellas);
+            }
+            
+            if (data.tieneOpciones && !data.sesionCompletada) {
+                // Mostrar nuevas opciones para el siguiente paso
+                setTimeout(() => {
+                    botones.forEach(btn => btn.disabled = false);
+                }, 1000);
+            } else {
+                // Ocultar opciones si no hay más pasos
+                opcionesDiv.style.display = 'none';
+                botones.forEach(btn => btn.disabled = false);
+            }
+            
+            if (data.sesionExpirada) {
+                window.sesionActual = null;
+                opcionesDiv.style.display = 'none';
+            }
+            
+        } catch (error) {
+            addMessage("❌ Error al procesar tu respuesta", 'bot');
+            console.error('Error:', error);
+            
+            // Rehabilitar botones en caso de error
+            botones.forEach(btn => btn.disabled = false);
+        }
+    }
+
+    // === ACTUALIZAR ESTRELLAS ===
+    function actualizarEstrellas(cantidad) {
+        window.estrellasTotales = cantidad;
+        document.getElementById('contadorEstrellas').textContent = cantidad;
+        
+        // Animación de estrella
+        const loading = document.getElementById('loadingEstrella');
+        loading.style.display = 'block';
+        
+        setTimeout(() => {
+            loading.style.display = 'none';
+        }, 2000);
     }
     
     function createTypingMessage(text) {
@@ -438,7 +526,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// === FUNCIONES PARA GRÁFICAS ===
+// === FUNCIONES PARA GRÁFICAS (MANTENER IGUAL) ===
 async function graficarFuncion(funcionTexto) {
     try {
         console.log("🚀 Iniciando generación de gráfica para:", funcionTexto);
@@ -542,11 +630,10 @@ function mostrarGrafica(datos, funcion) {
     console.log("✅ Gráfica creada exitosamente");
 }
 
-// === DETECTOR DE GRÁFICAS CORREGIDO ===
+// === DETECTOR DE GRÁFICAS CORREGIDO (MANTENER IGUAL) ===
 function detectarYGraficarFuncion(texto) {
     console.log("Detectando función en:", texto);
     
-    // 1. Patrones EXPLÍCITOS de graficación
     const patronesExplicitos = [
         /graficar\s+(.+)/i,
         /gráfica\s+de\s+(.+)/i,
@@ -565,17 +652,11 @@ function detectarYGraficarFuncion(texto) {
         }
     }
     
-    // 2. Funciones matemáticas puras (solo si son cortas y no contienen palabras de consulta)
     const esFuncionPura = 
-        // Debe ser corto (menos de 30 caracteres)
         texto.length <= 30 &&
-        // Debe contener al menos un operador matemático
         (/[\^\+\-\*\/\(\)]/.test(texto) || /f\(x\)/i.test(texto)) &&
-        // No debe contener palabras que indiquen consulta
         !/(resolver|calcular|explicar|ayuda|ejemplo|problema|ejercicio|derivada|integral|límite|ecuación|despejar|simplificar)/i.test(texto) &&
-        // No debe contener signos de interrogación
         !/\?/.test(texto) &&
-        // No debe ser solo un número
         !/^\d+$/.test(texto);
     
     if (esFuncionPura) {
@@ -587,7 +668,7 @@ function detectarYGraficarFuncion(texto) {
     return null;
 }
 
-// === FUNCIONES DE CONTROL DE GRÁFICA ===
+// === FUNCIONES DE CONTROL DE GRÁFICA (MANTENER IGUAL) ===
 function zoomIn() {
     if (window.graficaActual) {
         const chart = window.graficaActual;
@@ -653,112 +734,5 @@ function compartirGrafica() {
         });
     } else {
         alert('Tu navegador no soporta la función de compartir');
-    }
-}
-// === SISTEMA DE OPCIONES Y ESTRELLAS ===
-let sesionActual = null;
-let estrellasTotales = 0;
-
-async function elegirOpcion(opcion) {
-    if (!sesionActual) return;
-    
-    const respuestaDiv = document.getElementById('chatContainer');
-    const opcionesDiv = document.getElementById('opcionesContainer');
-    
-    // Mostrar opción seleccionada
-    addMessage(`Elegiste: Opción ${opcion}`, 'user');
-    opcionesDiv.style.display = 'none';
-    
-    try {
-        const response = await fetch('/responder', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                sesionId: sesionActual, 
-                opcionElegida: opcion 
-            })
-        });
-
-        const data = await response.json();
-        
-        // Mostrar respuesta
-        addMessage(data.respuesta, 'bot');
-        
-        // Actualizar estrellas
-        if (data.estrellas !== undefined) {
-            actualizarEstrellas(data.estrellas);
-        }
-        
-        // Mostrar opciones si hay más pasos
-        if (data.tieneOpciones && !data.sesionCompletada) {
-            setTimeout(() => {
-                opcionesDiv.style.display = 'block';
-            }, 1000);
-        }
-        
-        // Si la sesión expiró
-        if (data.sesionExpirada) {
-            sesionActual = null;
-        }
-        
-    } catch (error) {
-        addMessage("❌ Error al procesar tu respuesta", 'bot');
-        console.error('Error:', error);
-    }
-}
-
-function actualizarEstrellas(cantidad) {
-    estrellasTotales = cantidad;
-    document.getElementById('contadorEstrellas').textContent = cantidad;
-    
-    // Animación de estrella
-    const loading = document.getElementById('loadingEstrella');
-    loading.style.display = 'block';
-    
-    setTimeout(() => {
-        loading.style.display = 'none';
-    }, 2000);
-}
-
-// Modificar la función sendMessage para manejar sesiones
-async function sendMessage() {
-    if (isSending) return;
-    const text = userInput.value.trim();
-    if (!text) return;
-    isSending = true;
-    addMessage(text, 'user');
-    userInput.value = '';
-    
-    const typing = createTypingMessage("Pensando...");
-    
-    try {
-        const response = await fetch('/analizar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: text })
-        });
-        
-        const data = await response.json();
-        removeTypingMessage(typing);
-        
-        if (data.tipo === "interactivo" && data.tieneOpciones) {
-            // Guardar sesión y mostrar opciones
-            sesionActual = data.sesionId;
-            actualizarEstrellas(data.estrellas);
-            
-            // Mostrar opciones después de un breve delay
-            setTimeout(() => {
-                document.getElementById('opcionesContainer').style.display = 'block';
-            }, 500);
-        }
-        
-        addMessage(data.respuesta, 'bot');
-        
-    } catch (err) {
-        removeTypingMessage(typing);
-        addMessage("🔴 Error de conexión", 'bot');
-        console.error('Error:', err);
-    } finally {
-        isSending = false;
     }
 }
