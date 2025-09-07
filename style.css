@@ -576,7 +576,7 @@ header p {
     }
 }
 
-/* ===== ESTILOS PARA GRÁFICAS CON GEOGEBRA ===== */
+/* ===== ESTILOS MEJORADOS PARA GRÁFICAS CON GEOGEBRA ===== */
 .graph-container {
     position: fixed;
     top: 50%;
@@ -595,16 +595,47 @@ header p {
     overflow: hidden;
 }
 
+/* Asegurar que GeoGebra ocupe todo el espacio disponible */
+#ggb-element {
+    width: 100% !important;
+    height: 400px !important;
+    min-height: 400px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Mejorar la barra de herramientas de GeoGebra */
+.ggb_border {
+    border: none !important;
+}
+
+/* Ajustar elementos de la interfaz de GeoGebra */
+.AlgebraView, .GraphicsView {
+    background: var(--card) !important;
+}
+
+/* Modo oscuro para GeoGebra */
+.dark-mode #ggb-element {
+    filter: invert(1) hue-rotate(180deg);
+}
+
+.dark-mode .AlgebraView, 
+.dark-mode .GraphicsView {
+    background: #2a2a2a !important;
+}
+
+/* Mejorar botones de control */
 .graph-controls {
     display: flex;
     gap: 10px;
-    margin-bottom: 15px;
+    margin: 15px 0;
     justify-content: center;
     flex-wrap: wrap;
 }
 
 .graph-controls button {
-    padding: 8px 12px;
+    padding: 8px 15px;
     background: var(--primary);
     color: white;
     border: none;
@@ -643,16 +674,23 @@ header p {
     transform: translateY(-2px);
 }
 
-/* Ajustes específicos para el contenedor de GeoGebra */
-#ggb-element {
-    border-radius: 8px;
-    overflow: hidden;
-    margin: 10px 0;
-    min-height: 400px;
-    border: 1px solid var(--border);
+/* Botón de cerrar gráfica */
+.graph-container .panel-header {
+    padding: 12px 16px;
+    background: rgba(67, 97, 238, 0.2);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-/* Botón de cerrar gráfica */
+.graph-container .panel-header h3 {
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0;
+}
+
 .graph-container .panel-header button {
     background: rgba(255,255,255,0.2);
     color: white;
@@ -686,6 +724,7 @@ header p {
     
     #ggb-element {
         min-height: 300px;
+        height: 300px !important;
     }
 }
 
@@ -699,6 +738,11 @@ header p {
     .graph-actions button {
         padding: 6px 10px;
         font-size: 0.8rem;
+    }
+    
+    #ggb-element {
+        min-height: 250px;
+        height: 250px !important;
     }
 }
 
@@ -1013,4 +1057,3 @@ header p {
 .dark-mode .chat-container::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.3);
 }
-
