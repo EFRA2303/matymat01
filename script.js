@@ -1,4 +1,4 @@
-// script.js - VERSIÓN CORREGIDA CON VOZ, OPCIONES DINÁMICAS Y SISTEMA DE ESTRELLAS
+// script.js - VERSIÓN MEJORADA CON GEOGEBRA Y SISTEMA DE VOZ COMPLETO
 document.addEventListener('DOMContentLoaded', () => {
     // Variables globales
     let isSending = false;
@@ -8,6 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
     window.respuestasCorrectas = 0;
     window.totalPreguntas = 0;
     window.opcionesActuales = [];
+    window.pasoActual = null;
+    window.colaVoz = [];
+    window.hablando = false;
+    window.ggbApp = null;
 
     const userInput = document.getElementById('userInput');
     const sendBtn = document.getElementById('sendBtn');
@@ -22,6 +26,33 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
     
+    // === INICIALIZAR GEOGEBRA ===
+    function inicializarGeoGebra() {
+        if (window.ggbApp) return;
+        
+        const parameters = {
+            "id": "ggb-element",
+            "width": "100%",
+            "height": 400,
+            "showToolBar": true,
+            "showAlgebraInput": true,
+            "showMenuBar": false,
+            "showZoomButtons": true,
+            "enableLabelDrags": false,
+            "enableShiftDragZoom": true,
+            "enableRightClick": false,
+            "errorDialogsActive": false,
+            "useBrowserForJS": false,
+            "allowStyleBar": false,
+            "preventFocus": false,
+            "language": "es",
+            "appName": "graphing"
+        };
+        
+        window.ggbApp = new GGBApplet(parameters, true);
+        window.ggbApp.inject('ggb-element');
+    }
+
     // === ACTIVAR CÁMARA ===
     if (uploadBtn && fileInput) {
         uploadBtn.addEventListener('click', () => fileInput.click());
@@ -40,6 +71,50 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
+    // === SISTEMA DE COLA PARA VOZ ===
+    window.hablarConCola = function(texto) {
+        if (!window.voiceEnabled || !texto) return;
+        
+        window.colaVoz.push(texto);
+        procesarColaVoz();
+    };
+
+    function procesarColaVoz() {
+        if (window.hablando || window.colaVoz.length === 0) return;
+        
+        window.hablando = true;
+        const texto = window.colaVoz.shift();
+        
+        const utterance = new SpeechSynthesisUtterance(texto);
+        utterance.lang = 'es-ES';
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+        
+        const voices = window.speechSynthesis.getVoices();
+        const spanishVoice = voices.find(voice => voice.lang.includes('es'));
+        
+        if (spanishVoice) {
+            utterance.voice = spanishVoice;
+        }
+        
+        utterance.onend = function() {
+            window.hablando = false;
+            setTimeout(procesarColaVoz, 300);
+        };
+        
+        utterance.onerror = function() {
+            window.hablando = false;
+            setTimeout(procesarColaVoz, 300);
+        };
+        
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function speakText(texto) {
+        window.hablarConCola(texto);
+    }
+    
     // === ENVIAR MENSAJE ===
     async function sendMessage() {
         if (isSending) return;
@@ -55,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (funcionAGraficar) {
             try {
                 const typing = createTypingMessage("Generando gráfica...");
-                await graficarFuncion(funcionAGraficar);
+                await graficarFuncionGeoGebra(funcionAGraficar);
                 removeTypingMessage(typing);
             } catch (error) {
                 addMessage("❌ Error al generar la gráfica.", 'bot');
@@ -78,9 +153,9 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (data.respuesta) {
                 // Si el servidor indica que generó una gráfica
-                if (data.necesitaGrafica && data.graficaData && data.graficaData.puntos) {
+                if (data.necesitaGrafica && data.graficaData && data.graficaData.funcion) {
                     addMessage(data.respuesta, 'bot');
-                    mostrarGrafica(data.graficaData.puntos, data.graficaData.funcion);
+                    graficarFuncionGeoGebra(data.graficaData.funcion);
                     isSending = false;
                     return;
                 }
@@ -91,6 +166,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.opcionesActuales = data.opciones || [];
                     window.respuestaCorrecta = data.respuestaCorrecta;
                     window.totalPreguntas++;
+                    
+                    // Guardar información del paso actual para explicaciones de error
+                    window.pasoActual = {
+                        explicacionError: data.explicacionError || "Revisa los conceptos básicos.",
+                        opcionCorrecta: data.respuestaCorrecta
+                    };
                     
                     actualizarEstrellas(data.estrellas || 0);
                     addMessage(data.respuesta, 'bot');
@@ -162,6 +243,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 actualizarEstrellas(window.estrellasTotales);
                 
                 addMessage(`Elegiste: Opción ${opcion} ✓ (¡Correcto! +${estrellasGanadas}⭐)`, 'user');
+                
+                // Felicitación con voz
+                if (window.voiceEnabled) {
+                    window.hablarConCola("¡Correcto! Excelente trabajo. Avanzando al siguiente paso.");
+                }
             } else {
                 botonElegido.classList.add('incorrecta');
                 botonElegido.innerHTML += ' ✗';
@@ -175,28 +261,29 @@ document.addEventListener('DOMContentLoaded', () => {
                         botonCorrecto.classList.add('correcta');
                         botonCorrecto.innerHTML += ' ✓';
                     }
-                }
-                
-                // Explicación vocal del error
-                if (window.voiceEnabled) {
-                    const explicacionError = `Incorrecto. La opción correcta es la ${opcionCorrecta.letra}. ` +
-                                           `Recuerda que: ${pasoActual.explicacionError || 'revisa los conceptos básicos.'}`;
                     
-                    // Esperar un momento antes de explicar el error
-                    setTimeout(() => {
-                        speakText(explicacionError);
+                    // Explicación detallada del error con voz
+                    if (window.voiceEnabled) {
+                        const explicacion = `Incorrecto. La opción correcta es la ${opcionCorrecta.letra}. `;
+                        window.hablarConCola(explicacion);
                         
-                        // Después de explicar el error, repetir las opciones
+                        // Esperar y luego explicar por qué es correcta
                         setTimeout(() => {
-                            let textoOpciones = " Las opciones disponibles son: ";
-                            window.opcionesActuales.forEach((opcion, index) => {
-                                const letra = String.fromCharCode(65 + index);
-                                textoOpciones += `Opción ${letra}. `;
-                            });
-                            textoOpciones += "Elige de nuevo.";
-                            speakText(textoOpciones);
-                        }, 4000);
-                    }, 2000);
+                            const textoOpciones = `Recuerda que: ${window.pasoActual?.explicacionError || 'revisa los conceptos básicos.'}`;
+                            window.hablarConCola(textoOpciones);
+                            
+                            // Repetir las opciones después de explicar
+                            setTimeout(() => {
+                                let textoRepetirOpciones = " Las opciones disponibles son: ";
+                                window.opcionesActuales.forEach((opcion, index) => {
+                                    const letra = String.fromCharCode(65 + index);
+                                    textoRepetirOpciones += `Opción ${letra}. `;
+                                });
+                                textoRepetirOpciones += "Elige de nuevo.";
+                                window.hablarConCola(textoRepetirOpciones);
+                            }, 4000);
+                        }, 2000);
+                    }
                 }
             }
         }
@@ -223,6 +310,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.respuestaCorrecta = data.respuestaCorrecta;
                 window.totalPreguntas++;
                 
+                // Guardar información del paso actual para explicaciones de error
+                window.pasoActual = {
+                    explicacionError: data.explicacionError || "Revisa los conceptos básicos.",
+                    opcionCorrecta: data.respuestaCorrecta
+                };
+                
                 setTimeout(() => {
                     mostrarOpcionesInteractivo(data.opciones);
                     if (window.voiceEnabled) {
@@ -235,7 +328,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Mostrar resumen final si se completó la sesión
                 if (data.sesionCompletada) {
                     const porcentaje = Math.round((window.respuestasCorrectas / window.totalPreguntas) * 100);
-                    addMessage(`🎉 ¡Sesión completada! ${window.respuestasCorrectas}/${window.totalPreguntas} correctas (${porcentaje}%)`, 'bot');
+                    const mensajeFinal = `🎉 ¡Sesión completada! ${window.respuestasCorrectas}/${window.totalPreguntas} correctas (${porcentaje}%)`;
+                    addMessage(mensajeFinal, 'bot');
+                    
+                    // Felicitación final con voz
+                    if (window.voiceEnabled) {
+                        let felicitacion = "";
+                        if (porcentaje >= 80) {
+                            felicitacion = "¡Excelente trabajo! Has demostrado un gran entendimiento del tema. ";
+                        } else if (porcentaje >= 60) {
+                            felicitacion = "Buen trabajo. Sigue practicando para mejorar. ";
+                        } else {
+                            felicitacion = "Sigue intentándolo, la práctica hace al maestro. ";
+                        }
+                        felicitacion += `Obtuviste ${window.estrellasTotales} estrellas. ¡Felicidades!`;
+                        window.hablarConCola(felicitacion);
+                    }
                     
                     // Reiniciar contadores
                     window.respuestasCorrectas = 0;
@@ -256,10 +364,17 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Extraer solo la explicación del paso (sin opciones)
         const lineas = respuestaCompleta.split('\n');
-        const explicacionPaso = lineas[0].replace(/\*\*/g, '').replace(/📝\s*\*?\*?Paso\s*\d+[:\.\-]\s*\*?\*?/i, '');
+        let explicacionPaso = "";
+        
+        for (const linea of lineas) {
+            if (linea.includes('Opciones:')) break;
+            explicacionPaso += linea + ". ";
+        }
+        
+        explicacionPaso = explicacionPaso.replace(/\*\*/g, '').replace(/📝\s*\*?\*?Paso\s*\d+[:\.\-]\s*\*?\*?/i, '');
         
         // Narra la explicación del paso
-        speakText(explicacionPaso);
+        window.hablarConCola(explicacionPaso);
         
         // Después de la explicación, narrar las opciones
         setTimeout(() => {
@@ -269,8 +384,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 textoOpciones += `Opción ${letra}. `;
             });
             textoOpciones += "¿Cuál eliges?";
-            speakText(textoOpciones);
-        }, 4000); // Tiempo suficiente para que termine la explicación
+            window.hablarConCola(textoOpciones);
+        }, 5000); // Tiempo suficiente para que termine la explicación
     }
     
     // === ACTUALIZAR ESTRELLAS CON EFECTOS MEJORADOS ===
@@ -359,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (window.voiceEnabled) {
                     await new Promise(resolve => setTimeout(resolve, 300));
-                    speakText(cleanTextForSpeech(steps[i]));
+                    window.hablarConCola(cleanTextForSpeech(steps[i]));
                     
                     if (i < steps.length - 1) {
                         await waitForSpeechEnd();
@@ -369,7 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             addMessage(fullResponse, 'bot');
             if (window.voiceEnabled) {
-                speakText(fullResponse);
+                window.hablarConCola(cleanTextForSpeech(fullResponse));
             }
         }
     }
@@ -457,27 +572,6 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/(Paso\s*\d+[:\.\-])/gi, '<strong style="color: #1565c0; font-size: 1.1em;">$1</strong>')
             .replace(/(Solución final[:\.\-])/gi, '<strong style="color: #2e7d32; font-size: 1.1em;">$1</strong>')
             .replace(/\n/g, '<br>');
-    }
-    
-    function speakText(texto) {
-        if ('speechSynthesis' in window && window.voiceEnabled) {
-            window.speechSynthesis.cancel();
-            
-            const utterance = new SpeechSynthesisUtterance(texto);
-            utterance.lang = 'es-ES';
-            utterance.rate = 0.9;
-            utterance.pitch = 1;
-            utterance.volume = 1;
-            
-            const voices = window.speechSynthesis.getVoices();
-            const spanishVoice = voices.find(voice => voice.lang.includes('es'));
-            
-            if (spanishVoice) {
-                utterance.voice = spanishVoice;
-            }
-            
-            window.speechSynthesis.speak(utterance);
-        }
     }
     
     function simulateImageAnalysis(file) {
@@ -584,6 +678,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 audioText.textContent = 'Voz Desactivada';
                 audioIcon.className = 'fas fa-volume-mute';
                 window.speechSynthesis.cancel();
+                window.colaVoz = [];
+                window.hablando = false;
             }
             
             localStorage.setItem('voiceEnabled', window.voiceEnabled);
@@ -606,96 +702,38 @@ document.addEventListener('DOMContentLoaded', () => {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.getVoices();
     }
+    
+    // Inicializar GeoGebra
+    inicializarGeoGebra();
 });
 
-// === FUNCIONES PARA GRÁFICAS ===
-async function graficarFuncion(funcionTexto) {
+// === FUNCIONES PARA GRÁFICAS CON GEOGEBRA ===
+async function graficarFuncionGeoGebra(funcionTexto) {
     try {
-        const response = await fetch('/graficar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                funcion: funcionTexto,
-                xMin: -10,
-                xMax: 10
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
+        if (!window.ggbApp) {
+            console.error("GeoGebra no está inicializado");
+            return;
         }
         
-        const data = await response.json();
+        // Mostrar el contenedor de gráficas
+        const graphContainer = document.getElementById('graphContainer');
+        graphContainer.style.display = 'block';
         
-        if (data.success) {
-            mostrarGrafica(data.datos, data.funcion);
-        } else {
-            addMessage(`❌ Error: ${data.error || 'No se pudo generar la gráfica'}`, 'bot');
-        }
+        // Limpiar gráfica anterior
+        window.ggbApp.evalCommand('DeleteAll()');
+        
+        // Graficar la función
+        window.ggbApp.evalCommand(`f(x)=${funcionTexto}`);
+        
+        // Ajustar la vista
+        window.ggbApp.setCoordSystem(-10, 10, -10, 10);
+        
+        addMessage(`✅ Gráfica generada para: f(x) = ${funcionTexto}`, 'bot');
+        
     } catch (error) {
-        console.error('Error al graficar:', error);
+        console.error('Error al graficar con GeoGebra:', error);
         addMessage("❌ Error al generar la gráfica. Verifica la función.", 'bot');
     }
-}
-
-function mostrarGrafica(datos, funcion) {
-    const graphContainer = document.getElementById('graphContainer');
-    const graphCanvas = document.getElementById('graphCanvas');
-    
-    if (!graphContainer || !graphCanvas) {
-        console.error("❌ No se encontraron los elementos de la gráfica");
-        return;
-    }
-    
-    graphContainer.style.display = 'block';
-    
-    const ctx = graphCanvas.getContext('2d');
-    
-    if (window.graficaActual) {
-        window.graficaActual.destroy();
-    }
-    
-    window.graficaActual = new Chart(ctx, {
-        type: 'line',
-        data: {
-            datasets: [{
-                label: `f(x) = ${funcion}`,
-                data: datos,
-                borderColor: '#4361ee',
-                backgroundColor: 'rgba(67, 97, 238, 0.1)',
-                borderWidth: 3,
-                pointRadius: 0,
-                fill: true,
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: {
-                    type: 'linear',
-                    position: 'bottom',
-                    title: { display: true, text: 'Eje X' },
-                    min: -10,
-                    max: 10
-                },
-                y: {
-                    title: { display: true, text: 'Eje Y' },
-                    min: -10,
-                    max: 10
-                }
-            },
-            plugins: {
-                title: {
-                    display: true,
-                    text: `Gráfica de: ${funcion}`,
-                    font: { size: 16 }
-                },
-                legend: { position: 'top' }
-            }
-        }
-    });
 }
 
 function detectarYGraficarFuncion(texto) {
@@ -730,73 +768,35 @@ function detectarYGraficarFuncion(texto) {
     return null;
 }
 
-// === FUNCIONES DE CONTROL DE GRÁFICA ===
-function zoomIn() {
-    if (window.graficaActual) {
-        const chart = window.graficaActual;
-        const xRange = chart.options.scales.x.max - chart.options.scales.x.min;
-        const yRange = chart.options.scales.y.max - chart.options.scales.y.min;
-        
-        chart.options.scales.x.min += xRange * 0.1;
-        chart.options.scales.x.max -= xRange * 0.1;
-        chart.options.scales.y.min += yRange * 0.1;
-        chart.options.scales.y.max -= yRange * 0.1;
-        
-        chart.update();
+// === FUNCIONES DE CONTROL DE GRÁFICA GEOGEBRA ===
+function zoomInGeoGebra() {
+    if (window.ggbApp) {
+        window.ggbApp.zoom(0.8, 0, 0);
     }
 }
 
-function zoomOut() {
-    if (window.graficaActual) {
-        const chart = window.graficaActual;
-        const xRange = chart.options.scales.x.max - chart.options.scales.x.min;
-        const yRange = chart.options.scales.y.max - chart.options.scales.y.min;
-        
-        chart.options.scales.x.min -= xRange * 0.1;
-        chart.options.scales.x.max += xRange * 0.1;
-        chart.options.scales.y.min -= yRange * 0.1;
-        chart.options.scales.y.max += yRange * 0.1;
-        
-        chart.update();
+function zoomOutGeoGebra() {
+    if (window.ggbApp) {
+        window.ggbApp.zoom(1.2, 0, 0);
     }
 }
 
-function resetZoom() {
-    if (window.graficaActual) {
-        const chart = window.graficaActual;
-        chart.options.scales.x.min = -10;
-        chart.options.scales.x.max = 10;
-        chart.options.scales.y.min = -10;
-        chart.options.scales.y.max = 10;
-        chart.update();
+function resetZoomGeoGebra() {
+    if (window.ggbApp) {
+        window.ggbApp.setCoordSystem(-10, 10, -10, 10);
     }
 }
 
-function descargarGrafica() {
-    if (window.graficaActual) {
-        const canvas = document.getElementById('graphCanvas');
-        const url = canvas.toDataURL('image/png');
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'grafica.png';
-        a.click();
+function descargarGraficaGeoGebra() {
+    if (window.ggbApp) {
+        window.ggbApp.exportPNG("grafica_matymat", 2, true, 800, 600, 72);
     }
 }
 
-function compartirGrafica() {
-    if (navigator.share) {
-        const canvas = document.getElementById('graphCanvas');
-        canvas.toBlob(blob => {
-            const file = new File([blob], 'grafica.png', { type: 'image/png' });
-            navigator.share({
-                title: 'Gráfica Matemática',
-                text: 'Mira esta gráfica que generé',
-                files: [file]
-            }).catch(err => console.error('Error al compartir:', err));
-        });
-    } else {
-        alert('Tu navegador no soporta la función de compartir');
-    }
+function cerrarGrafica() {
+    const graphContainer = document.getElementById('graphContainer');
+    graphContainer.style.display = 'none';
 }
+
 
 
