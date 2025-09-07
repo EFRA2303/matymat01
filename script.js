@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.colaVoz = [];
     window.hablando = false;
     window.ggbApp = null;
+    window.felicitacionReproducida = false; // Controlar felicitación final
 
     const userInput = document.getElementById('userInput');
     const sendBtn = document.getElementById('sendBtn');
@@ -36,14 +37,14 @@ document.addEventListener('DOMContentLoaded', () => {
             "height": 400,
             "showToolBar": true,
             "showAlgebraInput": true,
-            "showMenuBar": false,
+            "showMenuBar": true, // Cambiado a true para mostrar la barra de menú
             "showZoomButtons": true,
             "enableLabelDrags": false,
             "enableShiftDragZoom": true,
             "enableRightClick": false,
             "errorDialogsActive": false,
             "useBrowserForJS": false,
-            "allowStyleBar": false,
+            "allowStyleBar": true, // Habilitar barra de estilo
             "preventFocus": false,
             "language": "es",
             "appName": "graphing"
@@ -331,8 +332,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     const mensajeFinal = `🎉 ¡Sesión completada! ${window.respuestasCorrectas}/${window.totalPreguntas} correctas (${porcentaje}%)`;
                     addMessage(mensajeFinal, 'bot');
                     
-                    // Felicitación final con voz
-                    if (window.voiceEnabled) {
+                    // Felicitación final con voz - SOLO SI NO SE HA REPRODUCIDO YA
+                    if (window.voiceEnabled && !window.felicitacionReproducida) {
+                        window.felicitacionReproducida = true; // Marcar como reproducida
+                        
                         let felicitacion = "";
                         if (porcentaje >= 80) {
                             felicitacion = "¡Excelente trabajo! Has demostrado un gran entendimiento del tema. ";
@@ -348,6 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Reiniciar contadores
                     window.respuestasCorrectas = 0;
                     window.totalPreguntas = 0;
+                    window.felicitacionReproducida = false; // Resetear para la próxima sesión
                 }
             }
             
@@ -719,14 +723,23 @@ async function graficarFuncionGeoGebra(funcionTexto) {
         const graphContainer = document.getElementById('graphContainer');
         graphContainer.style.display = 'block';
         
+        // Esperar a que GeoGebra esté listo
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
         // Limpiar gráfica anterior
         window.ggbApp.evalCommand('DeleteAll()');
         
         // Graficar la función
         window.ggbApp.evalCommand(`f(x)=${funcionTexto}`);
         
-        // Ajustar la vista
+        // Ajustar la vista para una mejor visualización
         window.ggbApp.setCoordSystem(-10, 10, -10, 10);
+        
+        // Esperar un momento para que se renderice
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Ajustar automáticamente la vista
+        window.ggbApp.zoomToFit();
         
         addMessage(`✅ Gráfica generada para: f(x) = ${funcionTexto}`, 'bot');
         
@@ -797,6 +810,4 @@ function cerrarGrafica() {
     const graphContainer = document.getElementById('graphContainer');
     graphContainer.style.display = 'none';
 }
-
-
 
