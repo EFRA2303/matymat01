@@ -620,3 +620,123 @@ header p {
     border-radius: 5px;
     cursor: pointer;
 }
+/* === SISTEMA DE OPCIONES Y ESTRELLAS === */
+#opcionesContainer {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    border-radius: 15px;
+    margin: 20px 0;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    border: 2px solid rgba(255,255,255,0.2);
+}
+
+.opciones-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    color: white;
+}
+
+.opciones-header h4 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.estrellas-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.2);
+    padding: 8px 15px;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.estrellas-container .estrella {
+    font-size: 1.5rem;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
+#contadorEstrellas {
+    font-size: 1.3rem;
+    font-weight: bold;
+}
+
+.opciones-botones {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.opcion-btn {
+    padding: 15px 0;
+    font-size: 1.3rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.9);
+    color: #4361ee;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.opcion-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    background: white;
+}
+
+.opcion-btn:active {
+    transform: translateY(0);
+}
+
+/* Loading de estrellas */
+#loadingEstrella {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255,255,255,0.95);
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    z-index: 1000;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.estrella-loading {
+    font-size: 3rem;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    50% { transform: scale(1.5) rotate(180deg); }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .opciones-botones {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .opcion-btn {
+        padding: 12px 0;
+        font-size: 1.1rem;
+    }
+    
+    .opciones-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+}
