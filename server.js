@@ -1,8 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-// Nota: conserva la importación de la librería que usas para Gemini/GenAI.
-// Si en tu entorno es distinta, ajústala.
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 dotenv.config();
@@ -43,11 +41,6 @@ Si no es matemática: "Solo ayudo con problemas de matemáticas :)"
 
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
 
-/**
- * Extrae pasos y opciones asociadas a cada paso.
- * Para cada [PASO n] toma el bloque entre este paso y el siguiente y busca
- * dentro de ese bloque las OPCIONES y la EXPLICACIÓN-ERROR.
- */
 function parsearRespuestaConOpciones(texto) {
   const pasos = [];
   const regexPaso = /\[PASO\s*(\d+)\]:\s*([\s\S]*?)(?=(?:\[PASO\s*\d+\]:)|$)/gi;
@@ -57,7 +50,6 @@ function parsearRespuestaConOpciones(texto) {
     const numeroPaso = parseInt(matchPaso[1], 10);
     const bloquePaso = matchPaso[2].trim();
 
-    // Buscar opciones y explicación de error dentro del mismo bloque
     const regexOpciones = /OPCIONES:\s*A\)\s*([\s\S]*?)\s*B\)\s*([\s\S]*?)\s*C\)\s*([\s\S]*?)\s*EXPLICACIÓN-ERROR:\s*([\s\S]*?)$/i;
     const matchOpciones = bloquePaso.match(regexOpciones);
 
@@ -97,7 +89,6 @@ app.post('/analizar', async (req, res) => {
       });
     }
 
-    // Detección simple de petición de gráfica
     const comandosGrafica = ['gráfica', 'grafica', 'graficar', 'gráficar', 'muéstrame la gráfica', 'mostrar gráfica', 'dibujar'];
     const esComandoGrafica = comandosGrafica.some(c => input.includes(c));
 
@@ -105,7 +96,6 @@ app.post('/analizar', async (req, res) => {
       return await manejarSolicitudGrafica(input, res);
     }
 
-    // Llamada a modelo generativo (Gemini) - adaptalo a tu SDK si difiere
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const fullPrompt = promptBase + "\n\nConsulta del estudiante: " + inputRaw;
 
@@ -113,11 +103,12 @@ app.post('/analizar', async (req, res) => {
     const response = await result.response;
     let textResponse = response.text();
 
-    // Parsear pasos y opciones
     const pasos = parsearRespuestaConOpciones(textResponse);
 
     if (pasos.length > 0) {
       const sesionId = Date.now().toString();
+      const primerPaso = pasos[0];
+      
       sesionesActivas.set(sesionId, {
         pasos,
         pasoActual: 0,
@@ -125,7 +116,6 @@ app.post('/analizar', async (req, res) => {
         timestamp: Date.now()
       });
 
-      const primerPaso = pasos[0];
       let respuestaTexto = `📝 **Paso ${primerPaso.numero}:** ${primerPaso.explicacion}\n\n`;
       respuestaTexto += "**Opciones:**\n";
       primerPaso.opciones.forEach(op => {
@@ -137,10 +127,11 @@ app.post('/analizar', async (req, res) => {
         tipo: "interactivo",
         sesionId: sesionId,
         tieneOpciones: true,
+        opciones: primerPaso.opciones,
+        respuestaCorrecta: primerPaso.opcionCorrecta,
         estrellas: 0
       });
     } else {
-      // Respuesta normal, limpiar formato Markdown u otros tags
       textResponse = textResponse
         .replace(/\*\*/g, '')
         .replace(/\[CORRECTA\]/gi, '')
@@ -186,7 +177,9 @@ app.post('/responder', async (req, res) => {
       });
     }
 
-    if (opcionElegida === pasoActual.opcionCorrecta) {
+    const esCorrecta = opcionElegida === pasoActual.opcionCorrecta;
+
+    if (esCorrecta) {
       sesion.estrellas++;
       sesion.pasoActual++;
 
@@ -208,9 +201,9 @@ app.post('/responder', async (req, res) => {
           correcto: true,
           sesionId,
           tieneOpciones: true,
-          estrellas: sesion.estrellas,
-          pasoActual: sesion.pasoActual,
-          totalPasos: sesion.pasos.length
+          opciones: siguientePaso.opciones,
+          respuestaCorrecta: siguientePaso.opcionCorrecta,
+          estrellas: sesion.estrellas
         });
       } else {
         respuesta += `🎉 **¡Problema completado!** Ganaste ${sesion.estrellas} estrellas ⭐\n\n`;
@@ -235,7 +228,6 @@ app.post('/responder', async (req, res) => {
         respuesta += `${op.letra}) ${op.texto}\n`;
       });
 
-      // no avanzamos el paso en incorrecta
       sesionesActivas.set(sesionId, sesion);
       return res.json({
         respuesta,
@@ -243,9 +235,9 @@ app.post('/responder', async (req, res) => {
         correcto: false,
         sesionId,
         tieneOpciones: true,
-        estrellas: sesion.estrellas,
-        pasoActual: sesion.pasoActual,
-        totalPasos: sesion.pasos.length
+        opciones: pasoActual.opciones,
+        respuestaCorrecta: pasoActual.opcionCorrecta,
+        estrellas: sesion.estrellas
       });
     }
   } catch (error) {
@@ -257,7 +249,6 @@ app.post('/responder', async (req, res) => {
   }
 });
 
-// Limpiar sesiones antiguas cada 10 minutos
 setInterval(() => {
   const ahora = Date.now();
   for (const [sesionId, sesion] of sesionesActivas.entries()) {
@@ -267,45 +258,31 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000);
 
-/* ----------------- Manejo de gráficas ----------------- */
-/**
- * Evaluar expresión de forma más segura: reemplazos con límites de palabra.
- */
 function generarDatosGrafica(funcion, xMin, xMax) {
   console.log(`🧮 Generando puntos para f(x) = ${funcion} en [${xMin}, ${xMax}]`);
   const puntos = [];
   const paso = 0.1;
 
   function evaluarFuncion(expr, x) {
-    // reemplazos seguros con límites de palabra
     let exprProcesada = expr;
-
-    // Reemplazar funciones y constantes usando límites de palabra
     exprProcesada = exprProcesada.replace(/\b(sin)\b/gi, 'Math.sin');
     exprProcesada = exprProcesada.replace(/\b(cos)\b/gi, 'Math.cos');
     exprProcesada = exprProcesada.replace(/\b(tan)\b/gi, 'Math.tan');
     exprProcesada = exprProcesada.replace(/\b(sqrt)\b/gi, 'Math.sqrt');
     exprProcesada = exprProcesada.replace(/\b(ln)\b/gi, 'Math.log');
-    exprProcesada = exprProcesada.replace(/\b(log10|log)\b/gi, 'Math.log10'); // si quieres log10
+    exprProcesada = exprProcesada.replace(/\b(log10|log)\b/gi, 'Math.log10');
     exprProcesada = exprProcesada.replace(/\bpi\b/gi, 'Math.PI');
-    // 'e' como constante: reemplazar solo si está aislada
     exprProcesada = exprProcesada.replace(/\bE\b/g, 'Math.E');
     exprProcesada = exprProcesada.replace(/\be\b/g, 'Math.E');
-
-    // Potencia con ^ -> **
     exprProcesada = exprProcesada.replace(/\^/g, '**');
-
-    // Reemplazar x sólo cuando sea variable independiente (limite de palabra)
     exprProcesada = exprProcesada.replace(/\bx\b/g, `(${x})`);
-
-    // Eliminar caracteres indeseados (dejamos operadores y paréntesis)
     exprProcesada = exprProcesada.replace(/[^\d\w\.\+\-\*\/\^\(\)\sMathPIE,]/g, '');
 
     try {
       const fn = new Function('Math', `return ${exprProcesada}`);
       return fn(Math);
     } catch (error) {
-      throw new Error(`Error al evaluar expresión: ${error.message} (expresion procesada: ${exprProcesada})`);
+      throw new Error(`Error al evaluar expresión: ${error.message}`);
     }
   }
 
@@ -317,7 +294,6 @@ function generarDatosGrafica(funcion, xMin, xMax) {
           puntos.push({ x: parseFloat(xx.toFixed(2)), y: parseFloat(y.toFixed(4)) });
         }
       } catch (e) {
-        // si falla en un punto, lo saltamos pero no abortamos todo el proceso
         console.warn(`⚠️ Error en x=${xx}: ${e.message}`);
       }
     }
@@ -332,11 +308,9 @@ function generarDatosGrafica(funcion, xMin, xMax) {
 
 async function manejarSolicitudGrafica(input, res) {
   try {
-    // Extraemos lo que parezca la función
     const funcionMatch = input.match(/(?:de|la|el|para|graficar|gráficar|grafica)\s+([^\.\?\!]+)/i);
     let funcion = funcionMatch ? funcionMatch[1].trim() : input;
 
-    // Limpiar la cadena de entrada (permitimos sólo caracteres matemáticos comunes)
     funcion = funcion
       .replace(/(funci[óo]n|gr[áa]fica|grafica|grafica:|de|la|el|mu[ée]strame|quiero|ver|visualizar)/gi, '')
       .replace(/[^\w\s\-\+\*\/\^\(\)\.\,]/g, '')
