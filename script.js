@@ -655,3 +655,110 @@ function compartirGrafica() {
         alert('Tu navegador no soporta la función de compartir');
     }
 }
+// === SISTEMA DE OPCIONES Y ESTRELLAS ===
+let sesionActual = null;
+let estrellasTotales = 0;
+
+async function elegirOpcion(opcion) {
+    if (!sesionActual) return;
+    
+    const respuestaDiv = document.getElementById('chatContainer');
+    const opcionesDiv = document.getElementById('opcionesContainer');
+    
+    // Mostrar opción seleccionada
+    addMessage(`Elegiste: Opción ${opcion}`, 'user');
+    opcionesDiv.style.display = 'none';
+    
+    try {
+        const response = await fetch('/responder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                sesionId: sesionActual, 
+                opcionElegida: opcion 
+            })
+        });
+
+        const data = await response.json();
+        
+        // Mostrar respuesta
+        addMessage(data.respuesta, 'bot');
+        
+        // Actualizar estrellas
+        if (data.estrellas !== undefined) {
+            actualizarEstrellas(data.estrellas);
+        }
+        
+        // Mostrar opciones si hay más pasos
+        if (data.tieneOpciones && !data.sesionCompletada) {
+            setTimeout(() => {
+                opcionesDiv.style.display = 'block';
+            }, 1000);
+        }
+        
+        // Si la sesión expiró
+        if (data.sesionExpirada) {
+            sesionActual = null;
+        }
+        
+    } catch (error) {
+        addMessage("❌ Error al procesar tu respuesta", 'bot');
+        console.error('Error:', error);
+    }
+}
+
+function actualizarEstrellas(cantidad) {
+    estrellasTotales = cantidad;
+    document.getElementById('contadorEstrellas').textContent = cantidad;
+    
+    // Animación de estrella
+    const loading = document.getElementById('loadingEstrella');
+    loading.style.display = 'block';
+    
+    setTimeout(() => {
+        loading.style.display = 'none';
+    }, 2000);
+}
+
+// Modificar la función sendMessage para manejar sesiones
+async function sendMessage() {
+    if (isSending) return;
+    const text = userInput.value.trim();
+    if (!text) return;
+    isSending = true;
+    addMessage(text, 'user');
+    userInput.value = '';
+    
+    const typing = createTypingMessage("Pensando...");
+    
+    try {
+        const response = await fetch('/analizar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: text })
+        });
+        
+        const data = await response.json();
+        removeTypingMessage(typing);
+        
+        if (data.tipo === "interactivo" && data.tieneOpciones) {
+            // Guardar sesión y mostrar opciones
+            sesionActual = data.sesionId;
+            actualizarEstrellas(data.estrellas);
+            
+            // Mostrar opciones después de un breve delay
+            setTimeout(() => {
+                document.getElementById('opcionesContainer').style.display = 'block';
+            }, 500);
+        }
+        
+        addMessage(data.respuesta, 'bot');
+        
+    } catch (err) {
+        removeTypingMessage(typing);
+        addMessage("🔴 Error de conexión", 'bot');
+        console.error('Error:', err);
+    } finally {
+        isSending = false;
+    }
+}
