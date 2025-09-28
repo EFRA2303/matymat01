@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import Groq from 'groq-sdk';  // ✅ CAMBIADO: Groq en lugar de Gemini
 
 dotenv.config();
 
@@ -41,7 +41,10 @@ Si no es matemática: "Solo ayudo con problemas de matemáticas :)"
 IMPORTANTE: Para funciones gráficas, responde indicando que se puede graficar pero NO intentes generar datos de gráfica.
 `;
 
-const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+// ✅ CAMBIADO: Configuración de Groq en lugar de Gemini
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY  // ✅ NUEVA variable de entorno
+});
 
 function parsearRespuestaConOpciones(texto) {
   const pasos = [];
@@ -79,6 +82,33 @@ function parsearRespuestaConOpciones(texto) {
   }
 
   return pasos;
+}
+
+// ✅ CAMBIADO: Función para llamar a Groq en lugar de Gemini
+async function generarRespuestaGroq(prompt) {
+  try {
+    const completion = await groq.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content: promptBase
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      model: "llama3-8b-8192",  // ✅ Modelo gratis y rápido
+      temperature: 0.7,
+      max_tokens: 1024,
+      stream: false
+    });
+
+    return completion.choices[0]?.message?.content || "No pude generar una respuesta.";
+  } catch (error) {
+    console.error('Error con Groq API:', error);
+    throw new Error("Error al comunicarse con el servicio de IA");
+  }
 }
 
 app.post('/analizar', async (req, res) => {
@@ -124,12 +154,9 @@ app.post('/analizar', async (req, res) => {
       });
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    const fullPrompt = promptBase + "\n\nConsulta del estudiante: " + inputRaw;
-
-    const result = await model.generateContent(fullPrompt);
-    const response = await result.response;
-    let textResponse = response.text();
+    // ✅ CAMBIADO: Usar Groq en lugar de Gemini
+    const fullPrompt = "Consulta del estudiante: " + inputRaw;
+    const textResponse = await generarRespuestaGroq(fullPrompt);
 
     const pasos = parsearRespuestaConOpciones(textResponse);
 
@@ -161,14 +188,14 @@ app.post('/analizar', async (req, res) => {
         estrellas: 0
       });
     } else {
-      textResponse = textResponse
+      const textResponseLimpio = textResponse
         .replace(/\*\*/g, '')
         .replace(/\[CORRECTA\]/gi, '')
         .replace(/#{1,6}\s*/g, '')
         .replace(/\n{3,}/g, '\n\n');
 
       return res.json({
-        respuesta: textResponse,
+        respuesta: textResponseLimpio,
         tipo: "normal",
         tieneOpciones: false
       });
@@ -182,6 +209,7 @@ app.post('/analizar', async (req, res) => {
   }
 });
 
+// Los endpoints /responder, /graficar y demás permanecen IGUALES
 app.post('/responder', async (req, res) => {
   try {
     const { sesionId, opcionElegida } = req.body;
@@ -324,7 +352,5 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 export default app;
-
-
 
 
