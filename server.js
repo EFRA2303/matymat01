@@ -101,7 +101,7 @@ async function generarRespuestaGroq(prompt) {
           content: prompt
         }
       ],
-      model: "llama3-8b-8192",
+      model: "llama-3.1-8b-instant",
       temperature: 0.7,
       max_tokens: 1024,
       stream: false
@@ -351,6 +351,7 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 export default app;
+
 
 
 
