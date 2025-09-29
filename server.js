@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import Groq from 'groq-sdk';  // ✅ CAMBIADO: Groq en lugar de Gemini
+import Groq from 'groq-sdk';
 
 dotenv.config();
 
@@ -41,10 +41,12 @@ Si no es matemática: "Solo ayudo con problemas de matemáticas :)"
 IMPORTANTE: Para funciones gráficas, responde indicando que se puede graficar pero NO intentes generar datos de gráfica.
 `;
 
-// ✅ CAMBIADO: Configuración de Groq en lugar de Gemini
+// Configuración de Groq
 const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY  // ✅ NUEVA variable de entorno
+  apiKey: process.env.GROQ_API_KEY
 });
+
+console.log('✅ Groq configurado correctamente');
 
 function parsearRespuestaConOpciones(texto) {
   const pasos = [];
@@ -68,7 +70,6 @@ function parsearRespuestaConOpciones(texto) {
       const explicacionError = (matchOpciones[4] || '').trim();
       const opcionCorrecta = opciones.find(op => op.correcta)?.letra || 'A';
 
-      // Extraer la explicación del paso (sin las opciones)
       const explicacionPaso = bloquePaso.replace(regexOpciones, '').trim();
 
       pasos.push({
@@ -84,9 +85,11 @@ function parsearRespuestaConOpciones(texto) {
   return pasos;
 }
 
-// ✅ CAMBIADO: Función para llamar a Groq en lugar de Gemini
+// Función para llamar a Groq
 async function generarRespuestaGroq(prompt) {
   try {
+    console.log('📤 Enviando consulta a Groq...');
+    
     const completion = await groq.chat.completions.create({
       messages: [
         {
@@ -98,15 +101,16 @@ async function generarRespuestaGroq(prompt) {
           content: prompt
         }
       ],
-      model: "llama3-8b-8192",  // ✅ Modelo gratis y rápido
+      model: "llama3-8b-8192",
       temperature: 0.7,
       max_tokens: 1024,
       stream: false
     });
 
+    console.log('✅ Respuesta recibida de Groq');
     return completion.choices[0]?.message?.content || "No pude generar una respuesta.";
   } catch (error) {
-    console.error('Error con Groq API:', error);
+    console.error('❌ Error con Groq API:', error.message);
     throw new Error("Error al comunicarse con el servicio de IA");
   }
 }
@@ -129,7 +133,6 @@ app.post('/analizar', async (req, res) => {
     const esComandoGrafica = comandosGrafica.some(c => input.includes(c));
 
     if (esComandoGrafica) {
-      // Extraer la función del texto
       const funcionMatch = input.match(/(?:de|la|el|para|graficar|gráficar|grafica)\s+([^\.\?\!]+)/i);
       let funcion = funcionMatch ? funcionMatch[1].trim() : input;
 
@@ -154,7 +157,6 @@ app.post('/analizar', async (req, res) => {
       });
     }
 
-    // ✅ CAMBIADO: Usar Groq en lugar de Gemini
     const fullPrompt = "Consulta del estudiante: " + inputRaw;
     const textResponse = await generarRespuestaGroq(fullPrompt);
 
@@ -209,7 +211,6 @@ app.post('/analizar', async (req, res) => {
   }
 });
 
-// Los endpoints /responder, /graficar y demás permanecen IGUALES
 app.post('/responder', async (req, res) => {
   try {
     const { sesionId, opcionElegida } = req.body;
@@ -308,7 +309,6 @@ app.post('/responder', async (req, res) => {
   }
 });
 
-// Endpoint para graficar (ahora manejado por GeoGebra en frontend)
 app.post('/graficar', async (req, res) => {
   try {
     const { funcion } = req.body;
@@ -316,7 +316,6 @@ app.post('/graficar', async (req, res) => {
       return res.status(400).json({ error: "Por favor, proporciona una función para graficar" });
     }
     
-    // Validar que sea una función matemática válida
     const funcionValida = /^[a-zA-Z0-9\s\-\+\*\/\^\(\)\.\,]+$/.test(funcion);
     if (!funcionValida) {
       return res.status(400).json({ error: "Función matemática inválida" });
@@ -352,5 +351,6 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 export default app;
+
 
 
