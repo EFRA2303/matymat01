@@ -872,3 +872,74 @@ function cerrarGrafica() {
     graphContainer.style.display = 'none';
 }
 
+// === DOBLE CLICK PARA SALIR - VERSIÓN MINIMALISTA ===
+let clicks = 0;
+
+document.addEventListener('click', (e) => {
+    if (e.target.closest('button, textarea, input')) return;
+    
+    clicks++;
+    
+    if (clicks === 1) {
+        setTimeout(() => clicks = 0, 1500);
+        showExitHint();
+    } else if (clicks === 2) {
+        clicks = 0;
+        confirmExit();
+    }
+});
+
+function showExitHint() {
+    const hint = document.createElement('div');
+    hint.textContent = '👆 Toca otra vez para SALIR';
+    hint.style.cssText = `
+        position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+        background: #ff4757; color: white; padding: 10px 20px; border-radius: 20px;
+        font-weight: bold; z-index: 9999; animation: fadeHint 2s;
+    `;
+    document.body.appendChild(hint);
+    setTimeout(() => hint.remove(), 2000);
+}
+
+function confirmExit() {
+    const modal = document.createElement('div');
+    modal.innerHTML = `
+        <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:10000;">
+            <div style="background:white; padding:25px; border-radius:15px; text-align:center; max-width:300px;">
+                <h3 style="margin:0 0 15px 0;">¿Salir de MatyMat?</h3>
+                <button onclick="closeApp()" style="background:#ff4757; color:white; border:none; padding:10px 20px; border-radius:8px; margin:5px; cursor:pointer;">
+                    ✅ Sí, salir
+                </button>
+                <button onclick="this.closest('div').remove()" style="background:#576574; color:white; border:none; padding:10px 20px; border-radius:8px; margin:5px; cursor:pointer;">
+                    ❌ Cancelar
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function closeApp() {
+    document.body.innerHTML = `
+        <div style="height:100vh; background:linear-gradient(135deg, #667eea, #764ba2); display:flex; align-items:center; justify-content:center; color:white; font-family:Poppins;">
+            <div style="text-align:center;">
+                <h1 style="font-size:2.5rem; margin-bottom:20px;">👋 ¡Hasta pronto!</h1>
+                <p>MatyMat-01</p>
+            </div>
+        </div>
+    `;
+    setTimeout(() => window.close() || (window.location.href = 'about:blank'), 1500);
+}
+
+// Estilos minimalistas
+document.head.insertAdjacentHTML('beforeend', `
+    <style>
+        @keyframes fadeHint {
+            0% { opacity:0; transform:translateX(-50%) translateY(-10px); }
+            20% { opacity:1; transform:translateX(-50%) translateY(0); }
+            80% { opacity:1; transform:translateX(-50%) translateY(0); }
+            100% { opacity:0; transform:translateX(-50%) translateY(-10px); }
+        }
+    </style>
+`);
+
