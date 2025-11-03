@@ -445,55 +445,48 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
         }, 3000);
     }
     
-    // === FUNCIÓN OCR PARA ANÁLISIS DE IMAGEN ===
+      // === FUNCIÓN SIMPLIFICADA - MODO DESCRIPCIÓN ===
     async function simulateImageAnalysis(file) {
-        const typing = createTypingMessage("🔍 Escaneando texto matemático...");
-        
-        try {
-            const worker = await Tesseract.createWorker('spa');
-            const { data: { text } } = await worker.recognize(file);
-            await worker.terminate();
-            removeTypingMessage(typing);
+        // Mostrar opciones directamente sin OCR
+        setTimeout(() => {
+            addMessage('✅ Foto recibida. ¿Qué te gustaría hacer con esta actividad matemática?', 'bot');
             
-            const textoLimpio = text.trim();
+            // Mostrar opciones para que el usuario describa
+            const opcionesContainer = document.getElementById('opcionesContainer');
+            const opcionesBotones = opcionesContainer.querySelector('.opciones-botones');
             
-            if (textoLimpio && textoLimpio.length > 5) {
-                addMessage(`✅ **Texto detectado:**\n\n"${textoLimpio}"\n\n¿Quieres que resuelva este problema?`, 'bot');
-                mostrarOpcionesConTexto(textoLimpio);
-            } else {
-                addMessage('❌ No pude detectar texto matemático claro. Describe el problema.', 'bot');
-            }
+            opcionesBotones.innerHTML = '';
+            opcionesContainer.style.display = 'block';
             
-        } catch (error) {
-            removeTypingMessage(typing);
-            addMessage('❌ Error escaneando la imagen. Describe el problema.', 'bot');
-        }
+            const opciones = [
+                { letra: 'A', texto: "📝 Describir el problema para resolverlo", accion: "describir" },
+                { letra: 'B', texto: "📚 Pedir explicación de conceptos", accion: "explicar" },
+                { letra: 'C', texto: "🔄 Tomar otra foto", accion: "otra" }
+            ];
+            
+            opciones.forEach((opcion) => {
+                const btn = document.createElement('button');
+                btn.className = 'opcion-btn';
+                btn.innerHTML = `<strong>${opcion.letra})</strong> ${opcion.texto}`;
+                btn.onclick = () => {
+                    opcionesContainer.style.display = 'none';
+                    if (opcion.accion === "describir") {
+                        addMessage("Por favor describe el problema matemático que ves en la foto:", 'bot');
+                        userInput.focus();
+                    } else if (opcion.accion === "explicar") {
+                        addMessage("¿Sobre qué concepto matemático necesitas explicación?", 'bot');
+                        userInput.focus();
+                    } else if (opcion.accion === "otra") {
+                        fileInput.click();
+                    }
+                };
+                opcionesBotones.appendChild(btn);
+            });
+            
+        }, 1000);
     }
-
-    // === FUNCIONES OCR PARA FOTOS ===
-    function mostrarOpcionesConTexto(textoDetectado) {
-        const opcionesContainer = document.getElementById('opcionesContainer');
-        const opcionesBotones = opcionesContainer.querySelector('.opciones-botones');
-        
-        opcionesBotones.innerHTML = '';
-        opcionesContainer.style.display = 'block';
-        
-        window.textoFotoDetectado = textoDetectado;
-        
-        const opciones = [
-            { letra: 'A', texto: "✅ Sí, resolver este problema", accion: "resolver" },
-            { letra: 'B', texto: "📚 Explicar conceptos", accion: "explicar" },
-            { letra: 'C', texto: "🔄 Tomar otra foto", accion: "otra" }
-        ];
-        
-        opciones.forEach((opcion) => {
-            const btn = document.createElement('button');
-            btn.className = 'opcion-btn';
-            btn.innerHTML = `<strong>${opcion.letra})</strong> ${opcion.texto}`;
-            btn.onclick = () => procesarOpcionConTexto(opcion.accion, textoDetectado);
-            opcionesBotones.appendChild(btn);
-        });
-    }
+    
+       
 
     async function procesarOpcionConTexto(accion, textoDetectado) {
         document.getElementById('opcionesContainer').style.display = 'none';
@@ -878,3 +871,4 @@ function cerrarGrafica() {
     const graphContainer = document.getElementById('graphContainer');
     graphContainer.style.display = 'none';
 }
+
