@@ -54,6 +54,26 @@ document.addEventListener('DOMContentLoaded', () => {
         window.ggbApp.inject('ggb-element');
     }
 
+    // === MEJORAR MENSAJE INICIAL CON VOZ ===
+    function mejorarMensajeInicial() {
+        // Narración con voz mejorada - SOLO se ejecuta una vez al inicio
+        if (window.voiceEnabled && !window.mensajeInicialReproducido) {
+            window.mensajeInicialReproducido = true; // Prevenir repetición
+            
+            const textoVoz = `¡Hola! Soy MatyMat cero uno, tu tutor virtual de matemáticas. Te ayudaré a entender y aprender álgebra, trigonometría y geometría. 
+
+Puedes escribir tu pregunta, tomar fotos de ejercicios, resolver paso a paso con opciones interactivas, ganar estrellas y visualizar gráficas. 
+
+Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igual a quince, calcular funciones trigonométricas como seno de treinta grados, o hallar áreas y volúmenes como el área de un círculo. 
+
+¿En qué tema matemático necesitas ayuda?`;
+            
+            setTimeout(() => {
+                window.hablarConCola(textoVoz);
+            }, 1500);
+        }
+    }
+
     // === ACTIVAR CÁMARA ===
     if (uploadBtn && fileInput) {
         uploadBtn.addEventListener('click', () => fileInput.click());
@@ -709,6 +729,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Inicializar GeoGebra
     inicializarGeoGebra();
+    
+    // Mejorar mensaje inicial con voz
+    mejorarMensajeInicial();
 });
 
 // === FUNCIONES PARA GRÁFICAS CON GEOGEBRA ===
@@ -810,4 +833,3 @@ function cerrarGrafica() {
     const graphContainer = document.getElementById('graphContainer');
     graphContainer.style.display = 'none';
 }
-
