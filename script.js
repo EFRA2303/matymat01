@@ -79,8 +79,11 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
         uploadBtn.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', (event) => {
             if (event.target.files.length > 0) {
-                addMessage('📸 Imagen enviada para análisis...', 'user');
-                simulateImageAnalysis(event.target.files[0]);
+            addMessage('📸 Imagen enviada para análisis...', 'user');
+            simulateImageAnalysis(event.target.files[0]);
+        
+            // 🔥 IMPORTANTE: Limpiar el input para permitir otra selección
+            event.target.value = '';
             }
         });
     }
@@ -936,4 +939,5 @@ function cerrarGrafica() {
     const graphContainer = document.getElementById('graphContainer');
     graphContainer.style.display = 'none';
 }
+
 
