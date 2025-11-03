@@ -598,11 +598,114 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
             .replace(/\n/g, '<br>');
     }
     
-    function simulateImageAnalysis(file) {
-        setTimeout(() => {
-            addMessage('🔍 He detectado un problema matemático en la imagen. Describe qué necesitas resolver.', 'bot');
-        }, 2000);
+  // === FUNCIÓN MEJORADA PARA ANÁLISIS DE IMAGEN ===
+function simulateImageAnalysis(file) {
+    // Mostrar opciones interactivas después de tomar foto
+    setTimeout(() => {
+        addMessage('✅ Foto recibida. ¿Qué te gustaría hacer con esta actividad matemática?', 'bot');
+        
+        // Mostrar opciones específicas para foto
+        mostrarOpcionesFoto();
+        
+        if (window.voiceEnabled) {
+            window.hablarConCola("Foto recibida. ¿Qué necesitas que haga con esta actividad matemática?");
+        }
+    }, 1000);
+}
+
+// === FUNCIÓN PARA MOSTRAR OPCIONES DE FOTO ===
+function mostrarOpcionesFoto() {
+    const opcionesContainer = document.getElementById('opcionesContainer');
+    const opcionesBotones = opcionesContainer.querySelector('.opciones-botones');
+    
+    if (!opcionesContainer || !opcionesBotones) return;
+    
+    opcionesBotones.innerHTML = '';
+    opcionesContainer.style.display = 'block';
+    
+    const opcionesFoto = [
+        { letra: 'A', texto: "Resolver esta actividad paso a paso", accion: "resolver" },
+        { letra: 'B', texto: "Explicar los conceptos matemáticos", accion: "explicar" },
+        { letra: 'C', texto: "Mostrar ejercicios similares", accion: "ejercicios" },
+        { letra: 'D', texto: "Analizar métodos de solución", accion: "metodos" }
+    ];
+    
+    opcionesFoto.forEach((opcion) => {
+        const btn = document.createElement('button');
+        btn.className = 'opcion-btn';
+        btn.dataset.opcion = opcion.letra;
+        btn.dataset.accion = opcion.accion;
+        btn.innerHTML = `<strong>${opcion.letra})</strong> ${opcion.texto}`;
+        btn.onclick = () => seleccionarOpcionFoto(opcion.accion, opcion.texto);
+        opcionesBotones.appendChild(btn);
+    });
+}
+
+// === FUNCIÓN PARA MANEJAR SELECCIÓN DE OPCIÓN DE FOTO ===
+async function seleccionarOpcionFoto(accion, textoOpcion) {
+    const opcionesContainer = document.getElementById('opcionesContainer');
+    
+    // Ocultar opciones
+    if (opcionesContainer) {
+        opcionesContainer.style.display = 'none';
     }
+    
+    // Mensaje de confirmación
+    addMessage(`Elegí: ${textoOpcion}`, 'user');
+    
+    // Crear consulta para Groq basada en la acción seleccionada
+    let consultaGroq = "";
+    
+    switch(accion) {
+        case "resolver":
+            consultaGroq = "Resuelve esta actividad matemática paso a paso de manera clara y detallada. Incluye explicaciones de cada paso.";
+            break;
+        case "explicar":
+            consultaGroq = "Explica los conceptos matemáticos involucrados en esta actividad. Incluye definiciones, fórmulas relevantes y ejemplos.";
+            break;
+        case "ejercicios":
+            consultaGroq = "Proporciona ejercicios similares a esta actividad matemática con sus soluciones. Incluye variedad de problemas.";
+            break;
+        case "metodos":
+            consultaGroq = "Analiza los diferentes métodos para resolver este tipo de actividad matemática. Compara ventajas y desventajas.";
+            break;
+    }
+    
+    // Enviar consulta a Groq
+    const typing = createTypingMessage("Procesando tu solicitud...");
+    
+    try {
+        const response = await fetch('/analizar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: consultaGroq })
+        });
+        
+        const data = await response.json();
+        removeTypingMessage(typing);
+        
+        if (data.respuesta) {
+            if (data.tipo === "interactivo" && data.tieneOpciones) {
+                // Manejar modo interactivo si Groq lo devuelve
+                window.sesionActual = data.sesionId;
+                window.opcionesActuales = data.opciones || [];
+                window.respuestaCorrecta = data.respuestaCorrecta;
+                
+                addMessage(data.respuesta, 'bot');
+                setTimeout(() => {
+                    mostrarOpcionesInteractivo(data.opciones);
+                }, 500);
+            } else {
+                // Modo normal de respuesta
+                await showStepsSequentially(data.respuesta);
+            }
+        }
+    } catch (error) {
+        removeTypingMessage(typing);
+        addMessage("❌ Error al procesar tu solicitud. Intenta de nuevo.", 'bot');
+        console.error('Error:', error);
+    }
+}
     
     // === EVENTOS ===
     sendBtn.addEventListener('click', sendMessage);
@@ -833,3 +936,4 @@ function cerrarGrafica() {
     const graphContainer = document.getElementById('graphContainer');
     graphContainer.style.display = 'none';
 }
+
