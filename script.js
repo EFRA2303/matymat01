@@ -1,4 +1,4 @@
-// script.js - VERSIÓN MEJORADA CON GEOGEBRA Y SISTEMA DE VOZ COMPLETO
+// script.js - VERSIÓN MEJORADA CON GEOGEBRA, OCR Y SISTEMA DE VOZ COMPLETO
 document.addEventListener('DOMContentLoaded', () => {
     // Variables globales
     let isSending = false;
@@ -37,14 +37,14 @@ document.addEventListener('DOMContentLoaded', () => {
             "height": 400,
             "showToolBar": true,
             "showAlgebraInput": true,
-            "showMenuBar": true, // Cambiado a true para mostrar la barra de menú
+            "showMenuBar": true,
             "showZoomButtons": true,
             "enableLabelDrags": false,
             "enableShiftDragZoom": true,
             "enableRightClick": false,
             "errorDialogsActive": false,
             "useBrowserForJS": false,
-            "allowStyleBar": true, // Habilitar barra de estilo
+            "allowStyleBar": true,
             "preventFocus": false,
             "language": "es",
             "appName": "graphing"
@@ -56,9 +56,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === MEJORAR MENSAJE INICIAL CON VOZ ===
     function mejorarMensajeInicial() {
-        // Narración con voz mejorada - SOLO se ejecuta una vez al inicio
         if (window.voiceEnabled && !window.mensajeInicialReproducido) {
-            window.mensajeInicialReproducido = true; // Prevenir repetición
+            window.mensajeInicialReproducido = true;
             
             const textoVoz = `¡Hola! Soy MatyMat cero uno, tu tutor virtual de matemáticas. Te ayudaré a entender y aprender álgebra, trigonometría y geometría. 
 
@@ -74,16 +73,14 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
         }
     }
 
-    // === ACTIVAR CÁMARA ===
+    // === ACTIVAR CÁMARA CON OCR ===
     if (uploadBtn && fileInput) {
         uploadBtn.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', (event) => {
             if (event.target.files.length > 0) {
-            addMessage('📸 Imagen enviada para análisis...', 'user');
-            simulateImageAnalysis(event.target.files[0]);
-        
-            // 🔥 IMPORTANTE: Limpiar el input para permitir otra selección
-            event.target.value = '';
+                addMessage('📸 Imagen enviada para análisis...', 'user');
+                simulateImageAnalysis(event.target.files[0]);
+                event.target.value = '';
             }
         });
     }
@@ -135,10 +132,6 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
         window.speechSynthesis.speak(utterance);
     }
 
-    function speakText(texto) {
-        window.hablarConCola(texto);
-    }
-    
     // === ENVIAR MENSAJE ===
     async function sendMessage() {
         if (isSending) return;
@@ -176,7 +169,6 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
             removeTypingMessage(typing);
             
             if (data.respuesta) {
-                // Si el servidor indica que generó una gráfica
                 if (data.necesitaGrafica && data.graficaData && data.graficaData.funcion) {
                     addMessage(data.respuesta, 'bot');
                     graficarFuncionGeoGebra(data.graficaData.funcion);
@@ -191,7 +183,6 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
                     window.respuestaCorrecta = data.respuestaCorrecta;
                     window.totalPreguntas++;
                     
-                    // Guardar información del paso actual para explicaciones de error
                     window.pasoActual = {
                         explicacionError: data.explicacionError || "Revisa los conceptos básicos.",
                         opcionCorrecta: data.respuestaCorrecta
@@ -200,7 +191,6 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
                     actualizarEstrellas(data.estrellas || 0);
                     addMessage(data.respuesta, 'bot');
                     
-                    // Mostrar opciones después de un breve delay
                     setTimeout(() => {
                         mostrarOpcionesInteractivo(data.opciones);
                         if (window.voiceEnabled) {
@@ -261,14 +251,12 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
                 botonElegido.innerHTML += ' ✓';
                 window.respuestasCorrectas++;
                 
-                // Calcular estrellas ganadas
                 const estrellasGanadas = 1;
                 window.estrellasTotales += estrellasGanadas;
                 actualizarEstrellas(window.estrellasTotales);
                 
                 addMessage(`Elegiste: Opción ${opcion} ✓ (¡Correcto! +${estrellasGanadas}⭐)`, 'user');
                 
-                // Felicitación con voz
                 if (window.voiceEnabled) {
                     window.hablarConCola("¡Correcto! Excelente trabajo. Avanzando al siguiente paso.");
                 }
@@ -277,7 +265,6 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
                 botonElegido.innerHTML += ' ✗';
                 addMessage(`Elegiste: Opción ${opcion} ✗ (Incorrecto)`, 'user');
                 
-                // Resaltar la opción correcta
                 const opcionCorrecta = window.opcionesActuales.find(op => op.correcta);
                 if (opcionCorrecta) {
                     const botonCorrecto = Array.from(botones).find(btn => btn.dataset.opcion === opcionCorrecta.letra);
@@ -286,17 +273,14 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
                         botonCorrecto.innerHTML += ' ✓';
                     }
                     
-                    // Explicación detallada del error con voz
                     if (window.voiceEnabled) {
                         const explicacion = `Incorrecto. La opción correcta es la ${opcionCorrecta.letra}. `;
                         window.hablarConCola(explicacion);
                         
-                        // Esperar y luego explicar por qué es correcta
                         setTimeout(() => {
                             const textoOpciones = `Recuerda que: ${window.pasoActual?.explicacionError || 'revisa los conceptos básicos.'}`;
                             window.hablarConCola(textoOpciones);
                             
-                            // Repetir las opciones después de explicar
                             setTimeout(() => {
                                 let textoRepetirOpciones = " Las opciones disponibles son: ";
                                 window.opcionesActuales.forEach((opcion, index) => {
@@ -334,7 +318,6 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
                 window.respuestaCorrecta = data.respuestaCorrecta;
                 window.totalPreguntas++;
                 
-                // Guardar información del paso actual para explicaciones de error
                 window.pasoActual = {
                     explicacionError: data.explicacionError || "Revisa los conceptos básicos.",
                     opcionCorrecta: data.respuestaCorrecta
@@ -349,15 +332,13 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
             } else {
                 if (opcionesContainer) opcionesContainer.style.display = 'none';
                 
-                // Mostrar resumen final si se completó la sesión
                 if (data.sesionCompletada) {
                     const porcentaje = Math.round((window.respuestasCorrectas / window.totalPreguntas) * 100);
                     const mensajeFinal = `🎉 ¡Sesión completada! ${window.respuestasCorrectas}/${window.totalPreguntas} correctas (${porcentaje}%)`;
                     addMessage(mensajeFinal, 'bot');
                     
-                    // Felicitación final con voz - SOLO SI NO SE HA REPRODUCIDO YA
                     if (window.voiceEnabled && !window.felicitacionReproducida) {
-                        window.felicitacionReproducida = true; // Marcar como reproducida
+                        window.felicitacionReproducida = true;
                         
                         let felicitacion = "";
                         if (porcentaje >= 80) {
@@ -371,10 +352,9 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
                         window.hablarConCola(felicitacion);
                     }
                     
-                    // Reiniciar contadores
                     window.respuestasCorrectas = 0;
                     window.totalPreguntas = 0;
-                    window.felicitacionReproducida = false; // Resetear para la próxima sesión
+                    window.felicitacionReproducida = false;
                 }
             }
             
@@ -385,11 +365,10 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
         }
     }
 
-    // === NARRAR EXPLICACIÓN COMPLETA DEL PASO MEJORADA ===
+    // === NARRAR EXPLICACIÓN COMPLETA DEL PASO ===
     function narrarPasoCompleto(respuestaCompleta, opciones, respuestaCorrecta) {
         if (!window.voiceEnabled) return;
         
-        // Extraer solo la explicación del paso (sin opciones)
         const lineas = respuestaCompleta.split('\n');
         let explicacionPaso = "";
         
@@ -400,10 +379,8 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
         
         explicacionPaso = explicacionPaso.replace(/\*\*/g, '').replace(/📝\s*\*?\*?Paso\s*\d+[:\.\-]\s*\*?\*?/i, '');
         
-        // Narra la explicación del paso
         window.hablarConCola(explicacionPaso);
         
-        // Después de la explicación, narrar las opciones
         setTimeout(() => {
             let textoOpciones = " Ahora tienes estas opciones: ";
             opciones.forEach((opcion, index) => {
@@ -412,16 +389,15 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
             });
             textoOpciones += "¿Cuál eliges?";
             window.hablarConCola(textoOpciones);
-        }, 5000); // Tiempo suficiente para que termine la explicación
+        }, 5000);
     }
     
-    // === ACTUALIZAR ESTRELLAS CON EFECTOS MEJORADOS ===
+    // === ACTUALIZAR ESTRELLAS ===
     function actualizarEstrellas(cantidad) {
         window.estrellasTotales = cantidad;
         const contador = document.getElementById('contadorEstrellas');
         
         if (contador) {
-            // Efecto de conteo animado
             let currentCount = parseInt(contador.textContent) || 0;
             const increment = cantidad > currentCount ? 1 : -1;
             
@@ -429,7 +405,6 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
                 currentCount += increment;
                 contador.textContent = currentCount;
                 
-                // Efecto de confeti cuando se gana una estrella
                 if (increment > 0) {
                     crearConfeti();
                 }
@@ -442,7 +417,6 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
             
             animateCount();
             
-            // Animación de pulso mejorada
             contador.classList.add('star-pulse');
             setTimeout(() => {
                 contador.classList.remove('star-pulse');
@@ -466,10 +440,94 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
         
         document.body.appendChild(confettiContainer);
         
-        // Remover después de la animación
         setTimeout(() => {
             confettiContainer.remove();
         }, 3000);
+    }
+    
+    // === FUNCIÓN OCR PARA ANÁLISIS DE IMAGEN ===
+    async function simulateImageAnalysis(file) {
+        const typing = createTypingMessage("🔍 Escaneando texto matemático...");
+        
+        try {
+            const worker = await Tesseract.createWorker('spa');
+            const { data: { text } } = await worker.recognize(file);
+            await worker.terminate();
+            removeTypingMessage(typing);
+            
+            const textoLimpio = text.trim();
+            
+            if (textoLimpio && textoLimpio.length > 5) {
+                addMessage(`✅ **Texto detectado:**\n\n"${textoLimpio}"\n\n¿Quieres que resuelva este problema?`, 'bot');
+                mostrarOpcionesConTexto(textoLimpio);
+            } else {
+                addMessage('❌ No pude detectar texto matemático claro. Describe el problema.', 'bot');
+            }
+            
+        } catch (error) {
+            removeTypingMessage(typing);
+            addMessage('❌ Error escaneando la imagen. Describe el problema.', 'bot');
+        }
+    }
+
+    // === FUNCIONES OCR PARA FOTOS ===
+    function mostrarOpcionesConTexto(textoDetectado) {
+        const opcionesContainer = document.getElementById('opcionesContainer');
+        const opcionesBotones = opcionesContainer.querySelector('.opciones-botones');
+        
+        opcionesBotones.innerHTML = '';
+        opcionesContainer.style.display = 'block';
+        
+        window.textoFotoDetectado = textoDetectado;
+        
+        const opciones = [
+            { letra: 'A', texto: "✅ Sí, resolver este problema", accion: "resolver" },
+            { letra: 'B', texto: "📚 Explicar conceptos", accion: "explicar" },
+            { letra: 'C', texto: "🔄 Tomar otra foto", accion: "otra" }
+        ];
+        
+        opciones.forEach((opcion) => {
+            const btn = document.createElement('button');
+            btn.className = 'opcion-btn';
+            btn.innerHTML = `<strong>${opcion.letra})</strong> ${opcion.texto}`;
+            btn.onclick = () => procesarOpcionConTexto(opcion.accion, textoDetectado);
+            opcionesBotones.appendChild(btn);
+        });
+    }
+
+    async function procesarOpcionConTexto(accion, textoDetectado) {
+        document.getElementById('opcionesContainer').style.display = 'none';
+        
+        if (accion === "otra") {
+            fileInput.click();
+            return;
+        }
+        
+        addMessage(`Elegí: ${accion === 'resolver' ? 'Resolver' : 'Explicar'} el problema`, 'user');
+        
+        let consulta = accion === "resolver" 
+            ? `Resuelve paso a paso: ${textoDetectado}`
+            : `Explica los conceptos de: ${textoDetectado}`;
+        
+        const typing = createTypingMessage("Procesando con Groq...");
+        
+        try {
+            const response = await fetch('/analizar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: consulta })
+            });
+            
+            const data = await response.json();
+            removeTypingMessage(typing);
+            
+            if (data.respuesta) {
+                await showStepsSequentially(data.respuesta);
+            }
+        } catch (error) {
+            removeTypingMessage(typing);
+            addMessage("❌ Error al procesar. Intenta de nuevo.", 'bot');
+        }
     }
     
     function createTypingMessage(text) {
@@ -600,115 +658,6 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
             .replace(/(Solución final[:\.\-])/gi, '<strong style="color: #2e7d32; font-size: 1.1em;">$1</strong>')
             .replace(/\n/g, '<br>');
     }
-    
-  // === FUNCIÓN MEJORADA PARA ANÁLISIS DE IMAGEN ===
-function simulateImageAnalysis(file) {
-    // Mostrar opciones interactivas después de tomar foto
-    setTimeout(() => {
-        addMessage('✅ Foto recibida. ¿Qué te gustaría hacer con esta actividad matemática?', 'bot');
-        
-        // Mostrar opciones específicas para foto
-        mostrarOpcionesFoto();
-        
-        if (window.voiceEnabled) {
-            window.hablarConCola("Foto recibida. ¿Qué necesitas que haga con esta actividad matemática?");
-        }
-    }, 1000);
-}
-
-// === FUNCIÓN PARA MOSTRAR OPCIONES DE FOTO ===
-function mostrarOpcionesFoto() {
-    const opcionesContainer = document.getElementById('opcionesContainer');
-    const opcionesBotones = opcionesContainer.querySelector('.opciones-botones');
-    
-    if (!opcionesContainer || !opcionesBotones) return;
-    
-    opcionesBotones.innerHTML = '';
-    opcionesContainer.style.display = 'block';
-    
-    const opcionesFoto = [
-        { letra: 'A', texto: "Resolver esta actividad paso a paso", accion: "resolver" },
-        { letra: 'B', texto: "Explicar los conceptos matemáticos", accion: "explicar" },
-        { letra: 'C', texto: "Mostrar ejercicios similares", accion: "ejercicios" },
-        { letra: 'D', texto: "Analizar métodos de solución", accion: "metodos" }
-    ];
-    
-    opcionesFoto.forEach((opcion) => {
-        const btn = document.createElement('button');
-        btn.className = 'opcion-btn';
-        btn.dataset.opcion = opcion.letra;
-        btn.dataset.accion = opcion.accion;
-        btn.innerHTML = `<strong>${opcion.letra})</strong> ${opcion.texto}`;
-        btn.onclick = () => seleccionarOpcionFoto(opcion.accion, opcion.texto);
-        opcionesBotones.appendChild(btn);
-    });
-}
-
-// === FUNCIÓN PARA MANEJAR SELECCIÓN DE OPCIÓN DE FOTO ===
-async function seleccionarOpcionFoto(accion, textoOpcion) {
-    const opcionesContainer = document.getElementById('opcionesContainer');
-    
-    // Ocultar opciones
-    if (opcionesContainer) {
-        opcionesContainer.style.display = 'none';
-    }
-    
-    // Mensaje de confirmación
-    addMessage(`Elegí: ${textoOpcion}`, 'user');
-    
-    // Crear consulta para Groq basada en la acción seleccionada
-    let consultaGroq = "";
-    
-    switch(accion) {
-        case "resolver":
-            consultaGroq = "Resuelve esta actividad matemática paso a paso de manera clara y detallada. Incluye explicaciones de cada paso.";
-            break;
-        case "explicar":
-            consultaGroq = "Explica los conceptos matemáticos involucrados en esta actividad. Incluye definiciones, fórmulas relevantes y ejemplos.";
-            break;
-        case "ejercicios":
-            consultaGroq = "Proporciona ejercicios similares a esta actividad matemática con sus soluciones. Incluye variedad de problemas.";
-            break;
-        case "metodos":
-            consultaGroq = "Analiza los diferentes métodos para resolver este tipo de actividad matemática. Compara ventajas y desventajas.";
-            break;
-    }
-    
-    // Enviar consulta a Groq
-    const typing = createTypingMessage("Procesando tu solicitud...");
-    
-    try {
-        const response = await fetch('/analizar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: consultaGroq })
-        });
-        
-        const data = await response.json();
-        removeTypingMessage(typing);
-        
-        if (data.respuesta) {
-            if (data.tipo === "interactivo" && data.tieneOpciones) {
-                // Manejar modo interactivo si Groq lo devuelve
-                window.sesionActual = data.sesionId;
-                window.opcionesActuales = data.opciones || [];
-                window.respuestaCorrecta = data.respuestaCorrecta;
-                
-                addMessage(data.respuesta, 'bot');
-                setTimeout(() => {
-                    mostrarOpcionesInteractivo(data.opciones);
-                }, 500);
-            } else {
-                // Modo normal de respuesta
-                await showStepsSequentially(data.respuesta);
-            }
-        }
-    } catch (error) {
-        removeTypingMessage(typing);
-        addMessage("❌ Error al procesar tu solicitud. Intenta de nuevo.", 'bot');
-        console.error('Error:', error);
-    }
-}
     
     // === EVENTOS ===
     sendBtn.addEventListener('click', sendMessage);
@@ -848,26 +797,16 @@ async function graficarFuncionGeoGebra(funcionTexto) {
             return;
         }
         
-        // Mostrar el contenedor de gráficas
         const graphContainer = document.getElementById('graphContainer');
         graphContainer.style.display = 'block';
         
-        // Esperar a que GeoGebra esté listo
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Limpiar gráfica anterior
         window.ggbApp.evalCommand('DeleteAll()');
-        
-        // Graficar la función
         window.ggbApp.evalCommand(`f(x)=${funcionTexto}`);
-        
-        // Ajustar la vista para una mejor visualización
         window.ggbApp.setCoordSystem(-10, 10, -10, 10);
         
-        // Esperar un momento para que se renderice
         await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Ajustar automáticamente la vista
         window.ggbApp.zoomToFit();
         
         addMessage(`✅ Gráfica generada para: f(x) = ${funcionTexto}`, 'bot');
@@ -939,5 +878,3 @@ function cerrarGrafica() {
     const graphContainer = document.getElementById('graphContainer');
     graphContainer.style.display = 'none';
 }
-
-
