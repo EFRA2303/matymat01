@@ -1,4 +1,4 @@
-// script.js - VERSIÓN MEJORADA CON TECLADO MATEMÁTICO COMPLETO
+// script.js - VERSIÓN ACTUALIZADA
 document.addEventListener('DOMContentLoaded', () => {
     // Variables globales
     let isSending = false;
@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.felicitacionReproducida = false;
     window.mensajeInicialReproducido = false;
 
+    // Elementos DOM
     const userInput = document.getElementById('userInput');
     const sendBtn = document.getElementById('sendBtn');
     const chatContainer = document.getElementById('chatContainer');
@@ -22,7 +23,286 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileInput = document.getElementById('fileInput');
     const toggleMathBtn = document.getElementById('toggleMathBtn');
     const mathToolbar = document.getElementById('mathToolbar');
+    const closeKeyboardBtn = document.getElementById('closeKeyboard');
+    const keyboardGrip = document.getElementById('keyboardGrip');
+    const keyboardTabs = document.getElementById('keyboardTabs');
+    const keyboardContent = document.getElementById('keyboardContent');
     
+    // Configuración del teclado
+    const keyboardLayouts = {
+        basic: [
+            { type: 'group', title: 'Números' },
+            { keys: ['7', '8', '9', '+', '-'], class: 'num-btn' },
+            { keys: ['4', '5', '6', '×', '÷'], class: 'num-btn' },
+            { keys: ['1', '2', '3', '=', '^'], class: 'num-btn' },
+            { keys: ['0', '.', '(', ')', '√'], class: 'num-btn' },
+            { type: 'group', title: 'Variables' },
+            { keys: ['x', 'y', 'z', 'π', '∞'], class: 'var-btn' },
+            { type: 'group', title: 'Acciones' },
+            { keys: ['⌫', 'C', '␣'], class: 'special', span: [2, 2, 1] }
+        ],
+        
+        advanced: [
+            { type: 'group', title: 'Exponentes' },
+            { keys: ['²', '³', '⁴', 'ⁿ', '√'], class: 'exp-btn' },
+            { keys: ['∛', '∜', 'a/b', '|x|', '≈'], class: 'exp-btn' },
+            { type: 'group', title: 'Operaciones especiales' },
+            { keys: ['±', '%', '‰', '°', '∠'], class: 'op-btn' },
+            { keys: ['≠', '≈', '≤', '≥', '≡'], class: 'op-btn' },
+            { type: 'group', title: 'Conjuntos' },
+            { keys: ['∈', '∉', '⊂', '⊆', '∪'], class: 'var-btn' },
+            { keys: ['∩', '∅', '∀', '∃', '∴'], class: 'var-btn' }
+        ],
+        
+        functions: [
+            { type: 'group', title: 'Trigonométricas' },
+            { keys: ['sin', 'cos', 'tan', 'cot', 'sec'], class: 'trig-btn' },
+            { keys: ['csc', 'arcsin', 'arccos', 'arctan', 'sinh'], class: 'trig-btn' },
+            { type: 'group', title: 'Logaritmos' },
+            { keys: ['log', 'ln', 'lg', 'exp', 'e'], class: 'func-btn' },
+            { type: 'group', title: 'Otras funciones' },
+            { keys: ['abs', 'floor', 'ceil', 'round', 'rand'], class: 'func-btn' },
+            { keys: ['gcd', 'lcm', 'mod', '!', 'Γ'], class: 'func-btn' }
+        ],
+        
+        calculus: [
+            { type: 'group', title: 'Cálculo diferencial' },
+            { keys: ['lim', '∂', '∇', '∆', '→'], class: 'calc-btn' },
+            { type: 'group', title: 'Cálculo integral' },
+            { keys: ['∫', '∬', '∭', '∮', '∯'], class: 'calc-btn' },
+            { keys: ['∑', '∏', '∐', '⨋', '⨌'], class: 'calc-btn' },
+            { type: 'group', title: 'Símbolos especiales' },
+            { keys: ['α', 'β', 'γ', 'δ', 'ε'], class: 'var-btn' },
+            { keys: ['θ', 'φ', 'ω', 'λ', 'μ'], class: 'var-btn' }
+        ]
+    };
+    
+    // Inicializar teclado
+    function initMathKeyboard() {
+        // Generar contenido inicial (tab básico)
+        generateKeyboardContent('basic');
+        
+        // Configurar eventos de tabs
+        const tabs = keyboardTabs.querySelectorAll('.keyboard-tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remover clase active de todos
+                tabs.forEach(t => t.classList.remove('active'));
+                // Agregar clase active al tab clickeado
+                tab.classList.add('active');
+                // Generar contenido del tab
+                const tabName = tab.dataset.tab;
+                generateKeyboardContent(tabName);
+            });
+        });
+        
+        // Evento cerrar teclado
+        closeKeyboardBtn.addEventListener('click', closeMathKeyboard);
+        
+        // Evento grip para arrastrar (opcional)
+        let isDragging = false;
+        let startY, startHeight;
+        
+        keyboardGrip.addEventListener('mousedown', startDrag);
+        keyboardGrip.addEventListener('touchstart', startDrag);
+        
+        function startDrag(e) {
+            isDragging = true;
+            startY = e.clientY || e.touches[0].clientY;
+            startHeight = mathToolbar.offsetHeight;
+            document.addEventListener('mousemove', doDrag);
+            document.addEventListener('touchmove', doDrag);
+            document.addEventListener('mouseup', stopDrag);
+            document.addEventListener('touchend', stopDrag);
+            e.preventDefault();
+        }
+        
+        function doDrag(e) {
+            if (!isDragging) return;
+            const currentY = e.clientY || e.touches[0].clientY;
+            const deltaY = startY - currentY;
+            const newHeight = Math.min(Math.max(startHeight + deltaY, 200), window.innerHeight * 0.7);
+            mathToolbar.style.height = newHeight + 'px';
+        }
+        
+        function stopDrag() {
+            isDragging = false;
+            document.removeEventListener('mousemove', doDrag);
+            document.removeEventListener('touchmove', doDrag);
+            document.removeEventListener('mouseup', stopDrag);
+            document.removeEventListener('touchend', stopDrag);
+        }
+        
+        // Cerrar teclado al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (mathToolbar.style.display === 'block' && 
+                !mathToolbar.contains(e.target) && 
+                e.target !== toggleMathBtn && 
+                !toggleMathBtn.contains(e.target)) {
+                closeMathKeyboard();
+            }
+        });
+    }
+    
+    // Generar contenido del teclado
+    function generateKeyboardContent(tabName) {
+        keyboardContent.innerHTML = '';
+        const layout = keyboardLayouts[tabName];
+        
+        layout.forEach(item => {
+            if (item.type === 'group') {
+                const groupTitle = document.createElement('div');
+                groupTitle.className = 'group-title';
+                groupTitle.textContent = item.title;
+                keyboardContent.appendChild(groupTitle);
+            } else {
+                const keysRow = document.createElement('div');
+                keysRow.className = 'keys-grid';
+                
+                item.keys.forEach((key, index) => {
+                    const button = document.createElement('button');
+                    button.className = `tool-btn ${item.class}`;
+                    button.textContent = key;
+                    
+                    // Asignar span si existe
+                    if (item.span && item.span[index]) {
+                        button.style.gridColumn = `span ${item.span[index]}`;
+                    }
+                    
+                    // Configurar función según tipo de tecla
+                    if (key === 'C') {
+                        button.addEventListener('click', () => clearAll());
+                    } else if (key === '⌫') {
+                        button.addEventListener('click', () => backspaceInput());
+                    } else if (key === '␣') {
+                        button.addEventListener('click', () => insertAtCursor(' '));
+                    } else if (key === '×') {
+                        button.addEventListener('click', () => insertAtCursor('*'));
+                    } else if (key === '÷') {
+                        button.addEventListener('click', () => insertAtCursor('/'));
+                    } else if (key === '^') {
+                        button.addEventListener('click', () => insertAtCursor('^'));
+                    } else if (key === 'a/b') {
+                        button.addEventListener('click', () => insertFraction());
+                    } else if (['sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'arcsin', 'arccos', 'arctan', 'sinh', 'cosh', 'tanh', 'log', 'ln', 'lg', 'exp', 'abs', 'floor', 'ceil', 'round', 'rand', 'gcd', 'lcm', 'mod', 'lim', '∑', '∏'].includes(key)) {
+                        button.addEventListener('click', () => insertFunction(key));
+                    } else if (key === '∫') {
+                        button.addEventListener('click', () => insertIntegral());
+                    } else if (key === '∂') {
+                        button.addEventListener('click', () => insertAtCursor('∂'));
+                    } else {
+                        button.addEventListener('click', () => insertAtCursor(key));
+                    }
+                    
+                    keysRow.appendChild(button);
+                });
+                
+                keyboardContent.appendChild(keysRow);
+            }
+        });
+    }
+    
+    // Funciones del teclado
+    window.insertAtCursor = function(value) {
+        const start = userInput.selectionStart;
+        const end = userInput.selectionEnd;
+        userInput.value = userInput.value.substring(0, start) + value + userInput.value.substring(end);
+        userInput.selectionStart = userInput.selectionEnd = start + value.length;
+        userInput.focus();
+        autoResizeTextarea();
+    };
+    
+    window.clearAll = function() {
+        userInput.value = '';
+        userInput.focus();
+        autoResizeTextarea();
+    };
+    
+    window.backspaceInput = function() {
+        const start = userInput.selectionStart;
+        const end = userInput.selectionEnd;
+        
+        if (start === end && start > 0) {
+            userInput.value = userInput.value.substring(0, start - 1) + userInput.value.substring(end);
+            userInput.selectionStart = userInput.selectionEnd = start - 1;
+        } else if (start !== end) {
+            userInput.value = userInput.value.substring(0, start) + userInput.value.substring(end);
+            userInput.selectionStart = userInput.selectionEnd = start;
+        }
+        userInput.focus();
+        autoResizeTextarea();
+    };
+    
+    window.insertFraction = function() {
+        const start = userInput.selectionStart;
+        const end = userInput.selectionEnd;
+        userInput.value = userInput.value.substring(0, start) + '(a)/(b)' + userInput.value.substring(end);
+        userInput.selectionStart = start + 1;
+        userInput.selectionEnd = start + 2;
+        userInput.focus();
+        autoResizeTextarea();
+    };
+    
+    window.insertFunction = function(funcName) {
+        const start = userInput.selectionStart;
+        const end = userInput.selectionEnd;
+        userInput.value = userInput.value.substring(0, start) + funcName + '()' + userInput.value.substring(end);
+        userInput.selectionStart = userInput.selectionEnd = start + funcName.length + 1;
+        userInput.focus();
+        autoResizeTextarea();
+    };
+    
+    window.insertIntegral = function() {
+        const start = userInput.selectionStart;
+        const end = userInput.selectionEnd;
+        userInput.value = userInput.value.substring(0, start) + '∫_a^b f(x)dx' + userInput.value.substring(end);
+        userInput.selectionStart = start + 7;
+        userInput.selectionEnd = start + 8;
+        userInput.focus();
+        autoResizeTextarea();
+    };
+    
+    // Funciones del teclado matemático
+    function toggleMathKeyboard() {
+        if (mathToolbar.style.display === 'block') {
+            closeMathKeyboard();
+        } else {
+            openMathKeyboard();
+        }
+    }
+    
+    function openMathKeyboard() {
+        mathToolbar.style.display = 'block';
+        toggleMathBtn.classList.add('active');
+        
+        // Ajustar tamaño inicial
+        mathToolbar.style.height = 'auto';
+        const initialHeight = Math.min(keyboardContent.scrollHeight + 120, window.innerHeight * 0.6);
+        mathToolbar.style.height = initialHeight + 'px';
+        
+        // Ajustar chat para que no quede tapado
+        chatContainer.style.paddingBottom = (initialHeight + 140) + 'px';
+        setTimeout(() => {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }, 100);
+    }
+    
+    function closeMathKeyboard() {
+        mathToolbar.style.display = 'none';
+        toggleMathBtn.classList.remove('active');
+        chatContainer.style.paddingBottom = '120px';
+    }
+    
+    function autoResizeTextarea() {
+        userInput.style.height = 'auto';
+        const newHeight = Math.min(userInput.scrollHeight, 150);
+        userInput.style.height = newHeight + 'px';
+        setTimeout(() => {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }, 10);
+    }
+    
+    // Inicialización principal
     if (!userInput || !sendBtn || !chatContainer) {
         console.error('❌ No se encontraron elementos del DOM');
         return;
@@ -74,7 +354,7 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
         }
     }
 
-    // === ACTIVAR CÁMARA CON OCR ===
+    // === ACTIVAR CÁMARA ===
     if (uploadBtn && fileInput) {
         uploadBtn.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', (event) => {
@@ -84,11 +364,6 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
                 event.target.value = '';
             }
         });
-    }
-    
-    // === TOGGLE TECLADO MATEMÁTICO ===
-    if (toggleMathBtn && mathToolbar) {
-        toggleMathBtn.addEventListener('click', toggleMathKeyboard);
     }
     
     // === SISTEMA DE COLA PARA VOZ ===
@@ -485,164 +760,6 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
         }, 1000);
     }
     
-    // === FUNCIONES DEL TECLADO MATEMÁTICO ===
-    
-    // Función principal para insertar en cursor
-    window.insertAtCursor = function(value) {
-        const start = userInput.selectionStart;
-        const end = userInput.selectionEnd;
-        userInput.value = userInput.value.substring(0, start) + value + userInput.value.substring(end);
-        userInput.selectionStart = userInput.selectionEnd = start + value.length;
-        userInput.focus();
-        
-        // Auto-ajustar altura del textarea
-        autoResizeTextarea();
-    };
-    
-    // Nueva función para limpiar todo el input
-    window.clearAll = function() {
-        userInput.value = '';
-        userInput.focus();
-        autoResizeTextarea();
-    };
-    
-    // Función para borrar un carácter (backspace)
-    window.backspaceInput = function() {
-        const start = userInput.selectionStart;
-        const end = userInput.selectionEnd;
-        
-        if (start === end && start > 0) {
-            // Borrar un carácter
-            userInput.value = userInput.value.substring(0, start - 1) + userInput.value.substring(end);
-            userInput.selectionStart = userInput.selectionEnd = start - 1;
-        } else if (start !== end) {
-            // Borrar selección
-            userInput.value = userInput.value.substring(0, start) + userInput.value.substring(end);
-            userInput.selectionStart = userInput.selectionEnd = start;
-        }
-        userInput.focus();
-        autoResizeTextarea();
-    };
-    
-    // Función para borrar línea actual
-    window.clearInput = function() {
-        const start = userInput.selectionStart;
-        const lines = userInput.value.split('\n');
-        let currentLine = 0;
-        let charCount = 0;
-        
-        for (let i = 0; i < lines.length; i++) {
-            charCount += lines[i].length + 1; // +1 por el salto de línea
-            if (charCount > start) {
-                currentLine = i;
-                break;
-            }
-        }
-        
-        // Eliminar la línea actual
-        lines.splice(currentLine, 1);
-        userInput.value = lines.join('\n');
-        userInput.focus();
-        autoResizeTextarea();
-    };
-    
-    // Función para insertar fracción
-    window.insertFraction = function() {
-        const start = userInput.selectionStart;
-        const end = userInput.selectionEnd;
-        userInput.value = userInput.value.substring(0, start) + '(a)/(b)' + userInput.value.substring(end);
-        userInput.selectionStart = start + 1;
-        userInput.selectionEnd = start + 2;
-        userInput.focus();
-        autoResizeTextarea();
-    };
-    
-    // Función para insertar función con paréntesis
-    window.insertFunction = function(funcName) {
-        const start = userInput.selectionStart;
-        const end = userInput.selectionEnd;
-        userInput.value = userInput.value.substring(0, start) + funcName + '()' + userInput.value.substring(end);
-        userInput.selectionStart = userInput.selectionEnd = start + funcName.length + 1;
-        userInput.focus();
-        autoResizeTextarea();
-    };
-    
-    // Función para insertar límite
-    window.insertLimit = function() {
-        const start = userInput.selectionStart;
-        const end = userInput.selectionEnd;
-        userInput.value = userInput.value.substring(0, start) + 'lim_(x→0)' + userInput.value.substring(end);
-        userInput.selectionStart = start + 5;
-        userInput.selectionEnd = start + 6;
-        userInput.focus();
-        autoResizeTextarea();
-    };
-    
-    // Función para insertar integral
-    window.insertIntegral = function() {
-        const start = userInput.selectionStart;
-        const end = userInput.selectionEnd;
-        userInput.value = userInput.value.substring(0, start) + '∫_a^b f(x)dx' + userInput.value.substring(end);
-        userInput.selectionStart = start + 7;
-        userInput.selectionEnd = start + 8;
-        userInput.focus();
-        autoResizeTextarea();
-    };
-    
-    // Función para auto-ajustar textarea
-    function autoResizeTextarea() {
-        userInput.style.height = 'auto';
-        const newHeight = Math.min(userInput.scrollHeight, 150);
-        userInput.style.height = newHeight + 'px';
-        
-        // Ajustar contenedor del chat si es necesario
-        setTimeout(() => {
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }, 10);
-    }
-    
-    // Función para alternar teclado matemático
-    function toggleMathKeyboard() {
-        if (mathToolbar.style.display === 'block') {
-            mathToolbar.style.display = 'none';
-            toggleMathBtn.classList.remove('active');
-        } else {
-            mathToolbar.style.display = 'block';
-            toggleMathBtn.classList.add('active');
-            autoResizeTextarea();
-        }
-    }
-    
-    // Configurar evento de entrada para auto-ajuste
-    userInput.addEventListener('input', autoResizeTextarea);
-    
-    // Atajos de teclado
-    document.addEventListener('keydown', function(e) {
-        // ESC para ocultar teclado matemático
-        if (e.key === 'Escape' && mathToolbar.style.display === 'block') {
-            mathToolbar.style.display = 'none';
-            toggleMathBtn.classList.remove('active');
-        }
-        
-        // Ctrl+M para mostrar/ocultar teclado matemático
-        if (e.ctrlKey && e.key === 'm') {
-            e.preventDefault();
-            toggleMathKeyboard();
-        }
-        
-        // Ctrl+Enter para enviar mensaje
-        if (e.ctrlKey && e.key === 'Enter') {
-            e.preventDefault();
-            sendMessage();
-        }
-        
-        // Ctrl+L para limpiar input
-        if (e.ctrlKey && e.key === 'l') {
-            e.preventDefault();
-            clearAll();
-        }
-    });
-    
     async function procesarOpcionConTexto(accion, textoDetectado) {
         document.getElementById('opcionesContainer').style.display = 'none';
         
@@ -816,6 +933,38 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
         }
     });
     
+    // Configurar evento del botón toggle
+    toggleMathBtn.addEventListener('click', toggleMathKeyboard);
+    
+    // Configurar auto-ajuste del textarea
+    userInput.addEventListener('input', autoResizeTextarea);
+    
+    // Atajos de teclado
+    document.addEventListener('keydown', function(e) {
+        // ESC para cerrar teclado
+        if (e.key === 'Escape' && mathToolbar.style.display === 'block') {
+            closeMathKeyboard();
+        }
+        
+        // Ctrl+M para teclado matemático
+        if (e.ctrlKey && e.key === 'm') {
+            e.preventDefault();
+            toggleMathKeyboard();
+        }
+        
+        // Ctrl+Enter para enviar
+        if (e.ctrlKey && e.key === 'Enter') {
+            e.preventDefault();
+            sendMessage();
+        }
+        
+        // Ctrl+L para limpiar
+        if (e.ctrlKey && e.key === 'l') {
+            e.preventDefault();
+            clearAll();
+        }
+    });
+    
     // === MENÚ CONFIGURACIÓN ===
     const menuToggle = document.getElementById('menuToggle');
     const menuPanel = document.getElementById('menuPanel');
@@ -881,10 +1030,9 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
         window.speechSynthesis.getVoices();
     }
     
-    // Inicializar GeoGebra
+    // Inicializar componentes
     inicializarGeoGebra();
-    
-    // Mejorar mensaje inicial con voz
+    initMathKeyboard();
     mejorarMensajeInicial();
 });
 
@@ -1037,7 +1185,7 @@ function closeApp() {
     setTimeout(() => window.close() || (window.location.href = 'about:blank'), 1500);
 }
 
-// Estilos minimalistas
+// Estilos adicionales dinámicos
 document.head.insertAdjacentHTML('beforeend', `
     <style>
         @keyframes fadeHint {
@@ -1045,12 +1193,6 @@ document.head.insertAdjacentHTML('beforeend', `
             20% { opacity:1; transform:translateX(-50%) translateY(0); }
             80% { opacity:1; transform:translateX(-50%) translateY(0); }
             100% { opacity:0; transform:translateX(-50%) translateY(-10px); }
-        }
-        
-        /* Estilos adicionales para botones activos */
-        .math-toggle-btn.active {
-            background: #5a1d91 !important;
-            transform: scale(1.1);
         }
     </style>
 `);
