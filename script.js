@@ -1,4 +1,4 @@
-// script.js - VERSIÓN ACTUALIZADA
+// script.js - VERSIÓN CON TECLADO MATEMÁTICO MEJORADO
 document.addEventListener('DOMContentLoaded', () => {
     // Variables globales
     let isSending = false;
@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const keyboardGrip = document.getElementById('keyboardGrip');
     const keyboardTabs = document.getElementById('keyboardTabs');
     const keyboardContent = document.getElementById('keyboardContent');
+    const minimizarOpcionesBtn = document.getElementById('minimizarOpciones');
     
     // Configuración del teclado
     const keyboardLayouts = {
@@ -76,6 +77,71 @@ document.addEventListener('DOMContentLoaded', () => {
             { keys: ['θ', 'φ', 'ω', 'λ', 'μ'], class: 'var-btn' }
         ]
     };
+    
+    // === FUNCIONALIDAD DE MINIMIZAR OPCIONES ===
+    function toggleMinimizarOpciones() {
+        const opcionesContainer = document.getElementById('opcionesContainer');
+        const boton = document.getElementById('minimizarOpciones');
+        
+        if (opcionesContainer.classList.contains('opciones-minimizadas')) {
+            // Mostrar opciones
+            opcionesContainer.classList.remove('opciones-minimizadas');
+            boton.innerHTML = '<i class="fas fa-chevron-down"></i>';
+            boton.title = "Minimizar opciones";
+            
+            // Scroll automático para ver las opciones
+            setTimeout(() => {
+                opcionesContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+        } else {
+            // Minimizar opciones
+            opcionesContainer.classList.add('opciones-minimizadas');
+            boton.innerHTML = '<i class="fas fa-chevron-up"></i>';
+            boton.title = "Mostrar opciones";
+        }
+    }
+    
+    // Configurar evento del botón minimizar
+    if (minimizarOpcionesBtn) {
+        minimizarOpcionesBtn.addEventListener('click', toggleMinimizarOpciones);
+        
+        // También permitir hacer clic en el contenedor minimizado para expandir
+        document.getElementById('opcionesContainer').addEventListener('click', function(e) {
+            if (this.classList.contains('opciones-minimizadas') && !e.target.closest('.minimizar-opciones')) {
+                toggleMinimizarOpciones();
+            }
+        });
+    }
+    
+    // Función para mostrar opciones (expande automáticamente)
+    function mostrarOpcionesInteractivo(opciones) {
+        const opcionesContainer = document.getElementById('opcionesContainer');
+        const opcionesBotones = opcionesContainer.querySelector('.opciones-botones');
+        if (!opcionesContainer || !opcionesBotones) return;
+        
+        // Asegurar que no esté minimizado
+        opcionesContainer.classList.remove('opciones-minimizadas');
+        minimizarOpcionesBtn.innerHTML = '<i class="fas fa-chevron-down"></i>';
+        minimizarOpcionesBtn.title = "Minimizar opciones";
+        
+        opcionesBotones.innerHTML = '';
+        opcionesContainer.style.display = 'block';
+        
+        opciones.forEach((opcion, index) => {
+            const letra = String.fromCharCode(65 + index);
+            const btn = document.createElement('button');
+            btn.className = 'opcion-btn';
+            btn.dataset.opcion = letra;
+            btn.innerHTML = `<strong>${letra})</strong> ${opcion.texto}`;
+            btn.onclick = () => window.elegirOpcion(letra, opcion.correcta);
+            opcionesBotones.appendChild(btn);
+        });
+        
+        // Scroll automático para ver las opciones
+        setTimeout(() => {
+            opcionesContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 500);
+    }
     
     // Inicializar teclado
     function initMathKeyboard() {
@@ -487,26 +553,6 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
         }
     }
     
-    // === FUNCIÓN MEJORADA PARA MOSTRAR OPCIONES ===
-    function mostrarOpcionesInteractivo(opciones) {
-        const opcionesContainer = document.getElementById('opcionesContainer');
-        const opcionesBotones = opcionesContainer.querySelector('.opciones-botones');
-        if (!opcionesContainer || !opcionesBotones) return;
-        
-        opcionesBotones.innerHTML = '';
-        opcionesContainer.style.display = 'block';
-        
-        opciones.forEach((opcion, index) => {
-            const letra = String.fromCharCode(65 + index);
-            const btn = document.createElement('button');
-            btn.className = 'opcion-btn';
-            btn.dataset.opcion = letra;
-            btn.innerHTML = `<strong>${letra})</strong> ${opcion.texto}`;
-            btn.onclick = () => window.elegirOpcion(letra, opcion.correcta);
-            opcionesBotones.appendChild(btn);
-        });
-    }
-    
     // === FUNCIÓN MEJORADA PARA ELEGIR OPCIÓN ===
     window.elegirOpcion = async function(opcion, esCorrecta) {
         if (!window.sesionActual) return;
@@ -604,7 +650,16 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
                     }
                 }, 1500);
             } else {
-                if (opcionesContainer) opcionesContainer.style.display = 'none';
+                if (opcionesContainer) {
+                    // Ocultar opciones después de completar la sesión
+                    setTimeout(() => {
+                        opcionesContainer.style.display = 'none';
+                        // Restaurar estado normal (sin minimizar)
+                        opcionesContainer.classList.remove('opciones-minimizadas');
+                        minimizarOpcionesBtn.innerHTML = '<i class="fas fa-chevron-down"></i>';
+                        minimizarOpcionesBtn.title = "Minimizar opciones";
+                    }, 2000);
+                }
                 
                 if (data.sesionCompletada) {
                     const porcentaje = Math.round((window.respuestasCorrectas / window.totalPreguntas) * 100);
@@ -731,6 +786,11 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
             
             opcionesBotones.innerHTML = '';
             opcionesContainer.style.display = 'block';
+            
+            // Asegurar que no esté minimizado al mostrar opciones de imagen
+            opcionesContainer.classList.remove('opciones-minimizadas');
+            minimizarOpcionesBtn.innerHTML = '<i class="fas fa-chevron-down"></i>';
+            minimizarOpcionesBtn.title = "Minimizar opciones";
             
             const opciones = [
                 { letra: 'A', texto: "📝 Describir el problema para resolverlo", accion: "describir" },
@@ -1196,3 +1256,4 @@ document.head.insertAdjacentHTML('beforeend', `
         }
     </style>
 `);
+
