@@ -1068,43 +1068,122 @@ header p {
     background: #5a1d91;
 }
 
-/* === SISTEMA DE OPCIONES Y ESTRELLAS === */
+/* === SISTEMA DE OPCIONES Y ESTRELLAS - MEJORADO === */
 #opcionesContainer {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 20px;
-    border-radius: 15px;
+    padding: 25px 20px 20px;
+    border-radius: 20px;
     margin: 20px 0;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
     border: 2px solid rgba(255,255,255,0.2);
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    overflow: hidden;
+    max-height: 500px;
+}
+
+/* Botón minimizar opciones */
+.minimizar-opciones {
+    position: absolute;
+    top: 12px;
+    right: 15px;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.25);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.minimizar-opciones:hover {
+    background: rgba(255, 255, 255, 0.35);
+    transform: scale(1.1);
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+}
+
+.minimizar-opciones i {
+    transition: transform 0.4s ease;
+}
+
+/* Estado minimizado */
+.opciones-minimizadas {
+    height: 80px !important;
+    padding-top: 45px !important;
+    max-height: 80px !important;
+    cursor: pointer;
+}
+
+.opciones-minimizadas .opciones-botones {
+    display: none !important;
+    opacity: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+.opciones-minimizadas .minimizar-opciones i {
+    transform: rotate(180deg);
+}
+
+.opciones-minimizadas:hover {
+    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
 }
 
 .opciones-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     color: white;
+    transition: margin-bottom 0.3s ease;
+}
+
+.opciones-minimizadas .opciones-header {
+    margin-bottom: 5px;
 }
 
 .opciones-header h4 {
     margin: 0;
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.opciones-header h4::before {
+    content: '🎯';
+    font-size: 1.2rem;
 }
 
 .estrellas-container {
     display: flex;
     align-items: center;
-    gap: 8px;
-    background: rgba(255,255,255,0.2);
-    padding: 8px 15px;
-    border-radius: 20px;
+    gap: 10px;
+    background: rgba(255,255,255,0.25);
+    padding: 10px 18px;
+    border-radius: 25px;
     backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    transition: all 0.3s ease;
+}
+
+.estrellas-container:hover {
+    background: rgba(255,255,255,0.35);
+    transform: translateY(-2px);
 }
 
 .estrellas-container .estrella {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
     animation: pulse 2s infinite;
+    filter: drop-shadow(0 0 5px rgba(255,215,0,0.5));
 }
 
 @keyframes pulse {
@@ -1113,102 +1192,125 @@ header p {
 }
 
 #contadorEstrellas {
-    font-size: 1.3rem;
+    font-size: 1.5rem;
     font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .opciones-botones {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
+    gap: 15px;
+    transition: all 0.4s ease;
+    opacity: 1;
 }
 
-.opcion-btn {
-    padding: 15px 0;
-    font-size: 1.3rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 12px;
-    background: rgba(255,255,255,0.9);
-    color: #4361ee;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+@media (max-width: 768px) {
+    .opciones-botones {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
 }
 
-.opcion-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-    background: white;
-}
-
-.opcion-btn:active {
-    transform: translateY(0);
-}
-
-/* Loading de estrellas */
-#loadingEstrella {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(255,255,255,0.95);
-    padding: 30px;
-    border-radius: 20px;
-    text-align: center;
-    z-index: 1000;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-}
-
-.estrella-loading {
-    font-size: 3rem;
-    animation: spin 1s ease-in-out infinite;
-}
-
-@keyframes spin {
-    0%, 100% { transform: scale(1) rotate(0deg); }
-    50% { transform: scale(1.5) rotate(180deg); }
-}
-
-/* Responsive */
 @media (max-width: 480px) {
     .opciones-botones {
         grid-template-columns: 1fr;
-        gap: 8px;
-    }
-    
-    .opcion-btn {
-        padding: 12px 0;
-        font-size: 1.1rem;
+        gap: 10px;
     }
     
     .opciones-header {
         flex-direction: column;
-        gap: 10px;
+        gap: 15px;
         text-align: center;
+    }
+    
+    .estrellas-container {
+        width: 100%;
+        justify-content: center;
     }
 }
 
-/* === ESTILOS PARA OPCIONES DINÁMICAS === */
+.opcion-btn {
+    padding: 18px 0;
+    font-size: 1.3rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 15px;
+    background: rgba(255,255,255,0.95);
+    color: #4361ee;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.opcion-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.6s ease;
+}
+
+.opcion-btn:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    background: white;
+}
+
+.opcion-btn:hover::before {
+    left: 100%;
+}
+
+.opcion-btn:active {
+    transform: translateY(-1px);
+}
+
+/* Estilos para opciones seleccionadas */
 .opcion-btn.correcta {
-    background: #4caf50 !important;
+    background: linear-gradient(135deg, #4caf50, #2e7d32) !important;
     color: white !important;
-    border-color: #388e3c !important;
+    border: 2px solid #388e3c !important;
     transform: scale(1.05);
-    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3) !important;
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4) !important;
+}
+
+.opcion-btn.correcta::after {
+    content: ' ✓';
+    font-size: 1.5rem;
+    animation: fadeIn 0.5s ease;
 }
 
 .opcion-btn.incorrecta {
-    background: #f44336 !important;
+    background: linear-gradient(135deg, #f44336, #c62828) !important;
     color: white !important;
-    border-color: #d32f2f !important;
-    box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3) !important;
+    border: 2px solid #d32f2f !important;
+    box-shadow: 0 6px 20px rgba(244, 67, 54, 0.4) !important;
+}
+
+.opcion-btn.incorrecta::after {
+    content: ' ✗';
+    font-size: 1.5rem;
+    animation: fadeIn 0.5s ease;
 }
 
 .opcion-btn:disabled {
     opacity: 0.7;
     cursor: not-allowed;
     transform: none !important;
+}
+
+.opcion-btn:disabled:hover {
+    transform: none !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
 }
 
 /* Animación para estrellas */
@@ -1259,17 +1361,6 @@ header p {
 }
 
 /* === EFECTOS MEJORADOS PARA ESTRELLAS === */
-.estrellas-container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,140,0,0.2));
-    padding: 8px 15px;
-    border-radius: 20px;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,215,0,0.3);
-}
-
 .estrellas-container .estrella {
     font-size: 1.5rem;
     color: #FFD700;
