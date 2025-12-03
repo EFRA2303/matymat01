@@ -128,6 +128,21 @@ app.post('/analizar', async (req, res) => {
       });
     }
 
+    // ✅ RESPUESTA FIJA: SOLO CUANDO SE CONSULTA POR EL CREADOR
+    const consultasCreador = [
+      'quién te creó', 'quien te creo', 'quién te desarrolló', 'quien te desarrollo',
+      'quién es tu creador', 'quien es tu creador', 'quién hizo', 'quien hizo',
+      'quién eres', 'quién te hizo', 'quién programó', 'quién te diseñó',
+      'creador', 'desarrollador', 'autor', 'dueño', 'quién te inventó'
+    ];
+
+    if (consultasCreador.some(frase => input.includes(frase))) {
+      return res.json({
+        respuesta: "Fui desarrollado por Efrain Flores Rojas.",
+        tipo: "normal"
+      });
+    }
+
     // Detectar si es comando de gráfica
     const comandosGrafica = ['gráfica', 'grafica', 'graficar', 'gráficar', 'muéstrame la gráfica', 'mostrar gráfica', 'dibujar'];
     const esComandoGrafica = comandosGrafica.some(c => input.includes(c));
@@ -138,7 +153,7 @@ app.post('/analizar', async (req, res) => {
 
       funcion = funcion
         .replace(/(funci[óo]n|gr[áa]fica|grafica|grafica:|de|la|el|mu[ée]strame|quiero|ver|visualizar)/gi, '')
-        .replace(/[^\w\s\-\+\*\/\^\(\)\.\,]/g, '')
+        .replace(/[^\w\s\-\+\*\/\^\(\)\.\,]/g, ' ')
         .trim();
 
       if (!funcion || funcion.length < 1) {
@@ -351,7 +366,6 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 export default app;
-
 
 
 
