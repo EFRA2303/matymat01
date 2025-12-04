@@ -1,128 +1,102 @@
-// script.js - VERSIÓN CON TECLADO MATEMÁTICO MEJORADO
-document.addEventListener('DOMContentLoaded', () => {
-    // Variables globales
-    let isSending = false;
-    window.voiceEnabled = true;
-    window.sesionActual = null;
-    window.estrellasTotales = 0;
-    window.respuestasCorrectas = 0;
-    window.totalPreguntas = 0;
-    window.opcionesActuales = [];
-    window.pasoActual = null;
-    window.colaVoz = [];
-    window.hablando = false;
-    window.ggbApp = null;
-    window.felicitacionReproducida = false;
-    window.mensajeInicialReproducido = false;
-
-    // Elementos DOM
+document.addEventListener('DOMContentLoaded', function() {
+    // Elementos del DOM
     const userInput = document.getElementById('userInput');
     const sendBtn = document.getElementById('sendBtn');
     const chatContainer = document.getElementById('chatContainer');
-    const uploadBtn = document.getElementById('uploadBtn');
-    const fileInput = document.getElementById('fileInput');
     const toggleMathBtn = document.getElementById('toggleMathBtn');
     const mathToolbar = document.getElementById('mathToolbar');
-    const closeKeyboardBtn = document.getElementById('closeKeyboard');
-    const keyboardGrip = document.getElementById('keyboardGrip');
     const keyboardTabs = document.getElementById('keyboardTabs');
     const keyboardContent = document.getElementById('keyboardContent');
-    const minimizarOpcionesBtn = document.getElementById('minimizarOpciones');
+    const closeKeyboardBtn = document.getElementById('closeKeyboardBtn');
+    const keyboardGrip = document.getElementById('keyboardGrip');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const fileInput = document.getElementById('fileInput');
     
-    // Configuración del teclado
+    // Variables globales
+    let isSending = false;
+    window.voiceEnabled = true;
+    window.colaVoz = [];
+    window.hablando = false;
+    window.sesionActual = null;
+    window.opcionesActuales = [];
+    window.respuestaCorrecta = null;
+    window.respuestasCorrectas = 0;
+    window.totalPreguntas = 0;
+    window.estrellasTotales = 0;
+    window.pasoActual = null;
+    window.felicitacionReproducida = false;
+    window.mensajeInicialReproducido = false;
+    window.ggbApp = null;
+    
+    // Layout del teclado matemático
     const keyboardLayouts = {
         basic: [
-            { type: 'group', title: 'Números' },
-            { keys: ['7', '8', '9', '+', '-'], class: 'num-btn' },
-            { keys: ['4', '5', '6', '×', '÷'], class: 'num-btn' },
-            { keys: ['1', '2', '3', '=', '^'], class: 'num-btn' },
-            { keys: ['0', '.', '(', ')', '√'], class: 'num-btn' },
-            { type: 'group', title: 'Variables' },
-            { keys: ['x', 'y', 'z', 'π', '∞'], class: 'var-btn' },
-            { type: 'group', title: 'Acciones' },
-            { keys: ['⌫', 'C', '␣'], class: 'special', span: [2, 2, 1] }
-        ],
-        
-        advanced: [
-            { type: 'group', title: 'Exponentes' },
-            { keys: ['²', '³', '⁴', 'ⁿ', '√'], class: 'exp-btn' },
-            { keys: ['∛', '∜', 'a/b', '|x|', '≈'], class: 'exp-btn' },
-            { type: 'group', title: 'Operaciones especiales' },
-            { keys: ['±', '%', '‰', '°', '∠'], class: 'op-btn' },
-            { keys: ['≠', '≈', '≤', '≥', '≡'], class: 'op-btn' },
-            { type: 'group', title: 'Conjuntos' },
-            { keys: ['∈', '∉', '⊂', '⊆', '∪'], class: 'var-btn' },
-            { keys: ['∩', '∅', '∀', '∃', '∴'], class: 'var-btn' }
-        ],
-        
-        functions: [
-            { type: 'group', title: 'Trigonométricas' },
-            { keys: ['sin', 'cos', 'tan', 'cot', 'sec'], class: 'trig-btn' },
-            { keys: ['csc', 'arcsin', 'arccos', 'arctan', 'sinh'], class: 'trig-btn' },
-            { type: 'group', title: 'Logaritmos' },
-            { keys: ['log', 'ln', 'lg', 'exp', 'e'], class: 'func-btn' },
-            { type: 'group', title: 'Otras funciones' },
-            { keys: ['abs', 'floor', 'ceil', 'round', 'rand'], class: 'func-btn' },
-            { keys: ['gcd', 'lcm', 'mod', '!', 'Γ'], class: 'func-btn' }
-        ],
-        
-        calculus: [
-            { type: 'group', title: 'Cálculo diferencial' },
-            { keys: ['lim', '∂', '∇', '∆', '→'], class: 'calc-btn' },
-            { type: 'group', title: 'Cálculo integral' },
-            { keys: ['∫', '∬', '∭', '∮', '∯'], class: 'calc-btn' },
-            { keys: ['∑', '∏', '∐', '⨋', '⨌'], class: 'calc-btn' },
-            { type: 'group', title: 'Símbolos especiales' },
-            { keys: ['α', 'β', 'γ', 'δ', 'ε'], class: 'var-btn' },
-            { keys: ['θ', 'φ', 'ω', 'λ', 'μ'], class: 'var-btn' }
+            { keys: ['7', '8', '9', '+', 'C'], class: 'num' },
+            { keys: ['4', '5', '6', '-', '⌫'], class: 'num' },
+            { keys: ['1', '2', '3', '×', '÷'], class: 'num' },
+            { keys: ['0', '.', '(', ')', '='], class: 'num', span: [1, 1, 1, 1, 1] },
+            { type: 'group', title: 'Símbolos' },
+            { keys: ['x', 'y', 'z', '^', '√'], class: 'sym' },
+            { keys: ['π', 'θ', '°', '%', '!'], class: 'sym' },
+            { keys: ['a/b', '∫', '∂', '∑', '∏'], class: 'sym' },
+            { type: 'group', title: 'Funciones' },
+            { keys: ['sin', 'cos', 'tan', 'cot', 'sec'], class: 'func' },
+            { keys: ['csc', 'arcsin', 'arccos', 'arctan', 'log'], class: 'func' },
+            { keys: ['ln', 'lg', 'exp', 'abs', 'lim'], class: 'func' },
+            { keys: ['sinh', 'cosh', 'tanh', 'floor', 'ceil'], class: 'func' },
+            { keys: ['round', 'rand', 'gcd', 'lcm', 'mod'], class: 'func' }
         ]
     };
     
-    // === FUNCIONALIDAD DE MINIMIZAR OPCIONES ===
-    function toggleMinimizarOpciones() {
-        const opcionesContainer = document.getElementById('opcionesContainer');
-        const boton = document.getElementById('minimizarOpciones');
+    // === FUNCIONALIDAD PARA MINIMIZAR EL CHAT ===
+    function toggleMinimizarChat() {
+        const body = document.body;
+        const boton = document.getElementById('minimizarChatBtn');
+        const mensaje = document.getElementById('minimizadoMensaje');
         
-        if (opcionesContainer.classList.contains('opciones-minimizadas')) {
-            // Mostrar opciones
-            opcionesContainer.classList.remove('opciones-minimizadas');
+        if (body.classList.contains('chat-minimizado')) {
+            // Restaurar chat (maximizar)
+            body.classList.remove('chat-minimizado');
             boton.innerHTML = '<i class="fas fa-chevron-down"></i>';
-            boton.title = "Minimizar opciones";
+            boton.title = "Minimizar chat para ver mejor las opciones";
             
-            // Scroll automático para ver las opciones
-            setTimeout(() => {
-                opcionesContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 300);
+            // Restaurar scroll del chat
+            const chatContainer = document.getElementById('chatContainer');
+            if (chatContainer) {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
         } else {
-            // Minimizar opciones
-            opcionesContainer.classList.add('opciones-minimizadas');
+            // Minimizar chat
+            body.classList.add('chat-minimizado');
             boton.innerHTML = '<i class="fas fa-chevron-up"></i>';
-            boton.title = "Mostrar opciones";
+            boton.title = "Maximizar chat";
+            
+            // Mostrar mensaje temporal
+            if (mensaje) {
+                mensaje.style.display = 'block';
+                setTimeout(() => {
+                    mensaje.style.display = 'none';
+                }, 3000);
+            }
+            
+            // Hacer scroll a las opciones si están visibles
+            const opcionesContainer = document.getElementById('opcionesContainer');
+            if (opcionesContainer && opcionesContainer.style.display === 'block') {
+                setTimeout(() => {
+                    opcionesContainer.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
+                }, 500);
+            }
         }
     }
     
-    // Configurar evento del botón minimizar
-    if (minimizarOpcionesBtn) {
-        minimizarOpcionesBtn.addEventListener('click', toggleMinimizarOpciones);
-        
-        // También permitir hacer clic en el contenedor minimizado para expandir
-        document.getElementById('opcionesContainer').addEventListener('click', function(e) {
-            if (this.classList.contains('opciones-minimizadas') && !e.target.closest('.minimizar-opciones')) {
-                toggleMinimizarOpciones();
-            }
-        });
-    }
-    
-    // Función para mostrar opciones (expande automáticamente)
+    // FUNCIÓN MODIFICADA PARA MOSTRAR OPCIONES
     function mostrarOpcionesInteractivo(opciones) {
         const opcionesContainer = document.getElementById('opcionesContainer');
         const opcionesBotones = opcionesContainer.querySelector('.opciones-botones');
         if (!opcionesContainer || !opcionesBotones) return;
-        
-        // Asegurar que no esté minimizado
-        opcionesContainer.classList.remove('opciones-minimizadas');
-        minimizarOpcionesBtn.innerHTML = '<i class="fas fa-chevron-down"></i>';
-        minimizarOpcionesBtn.title = "Minimizar opciones";
         
         opcionesBotones.innerHTML = '';
         opcionesContainer.style.display = 'block';
@@ -137,10 +111,17 @@ document.addEventListener('DOMContentLoaded', () => {
             opcionesBotones.appendChild(btn);
         });
         
-        // Scroll automático para ver las opciones
+        // MINIMIZAR AUTOMÁTICAMENTE EL CHAT PARA VER MEJOR LAS OPCIONES
         setTimeout(() => {
-            opcionesContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 500);
+            if (!document.body.classList.contains('chat-minimizado')) {
+                toggleMinimizarChat();
+            }
+            // Scroll a las opciones
+            opcionesContainer.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+        }, 800);
     }
     
     // Inicializar teclado
@@ -999,6 +980,12 @@ Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igu
     // Configurar auto-ajuste del textarea
     userInput.addEventListener('input', autoResizeTextarea);
     
+    // Configurar evento del botón minimizar chat
+    const minimizarChatBtn = document.getElementById('minimizarChatBtn');
+    if (minimizarChatBtn) {
+        minimizarChatBtn.addEventListener('click', toggleMinimizarChat);
+    }
+    
     // Atajos de teclado
     document.addEventListener('keydown', function(e) {
         // ESC para cerrar teclado
@@ -1256,4 +1243,3 @@ document.head.insertAdjacentHTML('beforeend', `
         }
     </style>
 `);
-
