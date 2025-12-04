@@ -274,7 +274,7 @@ header p {
 .options-popup {
     display: none;
     position: fixed;
-    bottom: 100px;
+    bottom: 120px;
     left: 10px;
     right: 10px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -1111,4 +1111,5 @@ body.keyboard-active .options-popup {
     touch-action: pan-y; /* ✅ Permite deslizar vertical */
     -webkit-overflow-scrolling: touch; /* ✅ Scroll suave móvil */
 }
+
 
