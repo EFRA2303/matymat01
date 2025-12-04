@@ -1106,3 +1106,8 @@ button:disabled:hover {
 body.keyboard-active .options-popup {
     bottom: calc(45vh + 100px); /* ✅ SE SUBE CUANDO TECLADO ESTÁ ABIERTO */
 }
+
+.options-popup {
+    touch-action: pan-y; /* ✅ Permite deslizar vertical */
+    -webkit-overflow-scrolling: touch; /* ✅ Scroll suave móvil */
+}
