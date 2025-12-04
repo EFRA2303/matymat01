@@ -282,7 +282,7 @@ header p {
     z-index: 2000;
     box-shadow: 0 10px 40px rgba(0,0,0,0.3);
     animation: slideUpOptions 0.3s ease;
-    max-height: 30vh; /* ✅ Solo ocupa 30% de la pantalla */
+    max-height: 25vh; /* ✅ Solo ocupa 30% de la pantalla */
     overflow-y: auto;
     border: 2px solid rgba(255,255,255,0.3);
 }
@@ -302,7 +302,7 @@ header p {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 20px;
+    padding: 12px 14px;
     color: white;
     border-bottom: 1px solid rgba(255,255,255,0.2);
 }
@@ -378,7 +378,7 @@ header p {
 .options-grid {
     display: flex;
     flex-direction: column;
-    gap: 10px; /* ✅ Menor espacio entre opciones */
+    gap: 8px; /* ✅ Menor espacio entre opciones */
     padding: 0 20px 15px; /* ✅ Menor padding inferior */
 }
 
@@ -386,7 +386,7 @@ header p {
     background: rgba(255,255,255,0.95);
     border: none;
     border-radius: 12px; /* ✅ Bordes más redondeados */
-    padding: 16px; /* ✅ Padding ajustado */
+    padding: 12px 14px; /* ✅ Padding ajustado */
     font-size: 1rem;
     color: #4361ee;
     cursor: pointer;
@@ -396,7 +396,7 @@ header p {
     align-items: center;
     gap: 12px;
     box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-    min-height: 60px; /* ✅ Altura reducida */
+    min-height: 55px; /* ✅ Altura reducida */
 }
 
 .option-btn:hover {
@@ -448,7 +448,7 @@ header p {
 .math-toolbar {
     display: none;
     position: fixed;
-    bottom: 60px;
+    bottom: 90px;
     left: 0;
     right: 0;
     background: #f0f0f0;
@@ -1090,3 +1090,4 @@ button:disabled:hover {
 .options-popup {
     transition: all 0.3s ease;
 }
+
