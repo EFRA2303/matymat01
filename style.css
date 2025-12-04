@@ -1079,3 +1079,14 @@ button:disabled:hover {
     transform: none !important;
     box-shadow: none !important;
 }
+/* =============== CORRECCIÓN OPCIONES =============== */
+.options-popup.hidden {
+    display: none !important;
+    transform: translateY(100%);
+    opacity: 0;
+}
+
+/* Asegurar que desaparezcan */
+.options-popup {
+    transition: all 0.3s ease;
+}
