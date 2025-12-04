@@ -33,16 +33,6 @@
             <p>Te ayudaré a resolver ejercicios con texto, foto y apoyo emocional</p>
         </header>
         
-        <!-- Botón para minimizar/maximizar el chat -->
-        <button class="minimizar-chat-btn" id="minimizarChatBtn" title="Minimizar chat para ver mejor las opciones">
-            <i class="fas fa-chevron-down"></i>
-        </button>
-        
-        <!-- Mensaje temporal cuando se minimiza -->
-        <div class="minimizado-mensaje" id="minimizadoMensaje">
-            💡 Chat minimizado para ver mejor las opciones
-        </div>
-        
         <div class="chat-container" id="chatContainer">
             <div class="message bot">
                 <div class="avatar bot-avatar">
@@ -73,44 +63,46 @@
             </div>
         </div>
         
-        <!-- TECLADO MATEMÁTICO MODERNO (fijo, encima del input) -->
-        <div class="math-toolbar" id="mathToolbar">
-            <!-- Grip para arrastrar -->
-            <div class="keyboard-grip" id="keyboardGrip">
-                <div class="grip-line"></div>
+        <!-- TECLADO MATEMÁTICO (como teclado emergente de WhatsApp) -->
+        <div class="math-keyboard" id="mathKeyboard">
+            <div class="keyboard-header">
+                <button class="keyboard-close" id="closeMathKeyboard">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3>Teclado Matemático</h3>
+                <button class="keyboard-switch" id="switchToTextKeyboard">
+                    <i class="fas fa-keyboard"></i> Texto
+                </button>
             </div>
             
-            <!-- Botón cerrar -->
-            <button class="close-keyboard" id="closeKeyboard" title="Cerrar teclado">
-                <i class="fas fa-times"></i>
-            </button>
-            
-            <!-- Tabs de categorías -->
-            <div class="keyboard-tabs" id="keyboardTabs">
+            <div class="keyboard-tabs">
                 <button class="keyboard-tab active" data-tab="basic">Básico</button>
-                <button class="keyboard-tab" data-tab="advanced">Avanzado</button>
+                <button class="keyboard-tab" data-tab="symbols">Símbolos</button>
                 <button class="keyboard-tab" data-tab="functions">Funciones</button>
                 <button class="keyboard-tab" data-tab="calculus">Cálculo</button>
             </div>
             
-            <!-- Contenido de teclado (se llena dinámicamente con JavaScript) -->
             <div class="keyboard-content" id="keyboardContent">
-                <!-- Se generará dinámicamente -->
+                <!-- Se generará dinámicamente con JavaScript -->
             </div>
         </div>
         
-        <!-- Input de usuario (fijo abajo) -->
+        <!-- Input de usuario (FIJO ABAJO como WhatsApp) -->
         <div class="input-section">
             <div class="input-wrapper">
                 <button class="btn upload-btn" id="uploadBtn" title="Subir foto o tomar">
                     <i class="fas fa-camera-retro"></i>
                 </button>
+                
                 <div class="math-input-container">
-                    <textarea id="userInput" placeholder="Escribe tu pregunta o función..." rows="1"></textarea>
+                    <textarea id="userInput" placeholder="Escribe tu pregunta matemática..." rows="1"></textarea>
                 </div>
-                <button class="btn math-toggle-btn" id="toggleMathBtn" title="Teclado matemático">
+                
+                <!-- Botón para cambiar entre teclado normal y matemático -->
+                <button class="btn keyboard-toggle-btn" id="toggleKeyboardBtn" title="Cambiar teclado">
                     <i class="fas fa-square-root-alt"></i>
                 </button>
+                
                 <button class="btn send-btn" id="sendBtn">
                     <i class="fas fa-paper-plane"></i>
                 </button>
@@ -159,26 +151,39 @@
         </div>
     </div>
     
-    <!-- Sistema de Opciones y Estrellas -->
-    <div class="opciones-container" id="opcionesContainer" style="display: none;">
-        <div class="opciones-header">
-            <h4>🎯 Elige una opción:</h4>
+    <!-- Sistema de Opciones y Estrellas (FULL SCREEN como teclado de WhatsApp) -->
+    <div class="options-fullscreen" id="optionsContainer" style="display: none;">
+        <div class="options-header">
+            <button class="options-close" onclick="closeOptions()">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3>🎯 Elige la opción correcta</h3>
             <div class="estrellas-container">
                 <span class="estrella">⭐</span>
                 <span id="contadorEstrellas">0</span>
             </div>
         </div>
-        <div class="opciones-botones">
-            <!-- Las opciones se generarán dinámicamente con JavaScript -->
+        
+        <div class="question-display" id="questionDisplay">
+            <!-- La pregunta actual se mostrará aquí -->
+        </div>
+        
+        <div class="options-grid" id="optionsGrid">
+            <!-- Las 3 opciones se generarán dinámicamente aquí -->
+        </div>
+        
+        <div class="options-footer">
+            <p class="hint-text" id="hintText">Selecciona la respuesta correcta</p>
         </div>
     </div>
 
     <!-- Loading de estrellas -->
-    <div id="loadingEstrella" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 1000;">
-        <div class="estrella-loading" style="font-size: 3rem; animation: starWin 1s ease-in-out infinite;">⭐</div>
-        <p style="color: white; text-shadow: 0 0 5px black; font-weight: bold;">¡Ganaste una estrella!</p>
+    <div id="loadingEstrella" style="display: none;">
+        <div class="estrella-loading">⭐</div>
+        <p>¡Ganaste una estrella!</p>
     </div>
     
     <script src="script.js"></script>
 </body>
 </html>
+
