@@ -55,7 +55,7 @@
                     
                     <strong>Ejemplos que puedes probar:</strong><br>
                     • Álgebra: "Resuelve 2x + 5 = 15" o "Factoriza x² - 4"<br>
-                    • Trigonometría: "Calcula sen(30°)" o "Resuelve un triángulo rectángulo"<br>
+                    • Trigonometría: "Calcula sen(30°)" o "Resuelve un triángulo rectángo<br>
                     • Geometría: "Calcula el área de un círculo de radio 5"<br><br>
                     
                     ¡Escribe tu pregunta o elige un ejemplo para comenzar!
@@ -63,8 +63,8 @@
             </div>
         </div>
         
-        <!-- TECLADO MATEMÁTICO ORGANIZADO (Como Symbolab) -->
-        <div class="math-keyboard" id="mathKeyboard">
+        <!-- TECLADO MATEMÁTICO COMPLETO -->
+        <div class="math-toolbar" id="mathToolbar" style="display: none;">
             <div class="keyboard-header">
                 <button class="keyboard-close" id="closeMathKeyboard">
                     <i class="fas fa-times"></i>
@@ -75,111 +75,85 @@
                 </button>
             </div>
             
-            <div class="keyboard-sections">
-                <!-- Sección principal con números y operaciones básicas -->
-                <div class="keyboard-main">
-                    <!-- Primera fila: Limpiar, parentesis, potencia, raíz -->
-                    <div class="keyboard-section-title">Operaciones Básicas</div>
-                    <button class="tool-btn func-key wide-key" onclick="clearAll()">C</button>
-                    <button class="tool-btn func-key" onclick="insertAtCursor('(')">(</button>
-                    <button class="tool-btn func-key" onclick="insertAtCursor(')')">)</button>
-                    <button class="tool-btn op-key" onclick="insertAtCursor('^')">x²</button>
-                    <button class="tool-btn op-key" onclick="insertAtCursor('√(')">√x</button>
-                    
-                    <!-- Segunda fila: 7, 8, 9, ÷ -->
-                    <button class="tool-btn num-key" onclick="insertAtCursor('7')">7</button>
-                    <button class="tool-btn num-key" onclick="insertAtCursor('8')">8</button>
-                    <button class="tool-btn num-key" onclick="insertAtCursor('9')">9</button>
-                    <button class="tool-btn op-key" onclick="insertAtCursor('÷')">÷</button>
-                    
-                    <!-- Tercera fila: 4, 5, 6, × -->
-                    <button class="tool-btn num-key" onclick="insertAtCursor('4')">4</button>
-                    <button class="tool-btn num-key" onclick="insertAtCursor('5')">5</button>
-                    <button class="tool-btn num-key" onclick="insertAtCursor('6')">6</button>
-                    <button class="tool-btn op-key" onclick="insertAtCursor('×')">×</button>
-                    
-                    <!-- Cuarta fila: 1, 2, 3, - -->
-                    <button class="tool-btn num-key" onclick="insertAtCursor('1')">1</button>
-                    <button class="tool-btn num-key" onclick="insertAtCursor('2')">2</button>
-                    <button class="tool-btn num-key" onclick="insertAtCursor('3')">3</button>
-                    <button class="tool-btn op-key" onclick="insertAtCursor('-')">-</button>
-                    
-                    <!-- Quinta fila: 0, ., =, + -->
-                    <button class="tool-btn num-key wide-key" onclick="insertAtCursor('0')">0</button>
-                    <button class="tool-btn num-key" onclick="insertAtCursor('.')">.</button>
-                    <button class="tool-btn func-key" onclick="insertAtCursor('=')">=</button>
-                    <button class="tool-btn op-key" onclick="insertAtCursor('+')">+</button>
-                </div>
-                
-                <!-- Sección lateral con funciones avanzadas -->
-                <div class="keyboard-side">
-                    <div class="keyboard-section-title">Funciones Avanzadas</div>
-                    <button class="tool-btn adv-key" onclick="insertFraction()"><sup>a</sup>/<sub>b</sub></button>
-                    <button class="tool-btn adv-key" onclick="insertAtCursor('π')">π</button>
-                    <button class="tool-btn adv-key" onclick="insertFunction('sin')">sin</button>
-                    <button class="tool-btn adv-key" onclick="insertFunction('cos')">cos</button>
-                    <button class="tool-btn adv-key" onclick="insertFunction('tan')">tan</button>
-                    <button class="tool-btn adv-key" onclick="insertFunction('log')">log</button>
-                    <button class="tool-btn adv-key" onclick="insertFunction('ln')">ln</button>
-                    <button class="tool-btn adv-key tall-key" onclick="backspaceInput()">
-                        <i class="fas fa-backspace"></i>
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Tabs para más funciones -->
             <div class="keyboard-tabs">
                 <button class="keyboard-tab active" data-tab="basic">Básico</button>
-                <button class="keyboard-tab" data-tab="trigonometry">Trigonometría</button>
                 <button class="keyboard-tab" data-tab="algebra">Álgebra</button>
+                <button class="keyboard-tab" data-tab="trigonometry">Trigonometría</button>
                 <button class="keyboard-tab" data-tab="calculus">Cálculo</button>
-                <button class="tool-btn func-key" onclick="insertAtCursor('x')">x</button>
-                <button class="tool-btn func-key" onclick="insertAtCursor('y')">y</button>
+                <button class="keyboard-tab" data-tab="special">Especial</button>
             </div>
             
-            <!-- Contenido adicional por tabs -->
-            <div class="keyboard-extras" id="keyboardExtras">
-                <div class="extra-section active" id="extraBasic">
-                    <button class="tool-btn" onclick="insertAtCursor('θ')">θ</button>
-                    <button class="tool-btn" onclick="insertAtCursor('∞')">∞</button>
-                    <button class="tool-btn" onclick="insertAtCursor('°')">°</button>
-                    <button class="tool-btn" onclick="insertAtCursor('%')">%</button>
+            <div class="keyboard-sections">
+                <!-- Sección izquierda: números y operaciones básicas -->
+                <div class="keyboard-main">
+                    <!-- Números ordenados 0-9 -->
+                    <button class="tool-btn num-btn" onclick="insertAtCursor('7')">7</button>
+                    <button class="tool-btn num-btn" onclick="insertAtCursor('8')">8</button>
+                    <button class="tool-btn num-btn" onclick="insertAtCursor('9')">9</button>
+                    <button class="tool-btn op-btn" onclick="insertAtCursor('÷')">÷</button>
+                    
+                    <button class="tool-btn num-btn" onclick="insertAtCursor('4')">4</button>
+                    <button class="tool-btn num-btn" onclick="insertAtCursor('5')">5</button>
+                    <button class="tool-btn num-btn" onclick="insertAtCursor('6')">6</button>
+                    <button class="tool-btn op-btn" onclick="insertAtCursor('×')">×</button>
+                    
+                    <button class="tool-btn num-btn" onclick="insertAtCursor('1')">1</button>
+                    <button class="tool-btn num-btn" onclick="insertAtCursor('2')">2</button>
+                    <button class="tool-btn num-btn" onclick="insertAtCursor('3')">3</button>
+                    <button class="tool-btn op-btn" onclick="insertAtCursor('-')">-</button>
+                    
+                    <button class="tool-btn num-btn wide-btn" onclick="insertAtCursor('0')">0</button>
+                    <button class="tool-btn num-btn" onclick="insertAtCursor('.')">.</button>
+                    <button class="tool-btn op-btn" onclick="insertAtCursor('+')">+</button>
+                    
+                    <!-- Botones especiales -->
+                    <button class="tool-btn special-btn" onclick="clearAll()">C</button>
+                    <button class="tool-btn special-btn" onclick="backspaceInput()">⌫</button>
+                    <button class="tool-btn op-btn" onclick="insertAtCursor('=')">=</button>
+                    <button class="tool-btn func-btn" onclick="insertAtCursor('(')">(</button>
+                    <button class="tool-btn func-btn" onclick="insertAtCursor(')')">)</button>
                 </div>
-                <div class="extra-section" id="extraTrig">
-                    <button class="tool-btn" onclick="insertFunction('sin')">sin</button>
-                    <button class="tool-btn" onclick="insertFunction('cos')">cos</button>
-                    <button class="tool-btn" onclick="insertFunction('tan')">tan</button>
-                    <button class="tool-btn" onclick="insertFunction('cot')">cot</button>
-                    <button class="tool-btn" onclick="insertFunction('sec')">sec</button>
-                    <button class="tool-btn" onclick="insertFunction('csc')">csc</button>
-                    <button class="tool-btn" onclick="insertFunction('arcsin')">arcsin</button>
-                    <button class="tool-btn" onclick="insertFunction('arccos')">arccos</button>
+                
+                <!-- Sección derecha: variables y funciones -->
+                <div class="keyboard-side">
+                    <!-- Variables en secuencia x, y, z -->
+                    <button class="tool-btn var-btn" onclick="insertAtCursor('x')">x</button>
+                    <button class="tool-btn var-btn" onclick="insertAtCursor('y')">y</button>
+                    <button class="tool-btn var-btn" onclick="insertAtCursor('z')">z</button>
+                    
+                    <!-- Potencias (como GeoGebra) -->
+                    <button class="tool-btn power-btn" onclick="insertPower('²')">x²</button>
+                    <button class="tool-btn power-btn" onclick="insertPower('³')">x³</button>
+                    <button class="tool-btn power-btn" onclick="insertAtCursor('^')">x^y</button>
+                    
+                    <!-- Fracciones (como GeoGebra) -->
+                    <button class="tool-btn frac-btn" onclick="insertFraction()">
+                        <sup>a</sup>/<sub>b</sub>
+                    </button>
+                    <button class="tool-btn frac-btn" onclick="insertSimpleFraction()">
+                        (a)/(b)
+                    </button>
+                    
+                    <!-- Raíces -->
+                    <button class="tool-btn func-btn" onclick="insertAtCursor('√(')">√</button>
+                    <button class="tool-btn func-btn" onclick="insertAtCursor('∛(')">∛</button>
+                    
+                    <!-- Constantes -->
+                    <button class="tool-btn func-btn" onclick="insertAtCursor('π')">π</button>
+                    <button class="tool-btn func-btn" onclick="insertAtCursor('θ')">θ</button>
                 </div>
-                <div class="extra-section" id="extraAlgebra">
-                    <button class="tool-btn" onclick="insertAtCursor('√(')">√</button>
-                    <button class="tool-btn" onclick="insertAtCursor('∛(')">∛</button>
-                    <button class="tool-btn" onclick="insertAtCursor('^2')">x²</button>
-                    <button class="tool-btn" onclick="insertAtCursor('^3')">x³</button>
-                    <button class="tool-btn" onclick="insertAtCursor('∑')">∑</button>
-                    <button class="tool-btn" onclick="insertAtCursor('∏')">∏</button>
-                    <button class="tool-btn" onclick="insertAtCursor('| |')">|x|</button>
-                </div>
-                <div class="extra-section" id="extraCalculus">
-                    <button class="tool-btn" onclick="insertIntegral()">∫</button>
-                    <button class="tool-btn" onclick="insertAtCursor('∂')">∂</button>
-                    <button class="tool-btn" onclick="insertFunction('lim')">lim</button>
-                    <button class="tool-btn" onclick="insertAtCursor('dx')">dx</button>
-                    <button class="tool-btn" onclick="insertAtCursor('dy')">dy</button>
-                    <button class="tool-btn" onclick="insertAtCursor('Δ')">Δ</button>
-                    <button class="tool-btn" onclick="insertAtCursor('∇')">∇</button>
-                </div>
+            </div>
+            
+            <!-- Secciones extras por tab -->
+            <div class="keyboard-extras active" id="extraBasic">
+                <!-- Se llena dinámicamente con JavaScript -->
             </div>
         </div>
         
-        <!-- Input de usuario (FIJO ABAJO como WhatsApp) -->
+        <!-- Input de usuario -->
         <div class="input-section">
             <div class="input-wrapper">
-                <button class="btn upload-btn" id="uploadBtn" title="Subir foto o tomar">
+                <button class="btn upload-btn" id="uploadBtn" title="Subir foto">
                     <i class="fas fa-camera-retro"></i>
                 </button>
                 
@@ -187,8 +161,7 @@
                     <textarea id="userInput" placeholder="Escribe tu pregunta matemática..." rows="1"></textarea>
                 </div>
                 
-                <!-- Botón para cambiar entre teclado normal y matemático -->
-                <button class="btn keyboard-toggle-btn" id="toggleKeyboardBtn" title="Cambiar teclado">
+                <button class="btn keyboard-toggle-btn" id="toggleKeyboardBtn" title="Teclado matemático">
                     <i class="fas fa-square-root-alt"></i>
                 </button>
                 
@@ -240,7 +213,7 @@
         </div>
     </div>
     
-    <!-- Sistema de Opciones y Estrellas (EMERGENTE, no full screen) -->
+    <!-- Sistema de Opciones (EMERGENTE 20-30%) -->
     <div class="options-popup" id="optionsContainer" style="display: none;">
         <div class="options-header">
             <h3><i class="fas fa-question-circle"></i> Elige la opción correcta</h3>
@@ -259,10 +232,6 @@
         
         <div class="options-grid" id="optionsGrid">
             <!-- Las 3 opciones se generarán dinámicamente aquí -->
-        </div>
-        
-        <div class="options-footer">
-            <p class="hint-text" id="hintText"><i class="fas fa-lightbulb"></i> Selecciona la respuesta correcta</p>
         </div>
     </div>
 
