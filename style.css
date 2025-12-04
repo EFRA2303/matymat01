@@ -271,7 +271,7 @@ header p {
 }
 
 /* === OPCIONES EMERGENTES (20-30% desde abajo) === */
-.options-popup {
+.options-container {
     display: block;
     position: fixed;
     bottom: -10vh;
@@ -290,7 +290,7 @@ header p {
     pointer-events: none;
 }
 
-.options-popup::before {
+.options-container::before {
     content: '';
     position: absolute;
     top: 8px;
@@ -302,7 +302,7 @@ header p {
     border-radius: 2px;
 }
 
-.options-popup.visible {
+.options-container.visible {
     bottom: 120px;
     opacity: 1;
     pointer-events: auto;
@@ -325,10 +325,10 @@ header p {
     gap: 10px;
 }
 
-/* ✅ HANDLE ARRASTRABLE ENCIMA DEL HEADER */
+/* HANDLE ARRASTRABLE ENCIMA DEL HEADER */
 .options-header {
     position: relative;
-    padding-top: 20px; /* ✅ ESPACIO PARA HANDLE */
+    padding-top: 20px;
     padding-bottom: 12px;
 }
 
@@ -351,7 +351,6 @@ header p {
     background: rgba(255, 255, 255, 1);
 }
 
-/* ✅ SI QUIERES QUE SEA MÁS VISIBLE */
 .options-header::after {
     content: '↑↓';
     position: absolute;
@@ -362,6 +361,7 @@ header p {
     font-size: 0.8rem;
     font-weight: bold;
 }
+
 .options-close {
     background: rgba(255,255,255,0.2);
     color: white;
@@ -409,31 +409,18 @@ header p {
     text-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-.question-display {
-    background: rgba(255,255,255,0.15); /* ✅ Fondo más transparente */
-    margin: 10px 20px;
-    padding: 12px;
-    border-radius: 10px;
-    color: white;
-    font-size: 1rem;
-    line-height: 1.4;
-    text-align: center;
-    backdrop-filter: blur(5px);
-    border: 1px solid rgba(255,255,255,0.2);
-}
-
-.options-grid {
+.opciones-botones {
     display: flex;
     flex-direction: column;
-    gap: 8px; /* ✅ Menor espacio entre opciones */
-    padding: 0 20px 15px; /* ✅ Menor padding inferior */
+    gap: 8px;
+    padding: 0 20px 15px;
 }
 
-.option-btn {
+.opcion-btn {
     background: rgba(255,255,255,0.95);
     border: none;
-    border-radius: 12px; /* ✅ Bordes más redondeados */
-    padding: 12px 14px; /* ✅ Padding ajustado */
+    border-radius: 12px;
+    padding: 12px 14px;
     font-size: 1rem;
     color: #4361ee;
     cursor: pointer;
@@ -443,23 +430,23 @@ header p {
     align-items: center;
     gap: 12px;
     box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-    min-height: 55px; /* ✅ Altura reducida */
+    min-height: 55px;
 }
 
-.option-btn:hover {
+.opcion-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0,0,0,0.15);
     background: white;
 }
 
-.option-btn:active {
+.opcion-btn:active {
     transform: translateY(-1px);
 }
 
-.option-btn .option-letter {
+.opcion-btn .option-letter {
     background: var(--primary);
     color: white;
-    width: 35px; /* ✅ Tamaño reducido */
+    width: 35px;
     height: 35px;
     border-radius: 50%;
     display: flex;
@@ -470,28 +457,28 @@ header p {
     flex-shrink: 0;
 }
 
-.option-btn.correct {
+.opcion-btn.correcta {
     background: linear-gradient(135deg, #4CAF50, #2E7D32);
     color: white;
     transform: scale(1.02);
 }
 
-.option-btn.incorrect {
+.opcion-btn.incorrecta {
     background: linear-gradient(135deg, #F44336, #C62828);
     color: white;
 }
 
-.option-btn:disabled {
+.opcion-btn:disabled {
     opacity: 0.8;
     cursor: not-allowed;
 }
 
-.option-btn:disabled:hover {
+.opcion-btn:disabled:hover {
     transform: none;
     box-shadow: 0 3px 10px rgba(0,0,0,0.1);
 }
 
-/* === TECLADO MATEMÁTICO (misma altura que teclado normal) === */
+/* === TECLADO MATEMÁTICO === */
 .math-toolbar {
     display: none;
     position: fixed;
@@ -677,7 +664,7 @@ header p {
 .op-btn {
     background: rgba(255, 159, 67, 0.1);
     color: var(--warning);
-    border: 1px solid rgba(255, 159, 67, 0.3);;
+    border: 1px solid rgba(255, 159, 67, 0.3);
     font-weight: 600;
 }
 
@@ -735,6 +722,11 @@ header p {
 /* Ajustar cuando teclado está activo */
 body.keyboard-active .chat-container {
     padding-bottom: calc(45vh + 80px);
+}
+
+/* Asegurar que no tape cuando teclado está activo */
+body.keyboard-active .options-container {
+    bottom: calc(45vh + 100px);
 }
 
 /* === MENÚ CONFIGURACIÓN === */
@@ -992,13 +984,13 @@ body.keyboard-active .chat-container {
         font-size: 0.9rem;
     }
     
-    .option-btn {
+    .opcion-btn {
         padding: 14px;
         font-size: 0.95rem;
         min-height: 55px;
     }
     
-    .option-btn .option-letter {
+    .opcion-btn .option-letter {
         width: 32px;
         height: 32px;
         font-size: 1rem;
@@ -1020,11 +1012,11 @@ body.keyboard-active .chat-container {
         grid-template-rows: auto;
     }
     
-    .options-popup {
+    .options-container {
         left: 5px;
         right: 5px;
         bottom: 70px;
-        max-height: 35vh; /* ✅ Un poco más alto en móviles */
+        max-height: 35vh;
     }
     
     .math-toolbar {
@@ -1035,21 +1027,21 @@ body.keyboard-active .chat-container {
 /* Scrollbar */
 .chat-container::-webkit-scrollbar,
 .keyboard-extras::-webkit-scrollbar,
-.options-popup::-webkit-scrollbar,
+.options-container::-webkit-scrollbar,
 .math-toolbar::-webkit-scrollbar {
     width: 6px;
 }
 
 .chat-container::-webkit-scrollbar-track,
 .keyboard-extras::-webkit-scrollbar-track,
-.options-popup::-webkit-scrollbar-track,
+.options-container::-webkit-scrollbar-track,
 .math-toolbar::-webkit-scrollbar-track {
     background: transparent;
 }
 
 .chat-container::-webkit-scrollbar-thumb,
 .keyboard-extras::-webkit-scrollbar-thumb,
-.options-popup::-webkit-scrollbar-thumb,
+.options-container::-webkit-scrollbar-thumb,
 .math-toolbar::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.2);
     border-radius: 3px;
@@ -1057,7 +1049,7 @@ body.keyboard-active .chat-container {
 
 .dark-mode .chat-container::-webkit-scrollbar-thumb,
 .dark-mode .keyboard-extras::-webkit-scrollbar-thumb,
-.dark-mode .options-popup::-webkit-scrollbar-thumb,
+.dark-mode .options-container::-webkit-scrollbar-thumb,
 .dark-mode .math-toolbar::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.2);
 }
@@ -1096,12 +1088,7 @@ body.keyboard-active .chat-container {
     background: #2d3748;
 }
 
-.dark-mode .question-display {
-    background: rgba(30, 30, 30, 0.3);
-    color: #e0e0e0;
-}
-
-.dark-mode .option-btn {
+.dark-mode .opcion-btn {
     background: rgba(255, 255, 255, 0.9);
 }
 
@@ -1126,40 +1113,8 @@ button:disabled:hover {
     transform: none !important;
     box-shadow: none !important;
 }
-/* =============== CORRECCIÓN OPCIONES =============== */
-.options-popup.hidden {
-    display: none !important;
-    transform: translateY(100%);
-    opacity: 0;
-}
 
-/* Asegurar que desaparezcan */
-.options-popup {
-    transition: all 0.3s ease;
-}
-
-/* ✅ AGREGAR ESTO AL FINAL DEL ARCHIVO */
-.options-popup::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
-}
-
-.options-popup::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 2px;
-}
-
-/* Asegurar que no tape cuando teclado está activo */
-body.keyboard-active .options-popup {
-    bottom: calc(45vh + 100px); /* ✅ SE SUBE CUANDO TECLADO ESTÁ ABIERTO */
-}
-
-.options-popup {
-    touch-action: pan-y; /* ✅ Permite deslizar vertical */
-    -webkit-overflow-scrolling: touch; /* ✅ Scroll suave móvil */
-}
-
-/* ✅ TECLADO ORGANIZADO POR CATEGORÍAS */
+/* TECLADO ORGANIZADO POR CATEGORÍAS */
 .basic-btn {
     background: var(--card);
     color: var(--primary);
@@ -1190,7 +1145,7 @@ body.keyboard-active .options-popup {
     border: 1px solid rgba(114, 9, 183, 0.3);
 }
 
-/* ✅ DISTRIBUCIÓN MEJORADA */
+/* DISTRIBUCIÓN MEJORADA */
 .keyboard-extras {
     grid-template-columns: repeat(auto-fit, minmax(75px, 1fr)) !important;
     gap: 6px !important;
@@ -1210,16 +1165,34 @@ body.keyboard-active .options-popup {
     box-shadow: 0 3px 8px rgba(0,0,0,0.15);
 }
 
-.options-popup {
-    z-index: 999; /* ✅ DEBAJO de botones (ellos 1000) */
+.options-container {
+    z-index: 999;
     bottom: 5px;
-    animation: floatUp 0.3s ease;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
 }
 
-@keyframes floatUp {
-    from { transform: translateY(100%); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+.options-container::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
 }
+
+.options-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+}
+
+/* Mejoras para modo oscuro en opciones */
+.dark-mode .opcion-btn {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #e0e0e0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.dark-mode .opcion-btn:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+
 
 
 
