@@ -2,25 +2,29 @@
 :root {
     --primary: #4361ee;
     --secondary: #7209b7;
+    --whatsapp-green: #25D366;
+    --whatsapp-light: #dcf8c6;
     --bg: #f8f9fa;
     --card: #ffffff;
     --text: #212529;
     --border: #dee2e6;
     --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     --transition: all 0.3s ease;
-    --keyboard-bg: rgba(255, 255, 255, 0.98);
-    --keyboard-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
+    --keyboard-bg: #f0f0f0;
+    --input-height: 60px;
 }
 
 /* Modo oscuro */
 .dark-mode {
-    --bg: #121212;
-    --card: #1e1e1e;
+    --bg: #0d1418;
+    --card: #1e2a30;
     --text: #e0e0e0;
-    --border: #444;
+    --border: #2a3942;
     --primary: #6c5ce7;
     --secondary: #a29bfe;
-    --keyboard-bg: rgba(30, 30, 30, 0.98);
+    --whatsapp-green: #00a884;
+    --whatsapp-light: #202c33;
+    --keyboard-bg: #1e2a30;
 }
 
 /* Reset básico */
@@ -37,8 +41,7 @@ body {
     color: var(--text);
     transition: var(--transition);
     min-height: 100vh;
-    padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) 
-              env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+    padding: 0;
     overflow-x: hidden;
 }
 
@@ -51,155 +54,57 @@ body {
     position: relative;
 }
 
-/* Header con gradiente animado */
+/* Header tipo WhatsApp */
 header {
-    background: linear-gradient(135deg, var(--primary), var(--secondary), #9d4edd);
+    background: var(--primary);
     color: white;
-    padding: 20px;
+    padding: 15px 20px;
     text-align: center;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    border-bottom: 1px solid rgba(255,255,255,0.2);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
     position: relative;
-    overflow: hidden;
-    z-index: 1;
-}
-
-header::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1), rgba(255,255,255,0) 70%);
-    pointer-events: none;
-    z-index: -1;
+    z-index: 100;
+    height: 70px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 header h1 {
-    font-size: 1.8rem;
+    font-size: 1.4rem;
     font-weight: 600;
     color: white;
-    text-shadow: 0 0 5px rgba(67, 97, 238, 0.4), 0 0 10px rgba(67, 97, 238, 0.3);
-    margin-bottom: 5px;
-    letter-spacing: -0.5px;
-    animation: glow 2s ease-in-out infinite alternate;
-}
-
-@keyframes glow {
-    from { text-shadow: 0 0 5px rgba(67, 97, 238, 0.4), 0 0 10px rgba(67, 97, 238, 0.3); }
-    to { text-shadow: 0 0 10px rgba(67, 97, 238, 0.6), 0 0 20px rgba(67, 97, 238, 0.5), 0 0 30px rgba(67, 97, 238, 0.4); }
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 }
 
 header p {
-    font-size: 0.95rem;
+    font-size: 0.8rem;
     opacity: 0.9;
     font-weight: 300;
 }
 
-/* === BOTÓN PARA MINIMIZAR CHAT === */
-.minimizar-chat-btn {
-    position: fixed;
-    top: 70px;
-    right: 70px;
-    background: rgba(67, 97, 238, 0.9);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 850;
-    box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
-    transition: all 0.3s ease;
-}
-
-.minimizar-chat-btn:hover {
-    background: rgba(67, 97, 238, 1);
-    transform: scale(1.1);
-}
-
-.minimizar-chat-btn i {
-    font-size: 1.2rem;
-    transition: transform 0.3s ease;
-}
-
-.minimizar-chat-btn.minimizado i {
-    transform: rotate(180deg);
-}
-
-/* Estado cuando el chat está minimizado */
-body.chat-minimizado .chat-container {
-    max-height: 30vh !important;
-    overflow: hidden;
-    border: 2px solid rgba(67, 97, 238, 0.3);
-    border-radius: 10px;
-    margin-bottom: 10px;
-    opacity: 0.7;
-    transition: all 0.3s ease;
-}
-
-body.chat-minimizado .input-section {
-    opacity: 0.7;
-    transform: scale(0.95);
-}
-
-body.chat-minimizado #opcionesContainer {
-    transform: scale(1.05);
-    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-    z-index: 900;
-    border: 3px solid rgba(67, 97, 238, 0.5);
-}
-
-/* Mensaje cuando el chat está minimizado */
-.minimizado-mensaje {
-    display: none;
-    position: fixed;
-    top: 120px;
-    right: 70px;
-    background: rgba(67, 97, 238, 0.95);
-    color: white;
-    padding: 10px 15px;
-    border-radius: 10px;
-    font-size: 0.9rem;
-    z-index: 850;
-    animation: fadeInOut 3s ease;
-    box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
-}
-
-@keyframes fadeInOut {
-    0%, 100% { opacity: 0; transform: translateY(-10px); }
-    20%, 80% { opacity: 1; transform: translateY(0); }
-}
-
-/* Asegurar que las opciones sean visibles cuando el chat está minimizado */
-body.chat-minimizado #opcionesContainer {
-    margin-top: 20px;
-    margin-bottom: 100px;
-}
-
-/* Chat */
+/* Chat Container (como WhatsApp) */
 .chat-container {
     flex: 1;
-    padding: 20px;
+    padding: 15px 15px 80px;
     overflow-y: auto;
-    max-height: calc(100vh - 180px);
     scroll-behavior: smooth;
-    padding-bottom: 120px; /* Espacio para teclado */
-    transition: all 0.4s ease;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
-@media (max-height: 700px) {
-    .chat-container {
-        max-height: calc(100vh - 220px);
-    }
-}
-
-/* Mensajes */
+/* Mensajes estilo WhatsApp */
 .message {
     display: flex;
-    margin-bottom: 15px;
-    animation: fadeIn 0.4s ease-out;
+    margin-bottom: 8px;
+    animation: fadeIn 0.3s ease-out;
+    max-width: 85%;
 }
 
 @keyframes fadeIn {
@@ -209,159 +114,211 @@ body.chat-minimizado #opcionesContainer {
 
 /* Avatar */
 .avatar {
-    width: 60px;
-    height: 60px;
+    width: 45px;
+    height: 45px;
     border-radius: 50%;
-    margin-right: 15px;
+    margin-right: 10px;
     flex-shrink: 0;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    align-self: flex-end;
 }
 
 .bot-avatar img {
-    width: 60px;
-    height: 60px;
+    width: 45px;
+    height: 45px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid #003366;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 2px solid var(--primary);
 }
 
 /* Contenido del mensaje */
 .message-content {
     background: var(--card);
-    padding: 15px 20px;
-    border-radius: 20px;
-    max-width: 75%;
-    box-shadow: var(--shadow);
+    padding: 12px 15px;
+    border-radius: 18px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     border: 1px solid var(--border);
-    transition: var(--transition);
-    line-height: 1.5;
+    line-height: 1.4;
+    font-size: 0.95rem;
+    word-wrap: break-word;
 }
 
 .bot .message-content {
-    background: var(--card);
-    border-top-left-radius: 4px;
+    background: var(--whatsapp-light);
+    border-bottom-left-radius: 5px;
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    border-bottom-right-radius: 18px;
 }
 
 .user {
-    justify-content: flex-end;
+    align-self: flex-end;
 }
 
 .user .message-content {
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    background: var(--whatsapp-green);
     color: white;
-    margin-left: auto;
-    border-top-right-radius: 4px;
+    border-bottom-right-radius: 5px;
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    border-bottom-left-radius: 18px;
 }
 
-/* Input de usuario */
+/* === INPUT SECTION (FIJO ABAJO como WhatsApp) === */
 .input-section {
-    padding: 15px;
-    background: var(--card);
-    border-top: 1px solid var(--border);
     position: fixed;
     bottom: 0;
-    z-index: 800;
-    width: 100%;
-    backdrop-filter: blur(10px);
-    background: rgba(var(--card-rgb), 0.9);
-    transition: all 0.4s ease;
+    left: 0;
+    right: 0;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    padding: 10px 15px;
+    z-index: 100;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
 }
 
 .input-wrapper {
     display: flex;
-    align-items: end;
+    align-items: center;
     gap: 10px;
-    position: relative;
-    padding: 10px 0;
-    border-radius: 15px 15px 0 0;
 }
 
 /* Contenedor del input */
 .math-input-container {
-    position: relative;
     flex: 1;
 }
 
 #userInput {
     width: 100%;
-    padding: 16px 20px;
+    padding: 12px 15px;
     border: 1px solid var(--border);
     border-radius: 25px;
     outline: none;
     resize: none;
-    font-size: 1.1rem;
+    font-size: 1rem;
     background: var(--bg);
     color: var(--text);
-    min-height: 70px;
+    min-height: 45px;
     max-height: 120px;
     line-height: 1.4;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    transition: all 0.3s ease;
+    font-family: 'Poppins', sans-serif;
 }
 
 #userInput:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
-    transform: scale(1.01);
 }
 
-/* ===== TECLADO MATEMÁTICO MODERNO ===== */
-.math-toolbar {
+/* Botones del input */
+.btn {
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.upload-btn {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 1.2rem;
+}
+
+.upload-btn:hover {
+    background: var(--border);
+}
+
+.keyboard-toggle-btn {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    font-size: 1.2rem;
+}
+
+.keyboard-toggle-btn:hover {
+    background: var(--secondary);
+}
+
+.keyboard-toggle-btn.active {
+    background: var(--secondary);
+    transform: rotate(180deg);
+}
+
+.send-btn {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: var(--whatsapp-green);
+    color: white;
+    font-size: 1.2rem;
+}
+
+.send-btn:hover {
+    background: #1da851;
+}
+
+.send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* === TECLADO MATEMÁTICO (como teclado emergente de WhatsApp) === */
+.math-keyboard {
     display: none;
     position: fixed;
-    bottom: 120px; /* Encima del input */
-    left: 10px;
-    right: 10px;
+    bottom: 0;
+    left: 0;
+    right: 0;
     background: var(--keyboard-bg);
-    backdrop-filter: blur(20px);
-    border-radius: 20px;
-    box-shadow: var(--keyboard-shadow);
-    z-index: 900;
+    border-top: 1px solid var(--border);
+    z-index: 1000;
     max-height: 60vh;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation: slideUp 0.3s ease;
 }
 
 @keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(100px) scale(0.9);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
 }
 
-/* Grip para arrastrar/indicador */
-.keyboard-grip {
-    padding: 10px;
+.keyboard-header {
     display: flex;
-    justify-content: center;
-    cursor: grab;
-    user-select: none;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--border);
+    background: var(--card);
 }
 
-.grip-line {
-    width: 40px;
-    height: 4px;
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 2px;
+.keyboard-close {
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 5px;
 }
 
-.dark-mode .grip-line {
-    background: rgba(255, 255, 255, 0.2);
+.keyboard-switch {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 0.9rem;
+    cursor: pointer;
 }
 
-/* Tabs del teclado */
 .keyboard-tabs {
     display: flex;
+    background: var(--card);
     border-bottom: 1px solid var(--border);
-    padding: 0 15px;
-    background: rgba(var(--primary-rgb), 0.05);
 }
 
 .keyboard-tab {
@@ -372,10 +329,8 @@ body.chat-minimizado #opcionesContainer {
     border: none;
     color: var(--text);
     font-size: 0.9rem;
-    font-weight: 500;
     cursor: pointer;
     opacity: 0.7;
-    transition: all 0.3s;
     border-bottom: 3px solid transparent;
 }
 
@@ -383,288 +338,234 @@ body.chat-minimizado #opcionesContainer {
     opacity: 1;
     color: var(--primary);
     border-bottom-color: var(--primary);
-    background: rgba(var(--primary-rgb), 0.1);
 }
 
-/* Contenedor de teclas */
 .keyboard-content {
     max-height: calc(60vh - 120px);
     overflow-y: auto;
     padding: 15px;
 }
 
-/* Grupos de teclas */
-.keyboard-group {
+/* Grid de teclas matemáticas */
+.keys-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
     margin-bottom: 15px;
 }
 
-.group-title {
-    font-size: 0.8rem;
-    color: var(--text);
-    opacity: 0.7;
-    margin-bottom: 8px;
-    padding-left: 5px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-/* Grid de teclas */
-.keys-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
-}
-
-/* Botones individuales */
 .tool-btn {
-    padding: 14px 8px;
+    padding: 15px 5px;
     font-size: 1rem;
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--card);
     color: var(--text);
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    border-radius: 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
     cursor: pointer;
     transition: all 0.2s;
     text-align: center;
     font-weight: 500;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     min-height: 50px;
-    user-select: none;
-    backdrop-filter: blur(10px);
 }
 
-.tool-btn:hover, .tool-btn:active {
+.tool-btn:hover {
+    background: var(--primary);
+    color: white;
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-    background: white;
 }
 
 .tool-btn:active {
     transform: translateY(0);
 }
 
-/* Tipos específicos de botones */
-.num-btn {
-    background: rgba(255, 255, 255, 0.95);
+/* Teclas especiales */
+.clear-btn {
+    background: #ff4757;
+    color: white;
+    border: none;
+}
+
+.backspace-btn {
+    background: #ffa502;
+    color: white;
+    border: none;
+}
+
+/* === OPCIONES FULL SCREEN (como teclado emergente) === */
+.options-fullscreen {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    z-index: 2000;
+    animation: fadeIn 0.3s ease;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.options-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    color: white;
+}
+
+.options-close {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.options-header h3 {
+    font-size: 1.4rem;
+    text-align: center;
+    flex: 1;
+}
+
+.estrellas-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.2);
+    padding: 8px 15px;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.estrellas-container .estrella {
+    font-size: 1.5rem;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
+#contadorEstrellas {
+    font-size: 1.3rem;
+    font-weight: bold;
+}
+
+.question-display {
+    background: rgba(255,255,255,0.95);
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    color: #333;
     font-size: 1.1rem;
-    font-weight: 600;
-    color: #2d3436;
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    line-height: 1.5;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
-.num-btn:hover {
-    background: linear-gradient(135deg, #74b9ff, #0984e3);
-    color: white;
-    border-color: transparent;
-}
-
-.op-btn {
-    background: linear-gradient(135deg, rgba(255, 234, 167, 0.9), rgba(250, 177, 160, 0.9));
-    color: #d63031;
-    font-weight: 600;
-    border: none;
-}
-
-.op-btn:hover {
-    background: linear-gradient(135deg, #fd79a8, #e84393);
-    color: white;
-}
-
-.var-btn {
-    background: rgba(223, 230, 233, 0.9);
-    color: #2d3436;
-    border: 1px solid rgba(99, 110, 114, 0.1);
-}
-
-.var-btn:hover {
-    background: #636e72;
-    color: white;
-}
-
-.trig-btn {
-    background: linear-gradient(135deg, rgba(162, 155, 254, 0.9), rgba(108, 92, 231, 0.9));
-    color: white;
-    font-size: 0.9rem;
-    border: none;
-}
-
-.trig-btn:hover {
-    background: linear-gradient(135deg, #5a1d91, #3c0d6b);
-}
-
-.func-btn {
-    background: linear-gradient(135deg, rgba(129, 236, 236, 0.9), rgba(0, 206, 201, 0.9));
-    color: #00cec9;
-    border: none;
-}
-
-.func-btn:hover {
-    background: linear-gradient(135deg, #00cec9, #00a8a8);
-    color: white;
-}
-
-.calc-btn {
-    background: linear-gradient(135deg, rgba(116, 185, 255, 0.9), rgba(9, 132, 227, 0.9));
-    color: white;
-    font-size: 0.9rem;
-    border: none;
-}
-
-.calc-btn:hover {
-    background: linear-gradient(135deg, #0984e3, #0767b1);
-}
-
-/* Botones especiales */
-.space-btn {
-    grid-column: span 2;
-    background: rgba(178, 190, 195, 0.9);
-    color: #2d3436;
-}
-
-.space-btn:hover {
-    background: #636e72;
-    color: white;
-}
-
-.clear, .backspace {
-    grid-column: span 2;
-    font-weight: 600;
-}
-
-.clear {
-    background: linear-gradient(135deg, rgba(255, 118, 117, 0.9), rgba(214, 48, 49, 0.9));
-    color: white;
-    border: none;
-}
-
-.clear:hover {
-    background: linear-gradient(135deg, #d63031, #c0392b);
-}
-
-.backspace {
-    background: linear-gradient(135deg, rgba(253, 203, 110, 0.9), rgba(225, 112, 85, 0.9));
-    color: white;
-    font-size: 1.2rem;
-    border: none;
-}
-
-.backspace:hover {
-    background: linear-gradient(135deg, #e17055, #d63031);
-}
-
-/* Botón cerrar teclado */
-.close-keyboard {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 30px;
-    height: 30px;
-    background: rgba(0, 0, 0, 0.1);
-    border: none;
-    border-radius: 50%;
-    color: var(--text);
-    cursor: pointer;
+.options-grid {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    z-index: 10;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 30px;
 }
 
-.close-keyboard:hover {
-    background: rgba(0, 0, 0, 0.2);
-}
-
-/* Botones flotantes */
-.upload-btn, .math-toggle-btn, .send-btn {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
+.option-btn {
+    background: rgba(255,255,255,0.95);
+    border: none;
+    border-radius: 15px;
+    padding: 25px 20px;
     font-size: 1.2rem;
+    color: #4361ee;
+    cursor: pointer;
     transition: all 0.3s;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    min-height: 80px;
+}
+
+.option-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.option-btn:active {
+    transform: translateY(-1px);
+}
+
+.option-btn .option-letter {
+    background: var(--primary);
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--card);
-    border: 1px solid var(--border);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    font-weight: bold;
+    font-size: 1.3rem;
+    flex-shrink: 0;
 }
 
-.upload-btn {
-    background: white;
-    color: var(--primary);
-}
-
-.upload-btn:hover {
-    background: var(--primary);
+.option-btn.correct {
+    background: linear-gradient(135deg, #4CAF50, #2E7D32);
     color: white;
-    transform: translateY(-2px);
 }
 
-.math-toggle-btn {
-    background: var(--secondary);
+.option-btn.incorrect {
+    background: linear-gradient(135deg, #F44336, #C62828);
     color: white;
-    border: none;
 }
 
-.math-toggle-btn:hover {
-    transform: scale(1.1);
-    background: #5a1d91;
+.option-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
 }
 
-.math-toggle-btn.active {
-    background: var(--primary);
-    transform: scale(1.05);
-    box-shadow: 0 0 20px rgba(67, 97, 238, 0.3);
+.option-btn:disabled:hover {
+    transform: none;
 }
 
-.send-btn {
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    color: white;
-    border: none;
+.options-footer {
+    text-align: center;
+    color: rgba(255,255,255,0.9);
+    font-size: 0.9rem;
+    margin-top: 20px;
 }
 
-.btn {
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn:hover {
-    transform: translateY(-2px);
-}
-
-/* Botón de configuración */
+/* === MENÚ CONFIGURACIÓN === */
 .menu-toggle {
     position: fixed;
     top: 15px;
     right: 15px;
     width: 40px;
     height: 40px;
-    background: rgba(67, 97, 238, 0.1);
-    color: var(--primary);
+    background: rgba(255,255,255,0.1);
+    color: white;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.2rem;
-    transition: all 0.3s ease;
+    transition: all 0.3s;
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(67, 97, 238, 0.2);
+    border: 1px solid rgba(255,255,255,0.2);
     z-index: 1000;
     cursor: pointer;
 }
 
 .menu-toggle:hover {
-    background: rgba(67, 97, 238, 0.2);
+    background: rgba(255,255,255,0.2);
     transform: scale(1.05);
 }
 
-/* Panel de configuración */
 .menu-panel {
     display: none;
     position: fixed;
@@ -677,10 +578,6 @@ body.chat-minimizado #opcionesContainer {
     z-index: 950;
     border: 1px solid rgba(255,255,255,0.1);
     backdrop-filter: blur(10px);
-}
-
-.menu-panel.active {
-    display: block;
 }
 
 .panel-header {
@@ -720,12 +617,12 @@ body.chat-minimizado #opcionesContainer {
     gap: 10px;
     cursor: pointer;
     color: var(--text);
-    transition: background 0.3s ease;
+    transition: background 0.3s;
     font-size: 0.95rem;
 }
 
 .option:hover {
-    background: rgba(67, 97, 238, 0.08);
+    background: rgba(67, 97, 238, 0.1);
 }
 
 .option i {
@@ -734,256 +631,7 @@ body.chat-minimizado #opcionesContainer {
     text-align: center;
 }
 
-/* Ajustes para móviles */
-@media (max-width: 480px) {
-    header h1 {
-        font-size: 1.6rem;
-    }
-    
-    .input-wrapper {
-        gap: 8px;
-        padding: 8px 0;
-    }
-    
-    .upload-btn, .math-toggle-btn, .send-btn {
-        width: 46px;
-        height: 46px;
-        font-size: 1.1rem;
-    }
-    
-    .math-toolbar {
-        left: 5px;
-        right: 5px;
-        bottom: 110px;
-        max-height: 55vh;
-    }
-    
-    .keys-grid {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 6px;
-    }
-    
-    .tool-btn {
-        padding: 12px 6px;
-        font-size: 0.9rem;
-        min-height: 45px;
-    }
-    
-    .chat-container {
-        padding-bottom: 100px;
-    }
-    
-    /* Ajustes para botón minimizar en móviles */
-    .minimizar-chat-btn {
-        top: 60px;
-        right: 60px;
-        width: 36px;
-        height: 36px;
-    }
-    
-    .minimizado-mensaje {
-        top: 100px;
-        right: 60px;
-        font-size: 0.8rem;
-        padding: 8px 12px;
-    }
-}
-
-@media (max-width: 350px) {
-    .keys-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-/* Scrollbar para teclado */
-.keyboard-content::-webkit-scrollbar {
-    width: 6px;
-}
-
-.keyboard-content::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.05);
-    border-radius: 3px;
-}
-
-.keyboard-content::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 3px;
-}
-
-.keyboard-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.3);
-}
-
-/* Modo oscuro ajustes */
-.dark-mode .math-toolbar {
-    background: rgba(30, 30, 30, 0.98);
-    border-color: rgba(255, 255, 255, 0.1);
-}
-
-.dark-mode .tool-btn {
-    background: rgba(60, 60, 60, 0.9);
-    color: #e0e0e0;
-    border-color: rgba(255, 255, 255, 0.1);
-}
-
-.dark-mode .num-btn {
-    background: rgba(70, 70, 70, 0.9);
-    color: #e0e0e0;
-}
-
-.dark-mode .op-btn {
-    background: linear-gradient(135deg, rgba(225, 112, 85, 0.9), rgba(192, 57, 43, 0.9));
-    color: white;
-}
-
-.dark-mode .var-btn {
-    background: rgba(80, 80, 80, 0.9);
-    color: #e0e0e0;
-}
-
-.dark-mode .trig-btn {
-    background: linear-gradient(135deg, rgba(90, 29, 145, 0.9), rgba(60, 13, 107, 0.9));
-}
-
-.dark-mode .func-btn {
-    background: linear-gradient(135deg, rgba(0, 206, 201, 0.9), rgba(0, 168, 168, 0.9));
-}
-
-.dark-mode .calc-btn {
-    background: linear-gradient(135deg, rgba(9, 132, 227, 0.9), rgba(7, 103, 177, 0.9));
-}
-
-.dark-mode .space-btn {
-    background: rgba(100, 100, 100, 0.9);
-    color: white;
-}
-
-.dark-mode .grip-line {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-.dark-mode .keyboard-tab {
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.dark-mode .keyboard-tab.active {
-    color: #a29bfe;
-    border-bottom-color: #a29bfe;
-    background: rgba(162, 155, 254, 0.1);
-}
-
-/* Mejoras para visibilidad de pasos */
-.message-content strong {
-    font-weight: 600;
-}
-
-.message.bot .message-content {
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-    border-left: 4px solid #4361ee;
-}
-
-.message.user .message-content {
-    background: linear-gradient(135deg, #4361ee, #7209b7);
-    border-right: 4px solid #ffffff;
-}
-
-/* Animaciones para pasos */
-@keyframes stepAppear {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.message {
-    animation: stepAppear 0.5s ease-out;
-}
-
-/* ===== MEJORAS PARA VISIBILIDAD DE PASOS ===== */
-.message.bot .message-content {
-    background: linear-gradient(135deg, #e8f4fd, #d4e9ff) !important;
-    border-left: 4px solid #4a90e2 !important;
-    color: #2c5282 !important;
-    font-weight: 500;
-    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.15);
-}
-
-.message-content strong {
-    font-weight: 700;
-    color: #2b6cb0 !important;
-}
-
-/* Resaltar "Paso X" y "Solución final" */
-.message-content strong[style*="color: #4361ee"] {
-    color: #3182ce !important;
-    font-size: 1.05em;
-}
-
-.message-content strong[style*="color: #00c853"] {
-    color: #38a169 !important;
-    font-size: 1.1em;
-}
-
-/* Mejor contraste para modo oscuro */
-.dark-mode .message.bot .message-content {
-    background: linear-gradient(135deg, #2a4365, #2c5282) !important;
-    color: #ebf8ff !important;
-    border-left: 4px solid #63b3ed !important;
-}
-
-.dark-mode .message-content strong {
-    color: #90cdf4 !important;
-}
-
-/* ===== CÁMARA RESPONSIVE ===== */
-#fileInput {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    border: 0;
-}
-
-.upload-btn {
-    position: relative;
-    overflow: hidden;
-}
-
-/* Mejora para móviles */
-@media (max-width: 480px) {
-    .tool-btn {
-        padding: 10px 4px;
-        font-size: 0.85rem;
-        min-height: 42px;
-    }
-}
-
-/* Soporte para iOS/Safari */
-@supports (-webkit-touch-callout: none) {
-    .upload-btn {
-        cursor: pointer;
-    }
-    
-    input[type="file"] {
-        font-size: 16px; /* Evita zoom en iOS */
-    }
-}
-
-/* Soporte para Android/Chrome */
-@media (max-width: 768px) {
-    .upload-btn:active {
-        transform: scale(0.95);
-    }
-}
-
-/* ===== ESTILOS MEJORADOS PARA GRÁFICAS CON GEOGEBRA ===== */
+/* === GRÁFICAS === */
 .graph-container {
     position: fixed;
     top: 50%;
@@ -993,7 +641,7 @@ body.chat-minimizado #opcionesContainer {
     border: 2px solid var(--primary);
     border-radius: 15px;
     padding: 20px;
-    z-index: 1000;
+    z-index: 2000;
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     max-width: 90vw;
     max-height: 80vh;
@@ -1002,7 +650,6 @@ body.chat-minimizado #opcionesContainer {
     overflow: hidden;
 }
 
-/* Asegurar que GeoGebra ocupe todo el espacio disponible */
 #ggb-element {
     width: 100% !important;
     height: 400px !important;
@@ -1012,36 +659,15 @@ body.chat-minimizado #opcionesContainer {
     overflow: hidden;
 }
 
-/* Mejorar la barra de herramientas de GeoGebra */
-.ggb_border {
-    border: none !important;
-}
-
-/* Ajustar elementos de la interfaz de GeoGebra */
-.AlgebraView, .GraphicsView {
-    background: var(--card) !important;
-}
-
-/* Modo oscuro para GeoGebra */
-.dark-mode #ggb-element {
-    filter: invert(1) hue-rotate(180deg);
-}
-
-.dark-mode .AlgebraView, 
-.dark-mode .GraphicsView {
-    background: #2a2a2a !important;
-}
-
-/* Mejorar botones de control */
 .graph-controls {
     display: flex;
     gap: 10px;
     margin: 15px 0;
     justify-content: center;
-    flex-wrap: wrap;
 }
 
-.graph-controls button {
+.graph-controls button,
+.graph-actions button {
     padding: 8px 15px;
     background: var(--primary);
     color: white;
@@ -1049,12 +675,11 @@ body.chat-minimizado #opcionesContainer {
     border-radius: 5px;
     cursor: pointer;
     transition: all 0.3s;
-    font-size: 0.9rem;
 }
 
-.graph-controls button:hover {
+.graph-controls button:hover,
+.graph-actions button:hover {
     background: var(--secondary);
-    transform: translateY(-2px);
 }
 
 .graph-actions {
@@ -1062,324 +687,11 @@ body.chat-minimizado #opcionesContainer {
     gap: 10px;
     margin-top: 15px;
     justify-content: center;
-    flex-wrap: wrap;
 }
 
-.graph-actions button {
-    padding: 8px 15px;
-    background: var(--secondary);
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: all 0.3s;
-    font-size: 0.9rem;
-}
-
-.graph-actions button:hover {
-    background: var(--primary);
-    transform: translateY(-2px);
-}
-
-/* Botón de cerrar gráfica */
-.graph-container .panel-header {
-    padding: 12px 16px;
-    background: rgba(67, 97, 238, 0.2);
-    color: white;
-    border-radius: 12px 12px 0 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.graph-container .panel-header h3 {
-    font-size: 1rem;
-    font-weight: 500;
-    margin: 0;
-}
-
-.graph-container .panel-header button {
-    background: rgba(255,255,255,0.2);
-    color: white;
-    border: none;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 1.2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s;
-}
-
-.graph-container .panel-header button:hover {
-    background: rgba(255,255,255,0.3);
-    transform: scale(1.1);
-}
-
-/* Mejoras responsive */
-@media (max-width: 768px) {
-    .graph-container {
-        width: 95%;
-        padding: 15px;
-    }
-    
-    .graph-controls, .graph-actions {
-        flex-wrap: wrap;
-    }
-    
-    #ggb-element {
-        min-height: 300px;
-        height: 300px !important;
-    }
-}
-
-@media (max-width: 480px) {
-    .graph-container {
-        width: 98%;
-        padding: 10px;
-    }
-    
-    .graph-controls button, 
-    .graph-actions button {
-        padding: 6px 10px;
-        font-size: 0.8rem;
-    }
-    
-    #ggb-element {
-        min-height: 250px;
-        height: 250px !important;
-    }
-}
-
-/* Modo oscuro para GeoGebra */
-.dark-mode .graph-container {
-    background: #2a2a2a;
-    border-color: #6c5ce7;
-}
-
-.dark-mode .graph-controls button,
-.dark-mode .graph-actions button {
-    background: #6c5ce7;
-}
-
-.dark-mode .graph-controls button:hover,
-.dark-mode .graph-actions button:hover {
-    background: #5a1d91;
-}
-
-/* === SISTEMA DE OPCIONES Y ESTRELLAS === */
-#opcionesContainer {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 25px 20px 20px;
-    border-radius: 20px;
-    margin: 20px 0;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-    border: 2px solid rgba(255,255,255,0.2);
-    position: relative;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    overflow: hidden;
-    max-height: 500px;
-}
-
-.opciones-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    color: white;
-    transition: margin-bottom 0.3s ease;
-}
-
-.opciones-header h4 {
-    margin: 0;
-    font-size: 1.3rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.opciones-header h4::before {
-    content: '🎯';
-    font-size: 1.2rem;
-}
-
-.estrellas-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: rgba(255,255,255,0.25);
-    padding: 10px 18px;
-    border-radius: 25px;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.2);
-    transition: all 0.3s ease;
-}
-
-.estrellas-container:hover {
-    background: rgba(255,255,255,0.35);
-    transform: translateY(-2px);
-}
-
-.estrellas-container .estrella {
-    font-size: 1.6rem;
-    animation: pulse 2s infinite;
-    filter: drop-shadow(0 0 5px rgba(255,215,0,0.5));
-}
-
-@keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-}
-
-#contadorEstrellas {
-    font-size: 1.5rem;
-    font-weight: bold;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-.opciones-botones {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
-    transition: all 0.4s ease;
-    opacity: 1;
-}
-
-@media (max-width: 768px) {
-    .opciones-botones {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-    }
-}
-
-@media (max-width: 480px) {
-    .opciones-botones {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-    
-    .opciones-header {
-        flex-direction: column;
-        gap: 15px;
-        text-align: center;
-    }
-    
-    .estrellas-container {
-        width: 100%;
-        justify-content: center;
-    }
-}
-
-.opcion-btn {
-    padding: 18px 0;
-    font-size: 1.3rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 15px;
-    background: rgba(255,255,255,0.95);
-    color: #4361ee;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    position: relative;
-    overflow: hidden;
-}
-
-.opcion-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: left 0.6s ease;
-}
-
-.opcion-btn:hover {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-    background: white;
-}
-
-.opcion-btn:hover::before {
-    left: 100%;
-}
-
-.opcion-btn:active {
-    transform: translateY(-1px);
-}
-
-/* Estilos para opciones seleccionadas */
-.opcion-btn.correcta {
-    background: linear-gradient(135deg, #4caf50, #2e7d32) !important;
-    color: white !important;
-    border: 2px solid #388e3c !important;
-    transform: scale(1.05);
-    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4) !important;
-}
-
-.opcion-btn.correcta::after {
-    content: ' ✓';
-    font-size: 1.5rem;
-    animation: fadeIn 0.5s ease;
-}
-
-.opcion-btn.incorrecta {
-    background: linear-gradient(135deg, #f44336, #c62828) !important;
-    color: white !important;
-    border: 2px solid #d32f2f !important;
-    box-shadow: 0 6px 20px rgba(244, 67, 54, 0.4) !important;
-}
-
-.opcion-btn.incorrecta::after {
-    content: ' ✗';
-    font-size: 1.5rem;
-    animation: fadeIn 0.5s ease;
-}
-
-.opcion-btn:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-    transform: none !important;
-}
-
-.opcion-btn:disabled:hover {
-    transform: none !important;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
-}
-
-/* Animación para estrellas */
-@keyframes starPulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.3); }
-    100% { transform: scale(1); }
-}
-
-.star-pulse {
-    animation: starPulse 0.5s ease-in-out;
-}
-
-/* Mejora para modo oscuro en opciones */
-.dark-mode .opcion-btn {
-    background: rgba(255, 255, 255, 0.1) !important;
-    color: #e0e0e0 !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-}
-
-.dark-mode .opcion-btn:hover {
-    background: rgba(255, 255, 255, 0.2) !important;
-}
-
-/* Loading de estrellas */
+/* === EFECTOS ESTRELLAS === */
 #loadingEstrella {
+    display: none;
     position: fixed;
     top: 50%;
     left: 50%;
@@ -1388,113 +700,99 @@ body.chat-minimizado #opcionesContainer {
     padding: 30px;
     border-radius: 20px;
     text-align: center;
-    z-index: 1000;
+    z-index: 3000;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    display: none;
 }
 
 .estrella-loading {
     font-size: 3rem;
-    animation: spin 1s ease-in-out infinite;
+    animation: starSpin 1s ease-in-out infinite;
 }
 
-@keyframes spin {
+@keyframes starSpin {
     0%, 100% { transform: scale(1) rotate(0deg); }
     50% { transform: scale(1.5) rotate(180deg); }
 }
 
-/* === EFECTOS MEJORADOS PARA ESTRELLAS === */
-.estrellas-container .estrella {
-    font-size: 1.5rem;
-    color: #FFD700;
-    text-shadow: 0 0 10px rgba(255,215,0,0.5);
-    animation: starFloat 3s ease-in-out infinite;
-}
-
-@keyframes starFloat {
-    0%, 100% { 
-        transform: translateY(0px) rotate(0deg);
-        text-shadow: 0 0 10px rgba(255,215,0,0.5);
+/* === RESPONSIVE === */
+@media (max-width: 480px) {
+    header h1 {
+        font-size: 1.2rem;
     }
-    50% { 
-        transform: translateY(-5px) rotate(10deg);
-        text-shadow: 0 0 20px rgba(255,215,0,0.8), 0 0 30px rgba(255,140,0,0.6);
+    
+    .avatar {
+        width: 40px;
+        height: 40px;
     }
-}
-
-@keyframes starWin {
-    0% { 
-        transform: scale(1) rotate(0deg);
-        text-shadow: 0 0 10px rgba(255,215,0,0.5);
+    
+    .bot-avatar img {
+        width: 40px;
+        height: 40px;
     }
-    50% { 
-        transform: scale(2) rotate(180deg);
-        text-shadow: 0 0 30px rgba(255,215,0,1), 0 0 50px rgba(255,140,0,0.8);
+    
+    .message-content {
+        padding: 10px 12px;
+        font-size: 0.9rem;
     }
-    100% { 
-        transform: scale(1) rotate(360deg);
-        text-shadow: 0 0 10px rgba(255,215,0,0.5);
+    
+    .option-btn {
+        padding: 20px 15px;
+        font-size: 1.1rem;
+        min-height: 70px;
     }
-}
-
-.star-pulse {
-    animation: starWin 1s ease-in-out;
-}
-
-/* Efecto de confeti cuando se gana una estrella */
-.star-confetti {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 1000;
-}
-
-.confetti-piece {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    background: #FFD700;
-    opacity: 0;
-    animation: confettiFall 3s ease-in-out forwards;
-}
-
-@keyframes confettiFall {
-    0% {
-        opacity: 1;
-        transform: translateY(-100px) rotate(0deg);
+    
+    .option-btn .option-letter {
+        width: 35px;
+        height: 35px;
+        font-size: 1.1rem;
     }
-    100% {
-        opacity: 0;
-        transform: translateY(100vh) rotate(360deg);
+    
+    .keys-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+    }
+    
+    .tool-btn {
+        padding: 12px 3px;
+        font-size: 0.9rem;
+        min-height: 45px;
     }
 }
 
-/* Mejoras para scroll en chat */
-.chat-container::-webkit-scrollbar {
+/* Scrollbar */
+.chat-container::-webkit-scrollbar,
+.keyboard-content::-webkit-scrollbar {
     width: 6px;
 }
 
-.chat-container::-webkit-scrollbar-track {
+.chat-container::-webkit-scrollbar-track,
+.keyboard-content::-webkit-scrollbar-track {
     background: transparent;
 }
 
-.chat-container::-webkit-scrollbar-thumb {
+.chat-container::-webkit-scrollbar-thumb,
+.keyboard-content::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.2);
     border-radius: 3px;
 }
 
-.chat-container::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.3);
-}
-
-.dark-mode .chat-container::-webkit-scrollbar-thumb {
+.dark-mode .chat-container::-webkit-scrollbar-thumb,
+.dark-mode .keyboard-content::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.2);
 }
 
-.dark-mode .chat-container::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
+/* Modo oscuro ajustes */
+.dark-mode .math-keyboard {
+    background: #1e2a30;
 }
 
+.dark-mode .tool-btn {
+    background: #2a3942;
+    color: #e0e0e0;
+    border-color: #3d4d57;
+}
+
+.dark-mode .question-display {
+    background: rgba(30, 30, 30, 0.95);
+    color: #e0e0e0;
+}
