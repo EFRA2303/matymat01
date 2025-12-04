@@ -303,7 +303,7 @@ header p {
 }
 
 .options-popup.visible {
-    bottom: 60px; /* ✅ VISIBLE SOBRE BOTONES */
+    bottom: 100px; /* ✅ VISIBLE SOBRE BOTONES */
     opacity: 1;
 }
 @keyframes slideUpOptions {
@@ -334,6 +334,43 @@ header p {
     gap: 10px;
 }
 
+/* ✅ HANDLE ARRASTRABLE ENCIMA DEL HEADER */
+.options-header {
+    position: relative;
+    padding-top: 20px; /* ✅ ESPACIO PARA HANDLE */
+    padding-bottom: 12px;
+}
+
+.options-header::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 2px;
+    cursor: grab;
+    transition: background 0.2s;
+}
+
+.options-header:active::before {
+    cursor: grabbing;
+    background: rgba(255, 255, 255, 1);
+}
+
+/* ✅ SI QUIERES QUE SEA MÁS VISIBLE */
+.options-header::after {
+    content: '↑↓';
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.8rem;
+    font-weight: bold;
+}
 .options-close {
     background: rgba(255,255,255,0.2);
     color: white;
@@ -1192,4 +1229,5 @@ body.keyboard-active .options-popup {
     from { transform: translateY(100%); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
 }
+
 
