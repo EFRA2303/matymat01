@@ -13,7 +13,7 @@
     --border: #dee2e6;
     --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     --transition: all 0.3s ease;
-    --keyboard-bg: #f8f9fa;
+    --keyboard-bg: #f0f0f0;
     --input-height: 60px;
 }
 
@@ -58,7 +58,7 @@ body {
     position: relative;
 }
 
-/* Header tipo WhatsApp */
+/* Header */
 header {
     background: linear-gradient(135deg, var(--primary), var(--secondary));
     color: white;
@@ -91,19 +91,20 @@ header p {
     font-weight: 300;
 }
 
-/* Chat Container (como WhatsApp) */
+/* Chat Container */
 .chat-container {
     flex: 1;
-    padding: 15px 15px 80px;
+    padding: 15px 15px 140px;
     overflow-y: auto;
     scroll-behavior: smooth;
     background: var(--bg);
     display: flex;
     flex-direction: column;
     gap: 15px;
+    transition: padding-bottom 0.3s ease;
 }
 
-/* Mensajes estilo WhatsApp */
+/* Mensajes */
 .message {
     display: flex;
     margin-bottom: 8px;
@@ -168,7 +169,7 @@ header p {
     border-bottom-left-radius: 18px;
 }
 
-/* === INPUT SECTION (FIJO ABAJO como WhatsApp) === */
+/* === INPUT SECTION === */
 .input-section {
     position: fixed;
     bottom: 0;
@@ -177,7 +178,7 @@ header p {
     background: var(--card);
     border-top: 1px solid var(--border);
     padding: 10px 15px;
-    z-index: 100;
+    z-index: 1000;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
 }
 
@@ -269,248 +270,7 @@ header p {
     cursor: not-allowed;
 }
 
-/* === TECLADO MATEMÁTICO ORGANIZADO (Como Symbolab) === */
-.math-keyboard {
-    display: none;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: var(--keyboard-bg);
-    border-top: 1px solid var(--border);
-    z-index: 1000;
-    max-height: 60vh;
-    overflow: hidden;
-    animation: slideUp 0.3s ease;
-    box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
-}
-
-@keyframes slideUp {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
-}
-
-.keyboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 15px;
-    border-bottom: 1px solid var(--border);
-    background: var(--card);
-}
-
-.keyboard-close {
-    background: none;
-    border: none;
-    color: var(--text);
-    font-size: 1.2rem;
-    cursor: pointer;
-    padding: 5px;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.keyboard-close:hover {
-    background: rgba(0,0,0,0.1);
-}
-
-.keyboard-header h3 {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.keyboard-switch {
-    background: var(--primary);
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.keyboard-switch:hover {
-    background: var(--secondary);
-}
-
-/* Layout del teclado */
-.keyboard-sections {
-    display: grid;
-    grid-template-columns: 3fr 1fr;
-    gap: 10px;
-    padding: 15px;
-    height: 100%;
-}
-
-.keyboard-main {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-}
-
-.keyboard-side {
-    display: grid;
-    grid-template-rows: repeat(4, 1fr);
-    gap: 8px;
-}
-
-.keyboard-section-title {
-    grid-column: 1 / -1;
-    font-size: 0.75rem;
-    color: var(--text);
-    opacity: 0.7;
-    margin: 5px 0 2px 0;
-    text-transform: uppercase;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-}
-
-/* Botones del teclado */
-.tool-btn {
-    padding: 12px 5px;
-    font-size: 1rem;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: center;
-    font-weight: 500;
-    min-height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    user-select: none;
-}
-
-/* Teclas NUMÉRICAS (ordenadas 0-9) */
-.num-key {
-    background: linear-gradient(135deg, #ffffff, #f5f5f5);
-    border: 1px solid #ddd;
-    color: #333;
-    font-weight: bold;
-    font-size: 1.2rem;
-}
-
-.num-key:hover {
-    background: linear-gradient(135deg, #4a90e2, #357ae8);
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 3px 10px rgba(74, 144, 226, 0.3);
-}
-
-/* Teclas de OPERACIÓN */
-.op-key {
-    background: linear-gradient(135deg, #ff9500, #ff7b00);
-    color: white;
-    border: none;
-    font-weight: bold;
-    font-size: 1.3rem;
-}
-
-.op-key:hover {
-    background: linear-gradient(135deg, #e68500, #cc7500);
-    transform: translateY(-2px);
-    box-shadow: 0 3px 10px rgba(255, 149, 0, 0.3);
-}
-
-/* Teclas ESPECIALES (funciones) */
-.func-key {
-    background: linear-gradient(135deg, #34c759, #2fb950);
-    color: white;
-    border: none;
-    font-size: 0.9rem;
-}
-
-.func-key:hover {
-    background: linear-gradient(135deg, #2ca54c, #279443);
-    transform: translateY(-2px);
-    box-shadow: 0 3px 10px rgba(52, 199, 89, 0.3);
-}
-
-/* Teclas AVANZADAS */
-.adv-key {
-    background: linear-gradient(135deg, #af52de, #9d4edd);
-    color: white;
-    border: none;
-    font-size: 0.85rem;
-}
-
-.adv-key:hover {
-    background: linear-gradient(135deg, #8e44ad, #7d3c98);
-    transform: translateY(-2px);
-    box-shadow: 0 3px 10px rgba(175, 82, 222, 0.3);
-}
-
-/* Teclas grandes */
-.wide-key {
-    grid-column: span 2;
-}
-
-.tall-key {
-    grid-row: span 2;
-    min-height: 110px;
-}
-
-/* Tabs del teclado */
-.keyboard-tabs {
-    display: flex;
-    background: var(--card);
-    border-top: 1px solid var(--border);
-    padding: 0 15px;
-    overflow-x: auto;
-}
-
-.keyboard-tab {
-    flex: 0 0 auto;
-    padding: 10px 15px;
-    background: none;
-    border: none;
-    color: var(--text);
-    font-size: 0.85rem;
-    cursor: pointer;
-    opacity: 0.7;
-    border-bottom: 3px solid transparent;
-    white-space: nowrap;
-}
-
-.keyboard-tab.active {
-    opacity: 1;
-    color: var(--primary);
-    border-bottom-color: var(--primary);
-    font-weight: 600;
-}
-
-/* Secciones extra del teclado */
-.keyboard-extras {
-    padding: 10px 15px;
-    border-top: 1px solid var(--border);
-    background: var(--keyboard-bg);
-    overflow-x: auto;
-}
-
-.extra-section {
-    display: none;
-    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
-    gap: 8px;
-}
-
-.extra-section.active {
-    display: grid;
-    animation: fadeIn 0.3s ease;
-}
-
-/* === OPCIONES EMERGENTES (NO Full Screen) === */
+/* === OPCIONES EMERGENTES (20-30% desde abajo) === */
 .options-popup {
     display: none;
     position: fixed;
@@ -518,19 +278,19 @@ header p {
     left: 10px;
     right: 10px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 20px;
+    border-radius: 15px;
     z-index: 2000;
     box-shadow: 0 10px 40px rgba(0,0,0,0.3);
     animation: slideUpOptions 0.3s ease;
-    max-height: 70vh;
+    max-height: 30vh;
     overflow-y: auto;
-    border: 3px solid rgba(255,255,255,0.2);
+    border: 2px solid rgba(255,255,255,0.3);
 }
 
 @keyframes slideUpOptions {
     from { 
         opacity: 0;
-        transform: translateY(50px) scale(0.9);
+        transform: translateY(100%) scale(0.95);
     }
     to { 
         opacity: 1;
@@ -682,20 +442,250 @@ header p {
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
-.options-footer {
-    text-align: center;
-    color: rgba(255,255,255,0.9);
-    font-size: 0.9rem;
-    padding: 15px 20px;
-    border-top: 1px solid rgba(255,255,255,0.1);
+/* === TECLADO MATEMÁTICO (misma altura que teclado normal) === */
+.math-toolbar {
+    display: none;
+    position: fixed;
+    bottom: 60px;
+    left: 0;
+    right: 0;
+    background: #f0f0f0;
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+    z-index: 900;
+    height: 45vh;
+    overflow-y: auto;
+    animation: slideUpKeyboard 0.3s ease;
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.15);
 }
 
-.hint-text {
+@keyframes slideUpKeyboard {
+    from { 
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to { 
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.keyboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: var(--primary);
+    color: white;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.keyboard-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.keyboard-close {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+}
+
+.keyboard-switch {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 15px;
     font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Tabs del teclado */
+.keyboard-tabs {
+    display: flex;
+    background: #e0e0e0;
+    border-bottom: 1px solid #ccc;
+    overflow-x: auto;
+    padding: 0 5px;
+}
+
+.keyboard-tab {
+    flex: 0 0 auto;
+    padding: 10px 15px;
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+}
+
+.keyboard-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    background: rgba(67, 97, 238, 0.1);
+    font-weight: 600;
+}
+
+/* Layout del teclado */
+.keyboard-sections {
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+    gap: 10px;
+    padding: 15px;
+    height: calc(100% - 90px);
+}
+
+.keyboard-main {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.keyboard-side {
+    display: grid;
+    grid-template-rows: repeat(auto-fit, minmax(50px, 1fr));
+    gap: 8px;
+}
+
+.keyboard-extras {
+    padding: 10px 15px;
+    background: #f8f8f8;
+    border-top: 1px solid #ddd;
+    display: none;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 8px;
+}
+
+.keyboard-extras.active {
+    display: grid;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Botones del teclado */
+.tool-btn {
+    padding: 12px 8px;
+    font-size: 1rem;
+    background: white;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    font-weight: 500;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+}
+
+.tool-btn:hover {
+    background: #f0f0f0;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+}
+
+.tool-btn:active {
+    transform: translateY(0);
+}
+
+/* Números ordenados 0-9 */
+.num-btn {
+    background: white;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2d3436;
+    border: 1px solid #ddd;
+}
+
+/* Variables en secuencia x, y, z */
+.var-btn {
+    background: #e3f2fd;
+    color: #1976d2;
+    border: 1px solid #bbdefb;
+    font-weight: 500;
+}
+
+/* Operaciones básicas */
+.op-btn {
+    background: #fff3e0;
+    color: #f57c00;
+    border: 1px solid #ffe0b2;
+    font-weight: 600;
+}
+
+/* Funciones matemáticas */
+.func-btn {
+    background: #e8f5e9;
+    color: #388e3c;
+    border: 1px solid #c8e6c9;
+    font-size: 0.9rem;
+}
+
+/* Potencias (como GeoGebra) */
+.power-btn {
+    background: #fce4ec;
+    color: #c2185b;
+    border: 1px solid #f8bbd9;
+    font-weight: 600;
+}
+
+.power-btn sup, .power-btn sub {
+    font-size: 0.7em;
+    line-height: 0;
+}
+
+/* Fracciones (como GeoGebra) */
+.frac-btn {
+    background: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid #bbdefb;
+    font-size: 0.9rem;
+}
+
+.frac-btn sup, .frac-btn sub {
+    font-size: 0.7em;
+    line-height: 0;
+}
+
+/* Botones especiales */
+.special-btn {
+    background: #ffebee;
+    color: #d32f2f;
+    border: 1px solid #ffcdd2;
+    font-weight: 600;
+}
+
+/* Botones grandes */
+.wide-btn {
+    grid-column: span 2;
+}
+
+.tall-btn {
+    grid-row: span 2;
+}
+
+/* Ajustar cuando teclado está activo */
+body.keyboard-active .chat-container {
+    padding-bottom: calc(45vh + 80px);
 }
 
 /* === MENÚ CONFIGURACIÓN === */
@@ -957,47 +947,74 @@ header p {
         right: 5px;
         bottom: 70px;
     }
+    
+    .math-toolbar {
+        height: 50vh;
+    }
 }
 
 /* Scrollbar */
 .chat-container::-webkit-scrollbar,
 .keyboard-extras::-webkit-scrollbar,
-.options-popup::-webkit-scrollbar {
+.options-popup::-webkit-scrollbar,
+.math-toolbar::-webkit-scrollbar {
     width: 6px;
 }
 
 .chat-container::-webkit-scrollbar-track,
 .keyboard-extras::-webkit-scrollbar-track,
-.options-popup::-webkit-scrollbar-track {
+.options-popup::-webkit-scrollbar-track,
+.math-toolbar::-webkit-scrollbar-track {
     background: transparent;
 }
 
 .chat-container::-webkit-scrollbar-thumb,
 .keyboard-extras::-webkit-scrollbar-thumb,
-.options-popup::-webkit-scrollbar-thumb {
+.options-popup::-webkit-scrollbar-thumb,
+.math-toolbar::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.2);
     border-radius: 3px;
 }
 
 .dark-mode .chat-container::-webkit-scrollbar-thumb,
 .dark-mode .keyboard-extras::-webkit-scrollbar-thumb,
-.dark-mode .options-popup::-webkit-scrollbar-thumb {
+.dark-mode .options-popup::-webkit-scrollbar-thumb,
+.dark-mode .math-toolbar::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.2);
 }
 
 /* Modo oscuro ajustes */
-.dark-mode .math-keyboard {
-    background: #1e2a30;
+.dark-mode .math-toolbar {
+    background: #2d3748;
+    border-color: #4a5568;
+}
+
+.dark-mode .keyboard-tabs {
+    background: #4a5568;
+}
+
+.dark-mode .keyboard-tab {
+    color: #cbd5e0;
+}
+
+.dark-mode .keyboard-tab.active {
+    color: #90cdf4;
+    border-bottom-color: #90cdf4;
 }
 
 .dark-mode .tool-btn {
-    border-color: #3d4d57;
+    background: #4a5568;
+    color: #e2e8f0;
+    border-color: #718096;
 }
 
-.dark-mode .num-key {
-    background: linear-gradient(135deg, #2a3942, #1e2a30);
-    color: #e0e0e0;
-    border-color: #3d4d57;
+.dark-mode .num-btn {
+    background: #2d3748;
+    color: #e2e8f0;
+}
+
+.dark-mode .keyboard-extras {
+    background: #2d3748;
 }
 
 .dark-mode .question-display {
@@ -1020,4 +1037,9 @@ header p {
 button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+}
+
+button:disabled:hover {
+    transform: none !important;
+    box-shadow: none !important;
 }
