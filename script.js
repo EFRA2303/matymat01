@@ -392,7 +392,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Mostrar opciones emergentes
         if (optionsContainer) {
-            optionsContainer.style.display = 'block';
+            optionsContainer.classList.add('visible');
             
             // ✅ Asegurar que solo ocupe 20-30% de la pantalla
             setTimeout(() => {
@@ -404,8 +404,8 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     window.closeOptions = function() {
-        if (optionsContainer) {
-            optionsContainer.style.display = 'none';
+    if (optionsContainer) {
+        optionsContainer.classList.remove('visible');
         }
     };
     
@@ -1181,6 +1181,7 @@ function closeApp() {
 // =============== INICIALIZAR GEOGEBRA AL CARGAR ===============
 
 document.addEventListener('DOMContentLoaded', inicializarGeoGebra);
+
 
 
 
