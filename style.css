@@ -272,21 +272,40 @@ header p {
 
 /* === OPCIONES EMERGENTES (20-30% desde abajo) === */
 .options-popup {
-    display: none;
+    display: block;
     position: fixed;
-    bottom: 120px;
+    bottom: -25vh;
     left: 10px;
     right: 10px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 15px;
-    z-index: 2000;
+    border-radius: 15px 15px 0 0; 
+    z-index: 1001;
     box-shadow: 0 10px 40px rgba(0,0,0,0.3);
     animation: slideUpOptions 0.3s ease;
-    max-height: 22vh; /* ✅ Solo ocupa 30% de la pantalla */
+    max-height: 30vh;
     overflow-y: auto;
     border: 2px solid rgba(255,255,255,0.3);
+    border-bottom: none;
+    transition: bottom 0.3s ease; /* ✅ TRANSICIÓN SUAVE */
+    opacity: 0;
+}
+/* ✅ HANDLE PARA JALAR */
+.options-popup::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 2px;
 }
 
+.options-popup.visible {
+    bottom: 60px; /* ✅ VISIBLE SOBRE BOTONES */
+    opacity: 1;
+}
 @keyframes slideUpOptions {
     from { 
         opacity: 0;
@@ -1173,3 +1192,4 @@ body.keyboard-active .options-popup {
     from { transform: translateY(100%); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
 }
+
