@@ -279,19 +279,25 @@ app.post('/responder', async (req, res) => {
           explicacionError: siguientePaso.explicacionError,
           estrellas: sesion.estrellas
         });
-      } else {
-        respuesta += `🎉 **¡Problema completado!** Ganaste ${sesion.estrellas} estrellas ⭐\n\n`;
-        respuesta += "**Solución final completada correctamente.**";
-
-        sesionesActivas.delete(sesionId);
-        return res.json({
-          respuesta,
-          tipo: "completado",
-          correcto: true,
-          estrellas: sesion.estrellas,
-          sesionCompletada: true
-        });
-      }
+     } else {
+    // ✅ AGREGAR PORCENTAJE
+       const totalPasos = sesion.pasos.length;
+       const porcentaje = Math.round((sesion.estrellas / totalPasos) * 100);
+    
+       respuesta += `🎉 **¡Problema completado!** Ganaste ${sesion.estrellas} estrellas ⭐\n\n`;
+       respuesta += `**Resultado:** ${sesion.estrellas}/${totalPasos} correctos (${porcentaje}%)\n\n`;
+       respuesta += "**¡Excelente trabajo!**";
+   
+       sesionesActivas.delete(sesionId);
+       return res.json({
+           respuesta,
+           tipo: "completado",
+           correcto: true,
+           estrellas: sesion.estrellas,
+           porcentaje: porcentaje, // ✅ NUEVO
+           sesionCompletada: true
+       });
+   }
     } else {
       let respuesta = `❌ **Incorrecto.**\n\n`;
       respuesta += `**Explicación del error:** ${pasoActual.explicacionError}\n\n`;
@@ -366,6 +372,7 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 export default app;
+
 
 
 
