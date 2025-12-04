@@ -94,7 +94,7 @@ header p {
 /* Chat Container */
 .chat-container {
     flex: 1;
-    padding: 15px 15px 160px;
+    padding: 15px 15px 140px;
     overflow-y: auto;
     scroll-behavior: smooth;
     background: var(--bg);
@@ -271,48 +271,38 @@ header p {
 }
 
 /* === OPCIONES EMERGENTES (20-30% desde abajo) === */
-.options-container {
-    display: block;
+.options-popup {
+    display: none;
     position: fixed;
-    bottom: -10vh;
+    bottom: 80px;
     left: 10px;
     right: 10px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 15px 15px 0 0;
-    z-index: 1001;
+    border-radius: 15px;
+    z-index: 2000;
     box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-    max-height: 25vh;
+    animation: slideUpOptions 0.3s ease;
+    max-height: 30vh;
     overflow-y: auto;
     border: 2px solid rgba(255,255,255,0.3);
-    border-bottom: none;
-    transition: all 0.3s ease;
-    opacity: 0;
-    pointer-events: none;
 }
 
-.options-container::before {
-    content: '';
-    position: absolute;
-    top: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 4px;
-    background: rgba(255,255,255,0.7);
-    border-radius: 2px;
-}
-
-.options-container.visible {
-    bottom: 120px;
-    opacity: 1;
-    pointer-events: auto;
+@keyframes slideUpOptions {
+    from { 
+        opacity: 0;
+        transform: translateY(100%) scale(0.95);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 .options-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 14px;
+    padding: 15px 20px;
     color: white;
     border-bottom: 1px solid rgba(255,255,255,0.2);
 }
@@ -323,43 +313,6 @@ header p {
     display: flex;
     align-items: center;
     gap: 10px;
-}
-
-/* HANDLE ARRASTRABLE ENCIMA DEL HEADER */
-.options-header {
-    position: relative;
-    padding-top: 20px;
-    padding-bottom: 12px;
-}
-
-.options-header::before {
-    content: '';
-    position: absolute;
-    top: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.8);
-    border-radius: 2px;
-    cursor: grab;
-    transition: background 0.2s;
-}
-
-.options-header:active::before {
-    cursor: grabbing;
-    background: rgba(255, 255, 255, 1);
-}
-
-.options-header::after {
-    content: '↑↓';
-    position: absolute;
-    top: 4px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 0.8rem;
-    font-weight: bold;
 }
 
 .options-close {
@@ -409,85 +362,96 @@ header p {
     text-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-.opciones-botones {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 0 20px 15px;
+.question-display {
+    background: rgba(255,255,255,0.95);
+    margin: 15px 20px;
+    padding: 20px;
+    border-radius: 15px;
+    color: #333;
+    font-size: 1.1rem;
+    line-height: 1.5;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
-.opcion-btn {
+.options-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 20px 20px;
+}
+
+.option-btn {
     background: rgba(255,255,255,0.95);
     border: none;
-    border-radius: 12px;
-    padding: 12px 14px;
-    font-size: 1rem;
+    border-radius: 15px;
+    padding: 20px;
+    font-size: 1.1rem;
     color: #4361ee;
     cursor: pointer;
     transition: all 0.3s;
     text-align: left;
     display: flex;
     align-items: center;
-    gap: 12px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-    min-height: 55px;
+    gap: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    min-height: 70px;
 }
 
-.opcion-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+.option-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
     background: white;
 }
 
-.opcion-btn:active {
+.option-btn:active {
     transform: translateY(-1px);
 }
 
-.opcion-btn .option-letter {
+.option-btn .option-letter {
     background: var(--primary);
     color: white;
-    width: 35px;
-    height: 35px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     flex-shrink: 0;
 }
 
-.opcion-btn.correcta {
+.option-btn.correct {
     background: linear-gradient(135deg, #4CAF50, #2E7D32);
     color: white;
     transform: scale(1.02);
 }
 
-.opcion-btn.incorrecta {
+.option-btn.incorrect {
     background: linear-gradient(135deg, #F44336, #C62828);
     color: white;
 }
 
-.opcion-btn:disabled {
+.option-btn:disabled {
     opacity: 0.8;
     cursor: not-allowed;
 }
 
-.opcion-btn:disabled:hover {
+.option-btn:disabled:hover {
     transform: none;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
-/* === TECLADO MATEMÁTICO === */
+/* === TECLADO MATEMÁTICO (misma altura que teclado normal) === */
 .math-toolbar {
     display: none;
     position: fixed;
-    bottom: 90px;
+    bottom: 60px;
     left: 0;
     right: 0;
-    background: var(--card);
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
+    background: #f0f0f0;
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
     z-index: 900;
     height: 45vh;
     overflow-y: auto;
@@ -618,9 +582,9 @@ header p {
 .tool-btn {
     padding: 12px 8px;
     font-size: 1rem;
-    background: var(--card);
-    color: var(--text);
-    border: 1px solid var(--border);
+    background: white;
+    color: #333;
+    border: 1px solid #ddd;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s;
@@ -645,34 +609,34 @@ header p {
 
 /* Números ordenados 0-9 */
 .num-btn {
-    background: var(--bg);
+    background: white;
     font-size: 1.2rem;
     font-weight: 600;
-    color: var(--text);
-    border: 1px solid var(--border);
+    color: #2d3436;
+    border: 1px solid #ddd;
 }
 
 /* Variables en secuencia x, y, z */
 .var-btn {
-    background: rgba(67, 97, 238, 0.1);
-    color: var(--primary);
-    border: 1px solid rgba(67, 97, 238, 0.3);
+    background: #e3f2fd;
+    color: #1976d2;
+    border: 1px solid #bbdefb;
     font-weight: 500;
 }
 
 /* Operaciones básicas */
 .op-btn {
-    background: rgba(255, 159, 67, 0.1);
-    color: var(--warning);
-    border: 1px solid rgba(255, 159, 67, 0.3);
+    background: #fff3e0;
+    color: #f57c00;
+    border: 1px solid #ffe0b2;
     font-weight: 600;
 }
 
 /* Funciones matemáticas */
 .func-btn {
-    background: rgba(0, 184, 148, 0.1);
-    color: var(--accent); 
-    border: 1px solid rgba(0, 184, 148, 0.3);
+    background: #e8f5e9;
+    color: #388e3c;
+    border: 1px solid #c8e6c9;
     font-size: 0.9rem;
 }
 
@@ -722,11 +686,6 @@ header p {
 /* Ajustar cuando teclado está activo */
 body.keyboard-active .chat-container {
     padding-bottom: calc(45vh + 80px);
-}
-
-/* Asegurar que no tape cuando teclado está activo */
-body.keyboard-active .options-container {
-    bottom: calc(45vh + 100px);
 }
 
 /* === MENÚ CONFIGURACIÓN === */
@@ -878,35 +837,6 @@ body.keyboard-active .options-container {
     justify-content: center;
 }
 
-/* === TYPING INDICATOR === */
-.typing-indicator {
-    display: inline-flex;
-    gap: 4px;
-    margin-right: 10px;
-}
-
-.typing-indicator span {
-    width: 8px;
-    height: 8px;
-    background: #4361ee;
-    border-radius: 50%;
-    animation: typingBounce 1.4s infinite ease-in-out both;
-}
-
-.typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
-.typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
-
-@keyframes typingBounce {
-    0%, 80%, 100% { transform: scale(0); }
-    40% { transform: scale(1); }
-}
-
-.typing-text {
-    color: #666;
-    font-style: italic;
-    font-size: 0.9rem;
-}
-
 /* === EFECTOS ESTRELLAS === */
 #loadingEstrella {
     display: none;
@@ -984,16 +914,16 @@ body.keyboard-active .options-container {
         font-size: 0.9rem;
     }
     
-    .opcion-btn {
-        padding: 14px;
-        font-size: 0.95rem;
-        min-height: 55px;
+    .option-btn {
+        padding: 15px;
+        font-size: 1rem;
+        min-height: 65px;
     }
     
-    .opcion-btn .option-letter {
-        width: 32px;
-        height: 32px;
-        font-size: 1rem;
+    .option-btn .option-letter {
+        width: 35px;
+        height: 35px;
+        font-size: 1.1rem;
     }
     
     .tool-btn {
@@ -1012,11 +942,10 @@ body.keyboard-active .options-container {
         grid-template-rows: auto;
     }
     
-    .options-container {
+    .options-popup {
         left: 5px;
         right: 5px;
         bottom: 70px;
-        max-height: 35vh;
     }
     
     .math-toolbar {
@@ -1027,21 +956,21 @@ body.keyboard-active .options-container {
 /* Scrollbar */
 .chat-container::-webkit-scrollbar,
 .keyboard-extras::-webkit-scrollbar,
-.options-container::-webkit-scrollbar,
+.options-popup::-webkit-scrollbar,
 .math-toolbar::-webkit-scrollbar {
     width: 6px;
 }
 
 .chat-container::-webkit-scrollbar-track,
 .keyboard-extras::-webkit-scrollbar-track,
-.options-container::-webkit-scrollbar-track,
+.options-popup::-webkit-scrollbar-track,
 .math-toolbar::-webkit-scrollbar-track {
     background: transparent;
 }
 
 .chat-container::-webkit-scrollbar-thumb,
 .keyboard-extras::-webkit-scrollbar-thumb,
-.options-container::-webkit-scrollbar-thumb,
+.options-popup::-webkit-scrollbar-thumb,
 .math-toolbar::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.2);
     border-radius: 3px;
@@ -1049,7 +978,7 @@ body.keyboard-active .options-container {
 
 .dark-mode .chat-container::-webkit-scrollbar-thumb,
 .dark-mode .keyboard-extras::-webkit-scrollbar-thumb,
-.dark-mode .options-container::-webkit-scrollbar-thumb,
+.dark-mode .options-popup::-webkit-scrollbar-thumb,
 .dark-mode .math-toolbar::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.2);
 }
@@ -1088,8 +1017,9 @@ body.keyboard-active .options-container {
     background: #2d3748;
 }
 
-.dark-mode .opcion-btn {
-    background: rgba(255, 255, 255, 0.9);
+.dark-mode .question-display {
+    background: rgba(30, 30, 30, 0.95);
+    color: #e0e0e0;
 }
 
 /* Animación para estrellas */
@@ -1113,87 +1043,3 @@ button:disabled:hover {
     transform: none !important;
     box-shadow: none !important;
 }
-
-/* TECLADO ORGANIZADO POR CATEGORÍAS */
-.basic-btn {
-    background: var(--card);
-    color: var(--primary);
-    border: 1px solid var(--primary);
-}
-
-.algebra-btn {
-    background: rgba(67, 97, 238, 0.1);
-    color: var(--primary);
-    border: 1px solid rgba(67, 97, 238, 0.3);
-}
-
-.trig-btn {
-    background: rgba(0, 184, 148, 0.1);
-    color: var(--accent);
-    border: 1px solid rgba(0, 184, 148, 0.3);
-}
-
-.calc-btn {
-    background: rgba(255, 159, 67, 0.1);
-    color: var(--warning);
-    border: 1px solid rgba(255, 159, 67, 0.3);
-}
-
-.special-btn {
-    background: rgba(114, 9, 183, 0.1);
-    color: var(--secondary);
-    border: 1px solid rgba(114, 9, 183, 0.3);
-}
-
-/* DISTRIBUCIÓN MEJORADA */
-.keyboard-extras {
-    grid-template-columns: repeat(auto-fit, minmax(75px, 1fr)) !important;
-    gap: 6px !important;
-    padding: 12px !important;
-}
-
-.keyboard-extras .tool-btn {
-    min-height: 45px;
-    font-size: 0.95rem;
-    padding: 10px 5px;
-    border-radius: 8px;
-    transition: all 0.2s;
-}
-
-.keyboard-extras .tool-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-}
-
-.options-container {
-    z-index: 999;
-    bottom: 5px;
-    touch-action: pan-y;
-    -webkit-overflow-scrolling: touch;
-}
-
-.options-container::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
-}
-
-.options-container::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 2px;
-}
-
-/* Mejoras para modo oscuro en opciones */
-.dark-mode .opcion-btn {
-    background: rgba(255, 255, 255, 0.1) !important;
-    color: #e0e0e0 !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-}
-
-.dark-mode .opcion-btn:hover {
-    background: rgba(255, 255, 255, 0.2) !important;
-}
-
-
-
-
-
