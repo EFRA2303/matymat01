@@ -94,6 +94,90 @@ header p {
     font-weight: 300;
 }
 
+/* === BOTÓN PARA MINIMIZAR CHAT === */
+.minimizar-chat-btn {
+    position: fixed;
+    top: 70px;
+    right: 70px;
+    background: rgba(67, 97, 238, 0.9);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 850;
+    box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+    transition: all 0.3s ease;
+}
+
+.minimizar-chat-btn:hover {
+    background: rgba(67, 97, 238, 1);
+    transform: scale(1.1);
+}
+
+.minimizar-chat-btn i {
+    font-size: 1.2rem;
+    transition: transform 0.3s ease;
+}
+
+.minimizar-chat-btn.minimizado i {
+    transform: rotate(180deg);
+}
+
+/* Estado cuando el chat está minimizado */
+body.chat-minimizado .chat-container {
+    max-height: 30vh !important;
+    overflow: hidden;
+    border: 2px solid rgba(67, 97, 238, 0.3);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+}
+
+body.chat-minimizado .input-section {
+    opacity: 0.7;
+    transform: scale(0.95);
+}
+
+body.chat-minimizado #opcionesContainer {
+    transform: scale(1.05);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    z-index: 900;
+    border: 3px solid rgba(67, 97, 238, 0.5);
+}
+
+/* Mensaje cuando el chat está minimizado */
+.minimizado-mensaje {
+    display: none;
+    position: fixed;
+    top: 120px;
+    right: 70px;
+    background: rgba(67, 97, 238, 0.95);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    z-index: 850;
+    animation: fadeInOut 3s ease;
+    box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+}
+
+@keyframes fadeInOut {
+    0%, 100% { opacity: 0; transform: translateY(-10px); }
+    20%, 80% { opacity: 1; transform: translateY(0); }
+}
+
+/* Asegurar que las opciones sean visibles cuando el chat está minimizado */
+body.chat-minimizado #opcionesContainer {
+    margin-top: 20px;
+    margin-bottom: 100px;
+}
+
 /* Chat */
 .chat-container {
     flex: 1;
@@ -102,6 +186,7 @@ header p {
     max-height: calc(100vh - 180px);
     scroll-behavior: smooth;
     padding-bottom: 120px; /* Espacio para teclado */
+    transition: all 0.4s ease;
 }
 
 @media (max-height: 700px) {
@@ -181,6 +266,7 @@ header p {
     width: 100%;
     backdrop-filter: blur(10px);
     background: rgba(var(--card-rgb), 0.9);
+    transition: all 0.4s ease;
 }
 
 .input-wrapper {
@@ -686,6 +772,21 @@ header p {
     .chat-container {
         padding-bottom: 100px;
     }
+    
+    /* Ajustes para botón minimizar en móviles */
+    .minimizar-chat-btn {
+        top: 60px;
+        right: 60px;
+        width: 36px;
+        height: 36px;
+    }
+    
+    .minimizado-mensaje {
+        top: 100px;
+        right: 60px;
+        font-size: 0.8rem;
+        padding: 8px 12px;
+    }
 }
 
 @media (max-width: 350px) {
@@ -1068,7 +1169,7 @@ header p {
     background: #5a1d91;
 }
 
-/* === SISTEMA DE OPCIONES Y ESTRELLAS - MEJORADO === */
+/* === SISTEMA DE OPCIONES Y ESTRELLAS === */
 #opcionesContainer {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     padding: 25px 20px 20px;
@@ -1082,60 +1183,6 @@ header p {
     max-height: 500px;
 }
 
-/* Botón minimizar opciones */
-.minimizar-opciones {
-    position: absolute;
-    top: 12px;
-    right: 15px;
-    width: 36px;
-    height: 36px;
-    background: rgba(255, 255, 255, 0.25);
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    color: white;
-    cursor: pointer;
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(5px);
-}
-
-.minimizar-opciones:hover {
-    background: rgba(255, 255, 255, 0.35);
-    transform: scale(1.1);
-    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
-}
-
-.minimizar-opciones i {
-    transition: transform 0.4s ease;
-}
-
-/* Estado minimizado */
-.opciones-minimizadas {
-    height: 80px !important;
-    padding-top: 45px !important;
-    max-height: 80px !important;
-    cursor: pointer;
-}
-
-.opciones-minimizadas .opciones-botones {
-    display: none !important;
-    opacity: 0;
-    height: 0;
-    overflow: hidden;
-}
-
-.opciones-minimizadas .minimizar-opciones i {
-    transform: rotate(180deg);
-}
-
-.opciones-minimizadas:hover {
-    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
-}
-
 .opciones-header {
     display: flex;
     justify-content: space-between;
@@ -1143,10 +1190,6 @@ header p {
     margin-bottom: 20px;
     color: white;
     transition: margin-bottom 0.3s ease;
-}
-
-.opciones-minimizadas .opciones-header {
-    margin-bottom: 5px;
 }
 
 .opciones-header h4 {
@@ -1454,3 +1497,4 @@ header p {
 .dark-mode .chat-container::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.3);
 }
+
