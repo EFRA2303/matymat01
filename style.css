@@ -2,6 +2,9 @@
 :root {
     --primary: #4361ee;
     --secondary: #7209b7;
+    --accent: #00b894;
+    --danger: #ff4757;
+    --warning: #ff9f43;
     --whatsapp-green: #25D366;
     --whatsapp-light: #dcf8c6;
     --bg: #f8f9fa;
@@ -10,7 +13,7 @@
     --border: #dee2e6;
     --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     --transition: all 0.3s ease;
-    --keyboard-bg: #f0f0f0;
+    --keyboard-bg: #f8f9fa;
     --input-height: 60px;
 }
 
@@ -22,6 +25,7 @@
     --border: #2a3942;
     --primary: #6c5ce7;
     --secondary: #a29bfe;
+    --accent: #00cec9;
     --whatsapp-green: #00a884;
     --whatsapp-light: #202c33;
     --keyboard-bg: #1e2a30;
@@ -56,7 +60,7 @@ body {
 
 /* Header tipo WhatsApp */
 header {
-    background: var(--primary);
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
     color: white;
     padding: 15px 20px;
     text-align: center;
@@ -216,12 +220,12 @@ header p {
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
+    border-radius: 50%;
 }
 
 .upload-btn {
     width: 45px;
     height: 45px;
-    border-radius: 50%;
     background: var(--bg);
     color: var(--text);
     font-size: 1.2rem;
@@ -234,7 +238,6 @@ header p {
 .keyboard-toggle-btn {
     width: 45px;
     height: 45px;
-    border-radius: 50%;
     background: var(--primary);
     color: white;
     font-size: 1.2rem;
@@ -252,7 +255,6 @@ header p {
 .send-btn {
     width: 45px;
     height: 45px;
-    border-radius: 50%;
     background: var(--whatsapp-green);
     color: white;
     font-size: 1.2rem;
@@ -267,7 +269,7 @@ header p {
     cursor: not-allowed;
 }
 
-/* === TECLADO MATEMÁTICO (como teclado emergente de WhatsApp) === */
+/* === TECLADO MATEMÁTICO ORGANIZADO (Como Symbolab) === */
 .math-keyboard {
     display: none;
     position: fixed;
@@ -280,6 +282,7 @@ header p {
     max-height: 60vh;
     overflow: hidden;
     animation: slideUp 0.3s ease;
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
 }
 
 @keyframes slideUp {
@@ -303,62 +306,80 @@ header p {
     font-size: 1.2rem;
     cursor: pointer;
     padding: 5px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.keyboard-close:hover {
+    background: rgba(0,0,0,0.1);
+}
+
+.keyboard-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .keyboard-switch {
     background: var(--primary);
     color: white;
     border: none;
-    padding: 6px 12px;
-    border-radius: 15px;
+    padding: 8px 15px;
+    border-radius: 20px;
     font-size: 0.9rem;
     cursor: pointer;
-}
-
-.keyboard-tabs {
     display: flex;
-    background: var(--card);
-    border-bottom: 1px solid var(--border);
+    align-items: center;
+    gap: 5px;
 }
 
-.keyboard-tab {
-    flex: 1;
-    padding: 12px;
-    text-align: center;
-    background: none;
-    border: none;
-    color: var(--text);
-    font-size: 0.9rem;
-    cursor: pointer;
-    opacity: 0.7;
-    border-bottom: 3px solid transparent;
+.keyboard-switch:hover {
+    background: var(--secondary);
 }
 
-.keyboard-tab.active {
-    opacity: 1;
-    color: var(--primary);
-    border-bottom-color: var(--primary);
-}
-
-.keyboard-content {
-    max-height: calc(60vh - 120px);
-    overflow-y: auto;
+/* Layout del teclado */
+.keyboard-sections {
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+    gap: 10px;
     padding: 15px;
+    height: 100%;
 }
 
-/* Grid de teclas matemáticas */
-.keys-grid {
+.keyboard-main {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 8px;
-    margin-bottom: 15px;
 }
 
-.tool-btn {
-    padding: 15px 5px;
-    font-size: 1rem;
-    background: var(--card);
+.keyboard-side {
+    display: grid;
+    grid-template-rows: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.keyboard-section-title {
+    grid-column: 1 / -1;
+    font-size: 0.75rem;
     color: var(--text);
+    opacity: 0.7;
+    margin: 5px 0 2px 0;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* Botones del teclado */
+.tool-btn {
+    padding: 12px 5px;
+    font-size: 1rem;
     border: 1px solid var(--border);
     border-radius: 10px;
     cursor: pointer;
@@ -366,101 +387,226 @@ header p {
     text-align: center;
     font-weight: 500;
     min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
 }
 
-.tool-btn:hover {
-    background: var(--primary);
+/* Teclas NUMÉRICAS (ordenadas 0-9) */
+.num-key {
+    background: linear-gradient(135deg, #ffffff, #f5f5f5);
+    border: 1px solid #ddd;
+    color: #333;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.num-key:hover {
+    background: linear-gradient(135deg, #4a90e2, #357ae8);
     color: white;
     transform: translateY(-2px);
+    box-shadow: 0 3px 10px rgba(74, 144, 226, 0.3);
 }
 
-.tool-btn:active {
-    transform: translateY(0);
-}
-
-/* Teclas especiales */
-.clear-btn {
-    background: #ff4757;
+/* Teclas de OPERACIÓN */
+.op-key {
+    background: linear-gradient(135deg, #ff9500, #ff7b00);
     color: white;
     border: none;
+    font-weight: bold;
+    font-size: 1.3rem;
 }
 
-.backspace-btn {
-    background: #ffa502;
+.op-key:hover {
+    background: linear-gradient(135deg, #e68500, #cc7500);
+    transform: translateY(-2px);
+    box-shadow: 0 3px 10px rgba(255, 149, 0, 0.3);
+}
+
+/* Teclas ESPECIALES (funciones) */
+.func-key {
+    background: linear-gradient(135deg, #34c759, #2fb950);
     color: white;
     border: none;
+    font-size: 0.9rem;
 }
 
-/* === OPCIONES FULL SCREEN (como teclado emergente) === */
-.options-fullscreen {
+.func-key:hover {
+    background: linear-gradient(135deg, #2ca54c, #279443);
+    transform: translateY(-2px);
+    box-shadow: 0 3px 10px rgba(52, 199, 89, 0.3);
+}
+
+/* Teclas AVANZADAS */
+.adv-key {
+    background: linear-gradient(135deg, #af52de, #9d4edd);
+    color: white;
+    border: none;
+    font-size: 0.85rem;
+}
+
+.adv-key:hover {
+    background: linear-gradient(135deg, #8e44ad, #7d3c98);
+    transform: translateY(-2px);
+    box-shadow: 0 3px 10px rgba(175, 82, 222, 0.3);
+}
+
+/* Teclas grandes */
+.wide-key {
+    grid-column: span 2;
+}
+
+.tall-key {
+    grid-row: span 2;
+    min-height: 110px;
+}
+
+/* Tabs del teclado */
+.keyboard-tabs {
+    display: flex;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    padding: 0 15px;
+    overflow-x: auto;
+}
+
+.keyboard-tab {
+    flex: 0 0 auto;
+    padding: 10px 15px;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 0.85rem;
+    cursor: pointer;
+    opacity: 0.7;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+}
+
+.keyboard-tab.active {
+    opacity: 1;
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    font-weight: 600;
+}
+
+/* Secciones extra del teclado */
+.keyboard-extras {
+    padding: 10px 15px;
+    border-top: 1px solid var(--border);
+    background: var(--keyboard-bg);
+    overflow-x: auto;
+}
+
+.extra-section {
+    display: none;
+    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+    gap: 8px;
+}
+
+.extra-section.active {
+    display: grid;
+    animation: fadeIn 0.3s ease;
+}
+
+/* === OPCIONES EMERGENTES (NO Full Screen) === */
+.options-popup {
     display: none;
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    bottom: 80px;
+    left: 10px;
+    right: 10px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
     z-index: 2000;
-    animation: fadeIn 0.3s ease;
-    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    animation: slideUpOptions 0.3s ease;
+    max-height: 70vh;
     overflow-y: auto;
+    border: 3px solid rgba(255,255,255,0.2);
+}
+
+@keyframes slideUpOptions {
+    from { 
+        opacity: 0;
+        transform: translateY(50px) scale(0.9);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 .options-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
+    padding: 15px 20px;
     color: white;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.options-header h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .options-close {
     background: rgba(255,255,255,0.2);
     color: white;
     border: none;
-    width: 40px;
-    height: 40px;
+    width: 35px;
+    height: 35px;
     border-radius: 50%;
     font-size: 1.2rem;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
 }
 
-.options-header h3 {
-    font-size: 1.4rem;
-    text-align: center;
-    flex: 1;
+.options-close:hover {
+    background: rgba(255,255,255,0.3);
+    transform: scale(1.1);
 }
 
 .estrellas-container {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     background: rgba(255,255,255,0.2);
-    padding: 8px 15px;
+    padding: 6px 12px;
     border-radius: 20px;
     backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
 }
 
 .estrellas-container .estrella {
-    font-size: 1.5rem;
-    animation: pulse 2s infinite;
+    font-size: 1.3rem;
+    animation: starFloat 3s ease-in-out infinite;
 }
 
-@keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.2); }
+@keyframes starFloat {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-3px) rotate(5deg); }
 }
 
 #contadorEstrellas {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .question-display {
     background: rgba(255,255,255,0.95);
+    margin: 15px 20px;
     padding: 20px;
     border-radius: 15px;
-    margin-bottom: 30px;
     color: #333;
     font-size: 1.1rem;
     line-height: 1.5;
@@ -470,16 +616,16 @@ header p {
 .options-grid {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    margin-bottom: 30px;
+    gap: 12px;
+    padding: 0 20px 20px;
 }
 
 .option-btn {
     background: rgba(255,255,255,0.95);
     border: none;
     border-radius: 15px;
-    padding: 25px 20px;
-    font-size: 1.2rem;
+    padding: 20px;
+    font-size: 1.1rem;
     color: #4361ee;
     cursor: pointer;
     transition: all 0.3s;
@@ -488,12 +634,13 @@ header p {
     align-items: center;
     gap: 15px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    min-height: 80px;
+    min-height: 70px;
 }
 
 .option-btn:hover {
     transform: translateY(-3px);
     box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    background: white;
 }
 
 .option-btn:active {
@@ -510,13 +657,14 @@ header p {
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     flex-shrink: 0;
 }
 
 .option-btn.correct {
     background: linear-gradient(135deg, #4CAF50, #2E7D32);
     color: white;
+    transform: scale(1.02);
 }
 
 .option-btn.incorrect {
@@ -525,19 +673,29 @@ header p {
 }
 
 .option-btn:disabled {
-    opacity: 0.7;
+    opacity: 0.8;
     cursor: not-allowed;
 }
 
 .option-btn:disabled:hover {
     transform: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
 .options-footer {
     text-align: center;
     color: rgba(255,255,255,0.9);
     font-size: 0.9rem;
-    margin-top: 20px;
+    padding: 15px 20px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.hint-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.9rem;
 }
 
 /* === MENÚ CONFIGURACIÓN === */
@@ -714,6 +872,37 @@ header p {
     50% { transform: scale(1.5) rotate(180deg); }
 }
 
+/* === EFECTO CONFETI === */
+.star-confetti {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.confetti-piece {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: #FFD700;
+    opacity: 0;
+    animation: confettiFall 3s ease-in-out forwards;
+}
+
+@keyframes confettiFall {
+    0% {
+        opacity: 1;
+        transform: translateY(-100px) rotate(0deg);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(100vh) rotate(360deg);
+    }
+}
+
 /* === RESPONSIVE === */
 @media (max-width: 480px) {
     header h1 {
@@ -736,9 +925,9 @@ header p {
     }
     
     .option-btn {
-        padding: 20px 15px;
-        font-size: 1.1rem;
-        min-height: 70px;
+        padding: 15px;
+        font-size: 1rem;
+        min-height: 65px;
     }
     
     .option-btn .option-letter {
@@ -747,37 +936,52 @@ header p {
         font-size: 1.1rem;
     }
     
-    .keys-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 6px;
-    }
-    
     .tool-btn {
-        padding: 12px 3px;
+        padding: 10px 3px;
         font-size: 0.9rem;
         min-height: 45px;
+    }
+    
+    .keyboard-sections {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .keyboard-side {
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: auto;
+    }
+    
+    .options-popup {
+        left: 5px;
+        right: 5px;
+        bottom: 70px;
     }
 }
 
 /* Scrollbar */
 .chat-container::-webkit-scrollbar,
-.keyboard-content::-webkit-scrollbar {
+.keyboard-extras::-webkit-scrollbar,
+.options-popup::-webkit-scrollbar {
     width: 6px;
 }
 
 .chat-container::-webkit-scrollbar-track,
-.keyboard-content::-webkit-scrollbar-track {
+.keyboard-extras::-webkit-scrollbar-track,
+.options-popup::-webkit-scrollbar-track {
     background: transparent;
 }
 
 .chat-container::-webkit-scrollbar-thumb,
-.keyboard-content::-webkit-scrollbar-thumb {
+.keyboard-extras::-webkit-scrollbar-thumb,
+.options-popup::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.2);
     border-radius: 3px;
 }
 
 .dark-mode .chat-container::-webkit-scrollbar-thumb,
-.dark-mode .keyboard-content::-webkit-scrollbar-thumb {
+.dark-mode .keyboard-extras::-webkit-scrollbar-thumb,
+.dark-mode .options-popup::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.2);
 }
 
@@ -787,7 +991,11 @@ header p {
 }
 
 .dark-mode .tool-btn {
-    background: #2a3942;
+    border-color: #3d4d57;
+}
+
+.dark-mode .num-key {
+    background: linear-gradient(135deg, #2a3942, #1e2a30);
     color: #e0e0e0;
     border-color: #3d4d57;
 }
@@ -795,4 +1003,21 @@ header p {
 .dark-mode .question-display {
     background: rgba(30, 30, 30, 0.95);
     color: #e0e0e0;
+}
+
+/* Animación para estrellas */
+@keyframes starPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+}
+
+.star-pulse {
+    animation: starPulse 0.5s ease-in-out;
+}
+
+/* Mejora para botones deshabilitados */
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
