@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
         scrollToInput();
     };
     
-    // Insertar potencia (como GeoGebra)
+    // Insertar potencia
     window.insertPower = function(power) {
         if (!userInput) return;
         
@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function() {
         scrollToInput();
     };
     
-    // Insertar fracción (como GeoGebra - LaTeX)
+    // Insertar fracción
     window.insertFraction = function() {
         if (!userInput) return;
         
@@ -313,7 +313,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // =============== OPCIONES EMERGENTES (20-30%) ===============
     
-    window.mostrarOpcionesInteractivo = function(opciones, pregunta = '') {
+    window.mostrarOpcionesInteractivo = function(opciones, pregunta = '', respuestaCompleta = '') {
         // Cerrar teclado si está abierto
         if (window.isMathKeyboardActive) {
             closeMathKeyboardFunc();
@@ -322,6 +322,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // Mostrar pregunta
         if (questionDisplay) {
             questionDisplay.innerHTML = `<p>${formatText(pregunta || 'Selecciona la opción correcta:')}</p>`;
+            
+            // Si hay respuesta completa, agregarla también
+            if (respuestaCompleta) {
+                const explicacion = document.createElement('div');
+                explicacion.className = 'explicacion-paso';
+                explicacion.innerHTML = `<p><strong>Explicación:</strong> ${formatText(respuestaCompleta)}</p>`;
+                questionDisplay.appendChild(explicacion);
+            }
         }
         
         // Limpiar y agregar opciones (máximo 3)
@@ -338,7 +346,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <span class="option-letter">${letra}</span>
                     <span class="option-text">${opcion.texto}</span>
                 `;
-                btn.onclick = () => window.elegirOpcion(letra, opcion.correcta);
+                btn.onclick = () => enviarRespuestaOpcion(letra);
                 optionsGrid.appendChild(btn);
             });
         }
@@ -362,94 +370,109 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
-    // =============== FUNCIÓN PARA ELEGIR OPCIÓN ===============
+    // =============== FUNCIONES PARA ENVIAR RESPUESTAS REALES AL SERVIDOR ===============
     
-    window.elegirOpcion = async function(opcion, esCorrecta) {
-        if (!window.sesionActual) return;
+    async function enviarRespuestaOpcion(opcionElegida) {
+        if (!window.sesionActual) {
+            addMessage("⚠️ No hay sesión activa. Por favor, haz una nueva pregunta.", 'bot');
+            closeOptions();
+            return;
+        }
         
         const botones = optionsGrid ? optionsGrid.querySelectorAll('.option-btn') : [];
         
         // Deshabilitar todos los botones
         botones.forEach(btn => btn.disabled = true);
         
-        // Encontrar botón elegido
-        const botonElegido = Array.from(botones).find(btn => btn.dataset.opcion === opcion);
-        if (botonElegido) {
-            if (esCorrecta) {
-                botonElegido.classList.add('correct');
-                botonElegido.innerHTML += ' <i class="fas fa-check"></i>';
-                window.respuestasCorrectas++;
-                
-                const estrellasGanadas = 1;
-                window.estrellasTotales += estrellasGanadas;
-                actualizarEstrellas(window.estrellasTotales);
-                
-                addMessage(`Elegiste: Opción ${opcion} ✓ (¡Correcto! +${estrellasGanadas}⭐)`, 'user');
-                
-                if (window.voiceEnabled) {
-                    window.hablarConCola("¡Correcto! Excelente trabajo. Avanzando al siguiente paso.");
+        try {
+            const response = await fetch('/responder', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    sesionId: window.sesionActual,
+                    opcionElegida: opcionElegida
+                })
+            });
+            
+            const data = await response.json();
+            
+            // Procesar la respuesta del servidor
+            if (data.tipo === 'error' || data.sesionExpirada) {
+                addMessage(data.respuesta, 'bot');
+                if (data.sesionExpirada) {
+                    window.sesionActual = null;
                 }
-            } else {
-                botonElegido.classList.add('incorrect');
-                botonElegido.innerHTML += ' <i class="fas fa-times"></i>';
-                addMessage(`Elegiste: Opción ${opcion} ✗ (Incorrecto)`, 'user');
-                
-                const opcionCorrecta = window.opcionesActuales.find(op => op.correcta);
-                if (opcionCorrecta && window.voiceEnabled) {
-                    window.hablarConCola(`Incorrecto. La opción correcta es la ${opcionCorrecta.letra}.`);
+                closeOptions();
+                return;
+            }
+            
+            // Marcar botón correcto/incorrecto
+            const botonElegido = Array.from(botones).find(btn => btn.dataset.opcion === opcionElegida);
+            if (botonElegido) {
+                if (data.correcto) {
+                    botonElegido.classList.add('correct');
+                    botonElegido.innerHTML += ' <i class="fas fa-check"></i>';
+                    window.respuestasCorrectas++;
+                    window.estrellasTotales = data.estrellas || window.estrellasTotales;
+                    actualizarEstrellas(window.estrellasTotales);
+                    
+                    // Reproducir voz si está activada
+                    if (window.voiceEnabled) {
+                        const textoVoz = `¡Correcto! Excelente trabajo. ${data.correcto ? 'Avanzando al siguiente paso.' : 'Aprendamos del error.'}`;
+                        window.hablarConCola(textoVoz);
+                    }
+                } else {
+                    botonElegido.classList.add('incorrect');
+                    botonElegido.innerHTML += ' <i class="fas fa-times"></i>';
+                    
+                    // Reproducir explicación del error si hay voz
+                    if (window.voiceEnabled && data.explicacionError) {
+                        window.hablarConCola(data.explicacionError);
+                    }
                 }
             }
-        }
-        
-        try {
-            // Simular respuesta del servidor (en producción esto sería una llamada real)
-            const data = {
-                respuesta: "¡Bien hecho! Pasemos al siguiente paso.",
-                estrellas: window.estrellasTotales,
-                tieneOpciones: false,
-                sesionCompletada: false
-            };
             
-            // Cerrar opciones después de 2 segundos
-            setTimeout(() => {
-                closeOptions();
-                if (data.respuesta) {
-                    addMessage(data.respuesta, 'bot');
-                }
-            }, 2000);
+            // Mostrar mensaje del bot
+            addMessage(data.respuesta, 'bot');
             
+            // Actualizar estrellas
             if (data.estrellas !== undefined) {
                 actualizarEstrellas(data.estrellas);
             }
             
-            // Si hay más opciones, mostrarlas después de un tiempo
-            if (data.tieneOpciones && !data.sesionCompletada) {
+            // Si la sesión está completada
+            if (data.sesionCompletada) {
+                window.sesionActual = null;
                 setTimeout(() => {
-                    if (data.opciones) {
-                        window.mostrarOpcionesInteractivo(data.opciones, data.respuesta);
+                    closeOptions();
+                    if (window.voiceEnabled) {
+                        window.hablarConCola(`¡Felicidades! Completaste el problema. Ganaste ${data.estrellas} estrellas.`);
                     }
-                }, 3000);
-            } else if (data.sesionCompletada) {
-                // Sesión completada
-                const porcentaje = Math.round((window.respuestasCorrectas / window.totalPreguntas) * 100);
-                const mensajeFinal = `🎉 ¡Sesión completada! ${window.respuestasCorrectas}/${window.totalPreguntas} correctas (${porcentaje}%)`;
-                
+                }, 2000);
+                return;
+            }
+            
+            // Si hay más opciones, mostrarlas después de un tiempo
+            if (data.tieneOpciones && data.opciones) {
                 setTimeout(() => {
-                    addMessage(mensajeFinal, 'bot');
-                }, 1000);
-                
-                // Reiniciar contadores
-                window.respuestasCorrectas = 0;
-                window.totalPreguntas = 0;
+                    window.mostrarOpcionesInteractivo(data.opciones, data.respuesta, data.explicacionError);
+                    window.sesionActual = data.sesionId;
+                    window.opcionesActuales = data.opciones;
+                }, 2000);
+            } else {
+                setTimeout(() => {
+                    closeOptions();
+                }, 2000);
             }
             
         } catch (error) {
-            addMessage("❌ Error al procesar tu respuesta", 'bot');
-            console.error('Error:', error);
+            console.error('Error al enviar respuesta:', error);
+            addMessage("❌ Error al procesar tu respuesta. Intenta de nuevo.", 'bot');
             botones.forEach(btn => btn.disabled = false);
-            closeOptions();
         }
-    };
+    }
     
     // =============== ACTUALIZAR ESTRELLAS ===============
     
@@ -532,18 +555,38 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function formatText(text) {
-        return text
+        // Limpiar formato para voz pero mantener visual
+        const textoLimpio = text
+            .replace(/\*\*/g, '')  // Eliminar markdown bold
+            .replace(/#{1,6}\s*/g, '')  // Eliminar headers
+            .replace(/\[.*?\]/g, '')  // Eliminar corchetes
+            .replace(/\n{3,}/g, '\n\n');  // Limpiar saltos múltiples
+        
+        // Para visual, mantener algunos formatos
+        return textoLimpio
             .replace(/(Paso\s*\d+[:\.\-])/gi, '<strong style="color: #1565c0; font-size: 1.1em;">$1</strong>')
             .replace(/(Solución final[:\.\-])/gi, '<strong style="color: #2e7d32; font-size: 1.1em;">$1</strong>')
             .replace(/\n/g, '<br>');
     }
     
-    // =============== SISTEMA DE VOZ ===============
+    // =============== SISTEMA DE VOZ MEJORADO ===============
     
     window.hablarConCola = function(texto) {
         if (!window.voiceEnabled || !texto) return;
         
-        window.colaVoz.push(texto);
+        // Limpiar el texto para voz (sin formato)
+        const textoLimpio = texto
+            .replace(/<[^>]*>/g, '')  // Eliminar HTML
+            .replace(/\*\*/g, '')      // Eliminar markdown
+            .replace(/\[.*?\]/g, '')   // Eliminar corchetes
+            .replace(/#/g, '')         // Eliminar #
+            .replace(/\n/g, '. ')      // Convertir saltos a puntos
+            .replace(/\s+/g, ' ')      // Eliminar espacios múltiples
+            .trim();
+        
+        if (!textoLimpio) return;
+        
+        window.colaVoz.push(textoLimpio);
         procesarColaVoz();
     };
     
@@ -555,25 +598,30 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const utterance = new SpeechSynthesisUtterance(texto);
         utterance.lang = 'es-ES';
-        utterance.rate = 0.9;
-        utterance.pitch = 1;
+        utterance.rate = 0.85;  // Un poco más lento para explicaciones
+        utterance.pitch = 0.9;   // Tono un poco más grave, como profesor
         utterance.volume = 1;
         
+        // Buscar voces en español
         const voices = window.speechSynthesis.getVoices();
-        const spanishVoice = voices.find(voice => voice.lang.includes('es'));
+        let voice = voices.find(v => v.lang === 'es-ES' || v.lang.startsWith('es-'));
         
-        if (spanishVoice) {
-            utterance.voice = spanishVoice;
+        if (!voice) {
+            voice = voices.find(v => v.lang.includes('es'));
+        }
+        
+        if (voice) {
+            utterance.voice = voice;
         }
         
         utterance.onend = function() {
             window.hablando = false;
-            setTimeout(procesarColaVoz, 300);
+            setTimeout(procesarColaVoz, 500); // Pausa entre mensajes
         };
         
         utterance.onerror = function() {
             window.hablando = false;
-            setTimeout(procesarColaVoz, 300);
+            setTimeout(procesarColaVoz, 500);
         };
         
         window.speechSynthesis.speak(utterance);
@@ -597,7 +645,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // =============== ENVIAR MENSAJE ===============
+    // =============== ENVIAR MENSAJE AL SERVIDOR REAL ===============
     
     async function sendMessage() {
         if (isSending) return;
@@ -609,44 +657,90 @@ document.addEventListener('DOMContentLoaded', function() {
         userInput.value = '';
         autoResizeTextarea();
         
-        // Simular respuesta del tutor (en producción esto sería una llamada a IA)
+        // Mostrar indicador de "pensando"
         const typing = createTypingMessage("Pensando...");
         
-        setTimeout(() => {
+        try {
+            const response = await fetch('/analizar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    text: text,
+                    consulta: text
+                })
+            });
+            
+            const data = await response.json();
+            
             removeTypingMessage(typing);
             
-            // Simular una pregunta con opciones para demostración
-            if (text.toLowerCase().includes('resuelve') || text.toLowerCase().includes('calcula')) {
-                window.sesionActual = 'demo-' + Date.now();
-                window.opcionesActuales = [
-                    { letra: 'A', texto: "x = 5", correcta: true },
-                    { letra: 'B', texto: "x = 10", correcta: false },
-                    { letra: 'C', texto: "x = 15", correcta: false }
-                ];
-                
-                const respuestaBot = `📝 Para resolver: ${text}<br><br>
-                <strong>Paso 1:</strong> Aislar la variable x<br>
-                <strong>Paso 2:</strong> Simplificar la ecuación<br>
-                <strong>Paso 3:</strong> Encontrar el valor de x<br><br>
-                ¿Cuál crees que es la solución correcta?`;
-                
-                addMessage(respuestaBot, 'bot');
-                
-                setTimeout(() => {
-                    window.mostrarOpcionesInteractivo(window.opcionesActuales, "¿Cuál es el valor de x?");
-                }, 1000);
-            } else {
-                // Respuesta normal
-                const respuestas = [
-                    "¡Excelente pregunta! Para resolver esto necesitamos aplicar los conceptos de álgebra básica.",
-                    "Entiendo tu consulta. Vamos a resolverlo paso a paso para que comprendas el proceso.",
-                    "Esta es una pregunta interesante. Te mostraré cómo abordarla sistemáticamente."
-                ];
-                addMessage(respuestas[Math.floor(Math.random() * respuestas.length)], 'bot');
+            // Verificar si hay error
+            if (data.tipo === 'error') {
+                addMessage(data.respuesta, 'bot');
+                isSending = false;
+                return;
             }
             
-            isSending = false;
-        }, 1500);
+            // Si es una gráfica
+            if (data.necesitaGrafica) {
+                addMessage(data.respuesta, 'bot');
+                if (window.voiceEnabled) {
+                    window.hablarConCola(data.respuesta);
+                }
+                
+                // Mostrar gráfica
+                setTimeout(() => {
+                    if (data.graficaData && data.graficaData.funcion) {
+                        graficarFuncionGeoGebra(data.graficaData.funcion);
+                    }
+                }, 1000);
+                isSending = false;
+                return;
+            }
+            
+            // Si es respuesta normal
+            addMessage(data.respuesta, 'bot');
+            
+            // Reproducir voz con la respuesta
+            if (window.voiceEnabled) {
+                // Extraer solo el texto explicativo para voz
+                let textoParaVoz = data.respuesta;
+                
+                // Si tiene opciones, separar explicación de opciones
+                if (data.tieneOpciones) {
+                    const partes = textoParaVoz.split('**Opciones:**');
+                    if (partes[0]) {
+                        textoParaVoz = partes[0].trim();
+                    }
+                }
+                
+                window.hablarConCola(textoParaVoz);
+            }
+            
+            // Si tiene opciones interactivas
+            if (data.tieneOpciones && data.opciones) {
+                window.sesionActual = data.sesionId;
+                window.opcionesActuales = data.opciones;
+                
+                setTimeout(() => {
+                    window.mostrarOpcionesInteractivo(data.opciones, data.respuesta);
+                }, 1000);
+            }
+            
+            // Actualizar estrellas si hay
+            if (data.estrellas !== undefined) {
+                actualizarEstrellas(data.estrellas);
+            }
+            
+        } catch (error) {
+            console.error('Error al enviar mensaje:', error);
+            removeTypingMessage(typing);
+            addMessage("❌ Error de conexión con el servidor. Intenta de nuevo.", 'bot');
+        }
+        
+        isSending = false;
     }
     
     function createTypingMessage(text) {
@@ -716,6 +810,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (window.voiceEnabled) {
                 audioText.textContent = 'Voz Activada';
                 audioIcon.className = 'fas fa-volume-up';
+                // Reproducir mensaje de confirmación
+                window.hablarConCola("Voz activada. ¡Estoy listo para explicarte!");
             } else {
                 audioText.textContent = 'Voz Desactivada';
                 audioIcon.className = 'fas fa-volume-mute';
@@ -744,6 +840,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // =============== INICIALIZACIÓN ===============
     
     if ('speechSynthesis' in window) {
+        // Cargar voces disponibles
+        window.speechSynthesis.onvoiceschanged = function() {
+            console.log('Voces cargadas:', window.speechSynthesis.getVoices().length);
+        };
         window.speechSynthesis.getVoices();
     }
     
@@ -921,66 +1021,7 @@ function inicializarGeoGebra() {
     window.ggbApp.inject('ggb-element');
 }
 
-// =============== DOBLE CLICK PARA SALIR ===============
-
-let clicks = 0;
-
-document.addEventListener('click', (e) => {
-    if (e.target.closest('button, textarea, input')) return;
-    
-    clicks++;
-    
-    if (clicks === 1) {
-        setTimeout(() => clicks = 0, 1500);
-        showExitHint();
-    } else if (clicks === 2) {
-        clicks = 0;
-        confirmExit();
-    }
-});
-
-function showExitHint() {
-    const hint = document.createElement('div');
-    hint.textContent = '👆 Toca otra vez para SALIR';
-    hint.style.cssText = `
-        position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-        background: #ff4757; color: white; padding: 10px 20px; border-radius: 20px;
-        font-weight: bold; z-index: 9999; animation: fadeHint 2s;
-    `;
-    document.body.appendChild(hint);
-    setTimeout(() => hint.remove(), 2000);
-}
-
-function confirmExit() {
-    const modal = document.createElement('div');
-    modal.innerHTML = `
-        <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:10000;">
-            <div style="background:white; padding:25px; border-radius:15px; text-align:center; max-width:300px;">
-                <h3 style="margin:0 0 15px 0;">¿Salir de MatyMat?</h3>
-                <button onclick="closeApp()" style="background:#ff4757; color:white; border:none; padding:10px 20px; border-radius:8px; margin:5px; cursor:pointer;">
-                    ✅ Sí, salir
-                </button>
-                <button onclick="this.closest('div').remove()" style="background:#576574; color:white; border:none; padding:10px 20px; border-radius:8px; margin:5px; cursor:pointer;">
-                    ❌ Cancelar
-                </button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-}
-
-function closeApp() {
-    document.body.innerHTML = `
-        <div style="height:100vh; background:linear-gradient(135deg, #667eea, #764ba2); display:flex; align-items:center; justify-content:center; color:white; font-family:Poppins;">
-            <div style="text-align:center;">
-                <h1 style="font-size:2.5rem; margin-bottom:20px;">👋 ¡Hasta pronto!</h1>
-                <p>MatyMat-01</p>
-            </div>
-        </div>
-    `;
-    setTimeout(() => window.close() || (window.location.href = 'about:blank'), 1500);
-}
-
 // =============== INICIALIZAR GEOGEBRA AL CARGAR ===============
 
 document.addEventListener('DOMContentLoaded', inicializarGeoGebra);
+
