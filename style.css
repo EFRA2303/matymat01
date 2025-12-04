@@ -282,7 +282,7 @@ header p {
     z-index: 2000;
     box-shadow: 0 10px 40px rgba(0,0,0,0.3);
     animation: slideUpOptions 0.3s ease;
-    max-height: 30vh;
+    max-height: 30vh; /* ✅ Solo ocupa 30% de la pantalla */
     overflow-y: auto;
     border: 2px solid rgba(255,255,255,0.3);
 }
@@ -363,43 +363,45 @@ header p {
 }
 
 .question-display {
-    background: rgba(255,255,255,0.95);
-    margin: 15px 20px;
-    padding: 20px;
-    border-radius: 15px;
-    color: #333;
-    font-size: 1.1rem;
-    line-height: 1.5;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    background: rgba(255,255,255,0.15); /* ✅ Fondo más transparente */
+    margin: 10px 20px;
+    padding: 12px;
+    border-radius: 10px;
+    color: white;
+    font-size: 1rem;
+    line-height: 1.4;
+    text-align: center;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255,255,255,0.2);
 }
 
 .options-grid {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 0 20px 20px;
+    gap: 10px; /* ✅ Menor espacio entre opciones */
+    padding: 0 20px 15px; /* ✅ Menor padding inferior */
 }
 
 .option-btn {
     background: rgba(255,255,255,0.95);
     border: none;
-    border-radius: 15px;
-    padding: 20px;
-    font-size: 1.1rem;
+    border-radius: 12px; /* ✅ Bordes más redondeados */
+    padding: 16px; /* ✅ Padding ajustado */
+    font-size: 1rem;
     color: #4361ee;
     cursor: pointer;
     transition: all 0.3s;
     text-align: left;
     display: flex;
     align-items: center;
-    gap: 15px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    min-height: 70px;
+    gap: 12px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    min-height: 60px; /* ✅ Altura reducida */
 }
 
 .option-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
     background: white;
 }
 
@@ -410,14 +412,14 @@ header p {
 .option-btn .option-letter {
     background: var(--primary);
     color: white;
-    width: 40px;
-    height: 40px;
+    width: 35px; /* ✅ Tamaño reducido */
+    height: 35px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     flex-shrink: 0;
 }
 
@@ -439,7 +441,7 @@ header p {
 
 .option-btn:disabled:hover {
     transform: none;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
 }
 
 /* === TECLADO MATEMÁTICO (misma altura que teclado normal) === */
@@ -837,6 +839,35 @@ body.keyboard-active .chat-container {
     justify-content: center;
 }
 
+/* === TYPING INDICATOR === */
+.typing-indicator {
+    display: inline-flex;
+    gap: 4px;
+    margin-right: 10px;
+}
+
+.typing-indicator span {
+    width: 8px;
+    height: 8px;
+    background: #4361ee;
+    border-radius: 50%;
+    animation: typingBounce 1.4s infinite ease-in-out both;
+}
+
+.typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+.typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typingBounce {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
+}
+
+.typing-text {
+    color: #666;
+    font-style: italic;
+    font-size: 0.9rem;
+}
+
 /* === EFECTOS ESTRELLAS === */
 #loadingEstrella {
     display: none;
@@ -915,15 +946,15 @@ body.keyboard-active .chat-container {
     }
     
     .option-btn {
-        padding: 15px;
-        font-size: 1rem;
-        min-height: 65px;
+        padding: 14px;
+        font-size: 0.95rem;
+        min-height: 55px;
     }
     
     .option-btn .option-letter {
-        width: 35px;
-        height: 35px;
-        font-size: 1.1rem;
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
     }
     
     .tool-btn {
@@ -946,6 +977,7 @@ body.keyboard-active .chat-container {
         left: 5px;
         right: 5px;
         bottom: 70px;
+        max-height: 35vh; /* ✅ Un poco más alto en móviles */
     }
     
     .math-toolbar {
@@ -1018,8 +1050,12 @@ body.keyboard-active .chat-container {
 }
 
 .dark-mode .question-display {
-    background: rgba(30, 30, 30, 0.95);
+    background: rgba(30, 30, 30, 0.3);
     color: #e0e0e0;
+}
+
+.dark-mode .option-btn {
+    background: rgba(255, 255, 255, 0.9);
 }
 
 /* Animación para estrellas */
