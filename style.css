@@ -94,7 +94,7 @@ header p {
 /* Chat Container */
 .chat-container {
     flex: 1;
-    padding: 15px 15px 140px;
+    padding: 15px 15px 160px;
     overflow-y: auto;
     scroll-behavior: smooth;
     background: var(--bg);
@@ -274,7 +274,7 @@ header p {
 .options-popup {
     display: none;
     position: fixed;
-    bottom: 80px;
+    bottom: 100px;
     left: 10px;
     right: 10px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -282,7 +282,7 @@ header p {
     z-index: 2000;
     box-shadow: 0 10px 40px rgba(0,0,0,0.3);
     animation: slideUpOptions 0.3s ease;
-    max-height: 25vh; /* ✅ Solo ocupa 30% de la pantalla */
+    max-height: 22vh; /* ✅ Solo ocupa 30% de la pantalla */
     overflow-y: auto;
     border: 2px solid rgba(255,255,255,0.3);
 }
@@ -1091,3 +1091,18 @@ button:disabled:hover {
     transition: all 0.3s ease;
 }
 
+/* ✅ AGREGAR ESTO AL FINAL DEL ARCHIVO */
+.options-popup::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+.options-popup::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+}
+
+/* Asegurar que no tape cuando teclado está activo */
+body.keyboard-active .options-popup {
+    bottom: calc(45vh + 100px); /* ✅ SE SUBE CUANDO TECLADO ESTÁ ABIERTO */
+}
