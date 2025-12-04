@@ -1112,4 +1112,54 @@ body.keyboard-active .options-popup {
     -webkit-overflow-scrolling: touch; /* ✅ Scroll suave móvil */
 }
 
+/* ✅ TECLADO ORGANIZADO POR CATEGORÍAS */
+.basic-btn {
+    background: var(--card);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+}
+
+.algebra-btn {
+    background: rgba(67, 97, 238, 0.1);
+    color: var(--primary);
+    border: 1px solid rgba(67, 97, 238, 0.3);
+}
+
+.trig-btn {
+    background: rgba(0, 184, 148, 0.1);
+    color: var(--accent);
+    border: 1px solid rgba(0, 184, 148, 0.3);
+}
+
+.calc-btn {
+    background: rgba(255, 159, 67, 0.1);
+    color: var(--warning);
+    border: 1px solid rgba(255, 159, 67, 0.3);
+}
+
+.special-btn {
+    background: rgba(114, 9, 183, 0.1);
+    color: var(--secondary);
+    border: 1px solid rgba(114, 9, 183, 0.3);
+}
+
+/* ✅ DISTRIBUCIÓN MEJORADA */
+.keyboard-extras {
+    grid-template-columns: repeat(auto-fit, minmax(75px, 1fr)) !important;
+    gap: 6px !important;
+    padding: 12px !important;
+}
+
+.keyboard-extras .tool-btn {
+    min-height: 45px;
+    font-size: 0.95rem;
+    padding: 10px 5px;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.keyboard-extras .tool-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+}
 
