@@ -1043,3 +1043,43 @@ button:disabled:hover {
     transform: none !important;
     box-shadow: none !important;
 }
+/* === MEJORAS PARA VOZ Y EXPLICACIONES === */
+.explicacion-paso {
+    background: rgba(255, 255, 255, 0.9);
+    border-left: 4px solid var(--primary);
+    padding: 10px 15px;
+    margin: 10px 0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.dark-mode .explicacion-paso {
+    background: rgba(30, 30, 30, 0.9);
+    color: #e0e0e0;
+}
+
+/* Animación para indicar que el tutor está hablando */
+.message.bot.hablando .message-content::after {
+    content: ' 🔊';
+    animation: pulseVoice 1s infinite;
+}
+
+@keyframes pulseVoice {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* Mejora para texto de voz */
+.voice-text {
+    font-style: italic;
+    color: #4361ee;
+    border-left: 3px solid #4361ee;
+    padding-left: 10px;
+    margin: 5px 0;
+}
+
+.dark-mode .voice-text {
+    color: #90cdf4;
+    border-left-color: #90cdf4;
+}
