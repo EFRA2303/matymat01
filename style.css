@@ -451,9 +451,9 @@ header p {
     bottom: 90px;
     left: 0;
     right: 0;
-    background: #f0f0f0;
-    border-top: 1px solid #ccc;
-    border-bottom: 1px solid #ccc;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
     z-index: 900;
     height: 45vh;
     overflow-y: auto;
@@ -584,9 +584,9 @@ header p {
 .tool-btn {
     padding: 12px 8px;
     font-size: 1rem;
-    background: white;
-    color: #333;
-    border: 1px solid #ddd;
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s;
@@ -611,34 +611,34 @@ header p {
 
 /* Números ordenados 0-9 */
 .num-btn {
-    background: white;
+    background: var(--bg);
     font-size: 1.2rem;
     font-weight: 600;
-    color: #2d3436;
-    border: 1px solid #ddd;
+    color: var(--text);
+    border: 1px solid var(--border);
 }
 
 /* Variables en secuencia x, y, z */
 .var-btn {
-    background: #e3f2fd;
-    color: #1976d2;
-    border: 1px solid #bbdefb;
+    background: rgba(67, 97, 238, 0.1);
+    color: var(--primary);
+    border: 1px solid rgba(67, 97, 238, 0.3);
     font-weight: 500;
 }
 
 /* Operaciones básicas */
 .op-btn {
-    background: #fff3e0;
-    color: #f57c00;
-    border: 1px solid #ffe0b2;
+    background: rgba(255, 159, 67, 0.1);
+    color: var(--warning);
+    border: 1px solid rgba(255, 159, 67, 0.3);;
     font-weight: 600;
 }
 
 /* Funciones matemáticas */
 .func-btn {
-    background: #e8f5e9;
-    color: #388e3c;
-    border: 1px solid #c8e6c9;
+    background: rgba(0, 184, 148, 0.1);
+    color: var(--accent); 
+    border: 1px solid rgba(0, 184, 148, 0.3);
     font-size: 0.9rem;
 }
 
@@ -1111,3 +1111,4 @@ body.keyboard-active .options-popup {
     touch-action: pan-y; /* ✅ Permite deslizar vertical */
     -webkit-overflow-scrolling: touch; /* ✅ Scroll suave móvil */
 }
+
