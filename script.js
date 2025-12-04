@@ -39,13 +39,13 @@ document.addEventListener('DOMContentLoaded', function() {
     window.isMathKeyboardActive = false;
     
     // =============== CONFIGURACIÓN DEL TECLADO ===============
-    const keyboardExtrasData = {
-        basic: ['π', 'θ', '°', '%', '!', '|x|', '∞', '≈', '≠', '≤', '≥', '±'],
-        algebra: ['x²', 'x³', 'x^y', '√(', '∛(', '∑', '∏', 'log', 'ln', '| |', 'a/b', '(a)/(b)'],
-        trigonometry: ['sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'arcsin', 'arccos', 'arctan', 'sinh', 'cosh', 'tanh'],
-        calculus: ['∫', '∂', 'dx', 'dy', 'dz', 'lim', 'Δ', '∇', '∫dx', '∫dy', 'd/dx', '∂/∂x'],
-        special: ['⌊x⌋', '⌈x⌉', '→', '⇔', '∈', '∉', '⊂', '⊆', '∪', '∩', '∅', '∴']
-    };
+   const keyboardExtrasData = {
+    basic: ['π', 'θ', '°', '%', '!', '|x|', '∞', '≈', '≠', '≤', '≥', '±', '°', '‰', '∵', '∴', '∝', '∅', '∠', '∥'],
+    algebra: ['x²', 'x³', 'x^y', '√(', '∛(', '∑', '∏', 'log', 'ln', '| |', 'a/b', '(a)/(b)', 'mod', 'gcd', 'lcm', '√n', 'n√', 'bin', 'hex', 'dec'],
+    trigonometry: ['sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'arcsin', 'arccos', 'arctan', 'sinh', 'cosh', 'tanh', 'coth', 'sech', 'csch', 'asin', 'acos', 'atan', 'sin⁻¹', 'cos⁻¹'],
+    calculus: ['∫', '∂', 'dx', 'dy', 'dz', 'lim', 'Δ', '∇', '∫dx', '∫dy', 'd/dx', '∂/∂x', '∮', '∯', '∰', '∞', '→', 'lim→∞', '∑_{n=1}^∞', '∏_{i=1}^n'],
+    special: ['⌊x⌋', '⌈x⌉', '→', '⇔', '∈', '∉', '⊂', '⊆', '∪', '∩', '∅', '∴', '∵', '∃', '∀', '¬', '∧', '∨', '⊕', '⊗']
+};    
     
     // =============== INICIALIZAR TECLADO ===============
     function initMathKeyboard() {
@@ -347,6 +347,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Mostrar opciones emergentes
         if (optionsContainer) {
             optionsContainer.style.display = 'block';
+            optionsContainer.classList.remove('hidden');
             
             // ✅ Asegurar que solo ocupe 20-30% de la pantalla
             setTimeout(() => {
@@ -358,8 +359,12 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     window.closeOptions = function() {
-        if (optionsContainer) {
+    if (optionsContainer) {
+        optionsContainer.classList.add('hidden');
+        setTimeout(() => {
             optionsContainer.style.display = 'none';
+            optionsContainer.classList.remove('hidden');
+            }, 300);
         }
     };
     
@@ -1029,4 +1034,5 @@ function closeApp() {
 // =============== INICIALIZAR GEOGEBRA AL CARGAR ===============
 
 document.addEventListener('DOMContentLoaded', inicializarGeoGebra);
+
 
