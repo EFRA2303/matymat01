@@ -405,7 +405,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     // ✅ CORRECCIÓN: VOZ EXPLICA TODO EL TEXTO
                     if (window.voiceEnabled && data.respuesta) {
-                        const textoVoz = data.respuesta.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+                        const textoVoz = data.respuesta
+                            .replace(/<[^>]*>/g, ' ')
+                            .replace(/\*\*/g, '')
+                            .replace(/\*/g, ' por ')
+                            .replace(/#/g, ' número ')
+                            .replace(/_/g, ' sub ')
+                            .replace(/\^/g, ' elevado a ')
+                            .replace(/\+/g, ' más ')
+                            .replace(/-/g, ' menos ')
+                            .replace(/=/g, ' igual a ')
+                            .replace(/</g, ' menor que ')
+                            .replace(/>/g, ' mayor que ')
+                            .replace(/π/g, ' pi ')
+                            .replace(/√/g, ' raíz de ')
+                            .replace(/∫/g, ' integral ')
+                            .replace(/\s+/g, ' ')
+                            .trim();
                         window.hablarConCola(textoVoz);
                     }
                 } else {
@@ -415,7 +431,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     // ✅ CORRECCIÓN: VOZ EXPLICA TODO EL TEXTO
                     if (window.voiceEnabled && data.respuesta) {
-                        const textoVoz = `Incorrecto. ${data.respuesta.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()}`;
+                        const textoVoz = `Incorrecto. ${data.respuesta
+                            .replace(/<[^>]*>/g, ' ')
+                            .replace(/\*\*/g, '')
+                            .replace(/\*/g, ' por ')
+                            .replace(/#/g, ' número ')
+                            .replace(/_/g, ' sub ')
+                            .replace(/\^/g, ' elevado a ')
+                            .replace(/\+/g, ' más ')
+                            .replace(/-/g, ' menos ')
+                            .replace(/=/g, ' igual a ')
+                            .replace(/</g, ' menor que ')
+                            .replace(/>/g, ' mayor que ')
+                            .replace(/π/g, ' pi ')
+                            .replace(/√/g, ' raíz de ')
+                            .replace(/∫/g, ' integral ')
+                            .replace(/\s+/g, ' ')
+                            .trim()}`;
                         window.hablarConCola(textoVoz);
                     }
                 }
@@ -679,7 +711,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // ✅ CORRECCIÓN: VOZ EXPLICA LA EXPLICACIÓN INICIAL
                 if (window.voiceEnabled && data.respuesta) {
-                    const textoVoz = data.respuesta.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+                    const textoVoz = `Incorrecto. ${data.respuesta
+                        .replace(/<[^>]*>/g, ' ')
+                        .replace(/\*\*/g, '')
+                        .replace(/\*/g, ' por ')
+                        .replace(/#/g, ' número ')
+                        .replace(/_/g, ' sub ')
+                        .replace(/\^/g, ' elevado a ')
+                        .replace(/\+/g, ' más ')
+                        .replace(/-/g, ' menos ')
+                        .replace(/=/g, ' igual a ')
+                        .replace(/</g, ' menor que ')
+                        .replace(/>/g, ' mayor que ')
+                        .replace(/π/g, ' pi ')
+                        .replace(/√/g, ' raíz de ')
+                        .replace(/∫/g, ' integral ')
+                        .replace(/\s+/g, ' ')
+                        .trim()}`;
                     window.hablarConCola(textoVoz);
                 }
                 
@@ -696,7 +744,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 addMessage(data.respuesta, 'bot');
                 // ✅ CORRECCIÓN: VOZ EXPLICA SOBRE GRÁFICAS
                 if (window.voiceEnabled && data.respuesta) {
-                    const textoVoz = data.respuesta.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+                    const textoVoz = `Incorrecto. ${data.respuesta
+                        .replace(/<[^>]*>/g, ' ')
+                        .replace(/\*\*/g, '')
+                        .replace(/\*/g, ' por ')
+                        .replace(/#/g, ' número ')
+                        .replace(/_/g, ' sub ')
+                        .replace(/\^/g, ' elevado a ')
+                        .replace(/\+/g, ' más ')
+                        .replace(/-/g, ' menos ')
+                        .replace(/=/g, ' igual a ')
+                        .replace(/</g, ' menor que ')
+                        .replace(/>/g, ' mayor que ')
+                        .replace(/π/g, ' pi ')
+                        .replace(/√/g, ' raíz de ')
+                        .replace(/∫/g, ' integral ')
+                        .replace(/\s+/g, ' ')
+                        .trim()}`;
                     window.hablarConCola(textoVoz);
                 }
                 // Activar gráfica si es necesario
@@ -708,7 +772,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 addMessage(data.respuesta, 'bot');
                 // ✅ CORRECCIÓN: VOZ EXPLICA RESPUESTAS NORMALES
                 if (window.voiceEnabled && data.respuesta) {
-                    const textoVoz = data.respuesta.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+                   const textoVoz = `Incorrecto. ${data.respuesta
+                        .replace(/<[^>]*>/g, ' ')
+                        .replace(/\*\*/g, '')
+                        .replace(/\*/g, ' por ')
+                        .replace(/#/g, ' número ')
+                        .replace(/_/g, ' sub ')
+                        .replace(/\^/g, ' elevado a ')
+                        .replace(/\+/g, ' más ')
+                        .replace(/-/g, ' menos ')
+                        .replace(/=/g, ' igual a ')
+                        .replace(/</g, ' menor que ')
+                        .replace(/>/g, ' mayor que ')
+                        .replace(/π/g, ' pi ')
+                        .replace(/√/g, ' raíz de ')
+                        .replace(/∫/g, ' integral ')
+                        .replace(/\s+/g, ' ')
+                        .trim()}`;
                     window.hablarConCola(textoVoz);
                 }
             }
@@ -1049,3 +1129,4 @@ function closeApp() {
 // =============== INICIALIZAR GEOGEBRA AL CARGAR ===============
 
 document.addEventListener('DOMContentLoaded', inicializarGeoGebra);
+
