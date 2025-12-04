@@ -1163,3 +1163,13 @@ body.keyboard-active .options-popup {
     box-shadow: 0 3px 8px rgba(0,0,0,0.15);
 }
 
+.options-popup {
+    z-index: 999; /* ✅ DEBAJO de botones (ellos 1000) */
+    bottom: 5px;
+    animation: floatUp 0.3s ease;
+}
+
+@keyframes floatUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
