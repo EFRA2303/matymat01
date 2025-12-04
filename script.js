@@ -319,10 +319,10 @@ document.addEventListener('DOMContentLoaded', function() {
             closeMathKeyboardFunc();
         }
         
-        // ✅ CORRECCIÓN: Mostrar solo las opciones, NO la pregunta en el popup
+        // ✅ CORRECCIÓN: Solo mostrar "Selecciona la opción correcta"
         if (questionDisplay) {
-            questionDisplay.innerHTML = `<p>Selecciona la opción correcta:</p>`;
-            questionDisplay.style.display = 'none'; // Ocultamos completamente la pregunta
+            questionDisplay.innerHTML = `<p style="margin: 0; padding: 10px; text-align: center; color: white; font-weight: 500;">Selecciona la opción correcta:</p>`;
+            questionDisplay.style.display = 'block';
         }
         
         // Limpiar y agregar opciones (máximo 3)
@@ -348,11 +348,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (optionsContainer) {
             optionsContainer.style.display = 'block';
             
-            // ✅ CORRECCIÓN: Asegurar que solo ocupe 20-30% de la pantalla
-            optionsContainer.style.maxHeight = '30vh';
-            optionsContainer.style.overflowY = 'auto';
-            
-            // Asegurar visibilidad del proceso
+            // ✅ Asegurar que solo ocupe 20-30% de la pantalla
             setTimeout(() => {
                 if (chatContainer) {
                     chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -364,9 +360,6 @@ document.addEventListener('DOMContentLoaded', function() {
     window.closeOptions = function() {
         if (optionsContainer) {
             optionsContainer.style.display = 'none';
-            if (questionDisplay) {
-                questionDisplay.style.display = 'block';
-            }
         }
     };
     
@@ -574,7 +567,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .replace(/\n/g, '<br>');
     }
     
-    // =============== FUNCIONES DE TYPING (FALTANTES) ===============
+    // =============== FUNCIONES DE TYPING ===============
     
     function createTypingMessage(text) {
         if (!chatContainer) return null;
@@ -676,7 +669,7 @@ document.addEventListener('DOMContentLoaded', function() {
         userInput.value = '';
         autoResizeTextarea();
         
-        // ✅ LLAMADA REAL AL BACKEND (NO SIMULACIÓN)
+        // ✅ LLAMADA REAL AL BACKEND
         try {
             const typing = createTypingMessage("Pensando...");
             
@@ -691,14 +684,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             removeTypingMessage(typing);
             
+            // ✅ CORRECCIÓN: Mostrar explicación SOLO en el chat principal
             if (data.tipo === "interactivo") {
                 window.sesionActual = data.sesionId;
                 window.opcionesActuales = data.opciones;
                 window.respuestaCorrecta = data.respuestaCorrecta;
                 
-                // ✅ CORRECCIÓN: Solo mostrar la explicación en el chat, NO en el popup
+                // ✅ Explicación del problema en el chat
                 addMessage(data.respuesta, 'bot');
                 
+                // ✅ Opciones SOLO en popup inferior (sin texto del problema)
                 setTimeout(() => {
                     window.mostrarOpcionesInteractivo(data.opciones, "");
                 }, 1000);
@@ -721,7 +716,6 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Error:', error);
             
-            // ✅ FALLBACK SIMPLE PERO SIN SIMULACIÓN EXTENSA
             if (document.querySelector('.typing-message')) {
                 removeTypingMessage(document.querySelector('.typing-message'));
             }
@@ -747,7 +741,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 { letra: 'C', texto: "Mostrar ejemplos similares para practicar", correcta: true }
             ];
             
-            addMessage('📸 Analizando imagen... He detectado un ejercicio matemático. ¿Qué te gustaría hacer?', 'bot');
+            addMessage('📸 Analizando imagen... He detectado un ejercicio matemático.', 'bot');
             
             setTimeout(() => {
                 window.mostrarOpcionesInteractivo(opciones, "");
