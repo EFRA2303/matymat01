@@ -7,15 +7,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const mathKeyboard = document.getElementById('mathKeyboard');
     const closeMathKeyboard = document.getElementById('closeMathKeyboard');
     const switchToTextKeyboard = document.getElementById('switchToTextKeyboard');
-    const keyboardTabs = mathKeyboard.querySelector('.keyboard-tabs');
-    const keyboardContent = document.getElementById('keyboardContent');
+    const keyboardTabs = mathKeyboard.querySelectorAll('.keyboard-tab');
+    const keyboardExtras = document.getElementById('keyboardExtras');
+    const extraSections = keyboardExtras.querySelectorAll('.extra-section');
     const uploadBtn = document.getElementById('uploadBtn');
     const fileInput = document.getElementById('fileInput');
     const optionsContainer = document.getElementById('optionsContainer');
     const optionsGrid = document.getElementById('optionsGrid');
     const questionDisplay = document.getElementById('questionDisplay');
+    const contadorEstrellas = document.getElementById('contadorEstrellas');
     
-    // Variables globales
+    // Variables globales (MANTIENE TODAS LAS ORIGINALES)
     let isSending = false;
     window.voiceEnabled = true;
     window.colaVoz = [];
@@ -32,48 +34,22 @@ document.addEventListener('DOMContentLoaded', function() {
     window.ggbApp = null;
     window.isMathKeyboardActive = false;
     
-    // Layout del teclado matemático
-    const keyboardLayouts = {
-        basic: [
-            { keys: ['7', '8', '9', '+'], class: 'num' },
-            { keys: ['4', '5', '6', '-'], class: 'num' },
-            { keys: ['1', '2', '3', '×'], class: 'num' },
-            { keys: ['0', '.', '(', ')'], class: 'num' },
-            { keys: ['C', '⌫', '=', '÷'], class: 'special', types: ['clear', 'backspace', '=', '/'] }
-        ],
-        symbols: [
-            { keys: ['x', 'y', 'z', 'π'], class: 'sym' },
-            { keys: ['θ', '°', '%', '!'], class: 'sym' },
-            { keys: ['√', '^', '∞', '≈'], class: 'sym' },
-            { keys: ['≠', '≤', '≥', '±'], class: 'sym' }
-        ],
-        functions: [
-            { keys: ['sin', 'cos', 'tan', 'cot'], class: 'func' },
-            { keys: ['sec', 'csc', 'log', 'ln'], class: 'func' },
-            { keys: ['exp', 'abs', 'sinh', 'cosh'], class: 'func' },
-            { keys: ['tanh', '∑', '∏', '∫'], class: 'func' }
-        ],
-        calculus: [
-            { keys: ['∂', 'Δ', '∇', 'lim'], class: 'calc' },
-            { keys: ['dx', 'dy', 'dz', 'dt'], class: 'calc' },
-            { keys: ['∫dx', '∫dy', '∫dz', '∫dt'], class: 'calc' },
-            { keys: ['a/b', '|x|', '⌊x⌋', '⌈x⌉'], class: 'calc' }
-        ]
-    };
-    
-    // === INICIALIZAR TECLADO MATEMÁTICO ===
-    function initMathKeyboard() {
-        // Generar contenido inicial
-        generateKeyboardContent('basic');
-        
+    // === INICIALIZACIÓN DEL TECLADO ===
+    function initKeyboard() {
         // Configurar eventos de tabs
-        const tabs = keyboardTabs.querySelectorAll('.keyboard-tab');
-        tabs.forEach(tab => {
+        keyboardTabs.forEach(tab => {
             tab.addEventListener('click', () => {
-                tabs.forEach(t => t.classList.remove('active'));
+                // Remover clase active de todos
+                keyboardTabs.forEach(t => t.classList.remove('active'));
+                extraSections.forEach(s => s.classList.remove('active'));
+                
+                // Agregar clase active al tab clickeado
                 tab.classList.add('active');
                 const tabName = tab.dataset.tab;
-                generateKeyboardContent(tabName);
+                const extraSection = document.getElementById('extra' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+                if (extraSection) {
+                    extraSection.classList.add('active');
+                }
             });
         });
         
@@ -85,60 +61,19 @@ document.addEventListener('DOMContentLoaded', function() {
             closeMathKeyboardFunc();
             userInput.focus();
         });
-    }
-    
-    // Generar contenido del teclado
-    function generateKeyboardContent(tabName) {
-        keyboardContent.innerHTML = '';
-        const layout = keyboardLayouts[tabName];
         
-        layout.forEach(row => {
-            const keysRow = document.createElement('div');
-            keysRow.className = 'keys-grid';
-            
-            row.keys.forEach((key, index) => {
-                const button = document.createElement('button');
-                button.className = `tool-btn ${row.class}`;
-                button.textContent = key;
-                
-                // Configurar función según tipo de tecla
-                if (row.types && row.types[index]) {
-                    const type = row.types[index];
-                    if (type === 'clear') {
-                        button.classList.add('clear-btn');
-                        button.addEventListener('click', () => clearAll());
-                    } else if (type === 'backspace') {
-                        button.classList.add('backspace-btn');
-                        button.addEventListener('click', () => backspaceInput());
-                    } else if (type === '=') {
-                        button.addEventListener('click', () => insertAtCursor('='));
-                    } else if (type === '/') {
-                        button.addEventListener('click', () => insertAtCursor('/'));
-                    }
-                } else if (key === '×') {
-                    button.addEventListener('click', () => insertAtCursor('*'));
-                } else if (key === '÷') {
-                    button.addEventListener('click', () => insertAtCursor('/'));
-                } else if (key === 'a/b') {
-                    button.addEventListener('click', () => insertFraction());
-                } else if (['sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'arcsin', 'arccos', 'arctan', 'sinh', 'cosh', 'tanh', 'log', 'ln', 'lg', 'exp', 'abs', 'floor', 'ceil', 'round', 'rand', 'gcd', 'lcm', 'mod', 'lim', '∑', '∏'].includes(key)) {
-                    button.addEventListener('click', () => insertFunction(key));
-                } else if (key === '∫') {
-                    button.addEventListener('click', () => insertIntegral());
-                } else if (key.startsWith('∫')) {
-                    button.addEventListener('click', () => insertAtCursor(key));
-                } else {
-                    button.addEventListener('click', () => insertAtCursor(key));
-                }
-                
-                keysRow.appendChild(button);
-            });
-            
-            keyboardContent.appendChild(keysRow);
+        // Cerrar teclado al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (mathKeyboard.style.display === 'block' && 
+                !mathKeyboard.contains(e.target) && 
+                e.target !== toggleKeyboardBtn && 
+                !toggleKeyboardBtn.contains(e.target)) {
+                closeMathKeyboardFunc();
+            }
         });
     }
     
-    // Funciones del teclado
+    // === FUNCIONES DEL TECLADO (MANTIENE TODAS LAS ORIGINALES) ===
     window.insertAtCursor = function(value) {
         const start = userInput.selectionStart;
         const end = userInput.selectionEnd;
@@ -170,23 +105,32 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     window.insertFraction = function() {
-        insertAtCursor('( )/( )');
-        const start = userInput.selectionStart - 6;
+        const start = userInput.selectionStart;
+        const end = userInput.selectionEnd;
+        userInput.value = userInput.value.substring(0, start) + '(a)/(b)' + userInput.value.substring(end);
         userInput.selectionStart = start + 1;
         userInput.selectionEnd = start + 2;
         userInput.focus();
+        autoResizeTextarea();
     };
     
     window.insertFunction = function(funcName) {
-        insertAtCursor(funcName + '()');
-        userInput.selectionStart = userInput.selectionStart - 1;
+        const start = userInput.selectionStart;
+        const end = userInput.selectionEnd;
+        userInput.value = userInput.value.substring(0, start) + funcName + '()' + userInput.value.substring(end);
+        userInput.selectionStart = userInput.selectionEnd = start + funcName.length + 1;
         userInput.focus();
+        autoResizeTextarea();
     };
     
     window.insertIntegral = function() {
-        insertAtCursor('∫_^ dx');
-        userInput.selectionStart = userInput.selectionStart - 4;
+        const start = userInput.selectionStart;
+        const end = userInput.selectionEnd;
+        userInput.value = userInput.value.substring(0, start) + '∫_a^b f(x)dx' + userInput.value.substring(end);
+        userInput.selectionStart = start + 7;
+        userInput.selectionEnd = start + 8;
         userInput.focus();
+        autoResizeTextarea();
     };
     
     // Funciones del teclado matemático
@@ -225,7 +169,66 @@ document.addEventListener('DOMContentLoaded', function() {
         userInput.style.height = newHeight + 'px';
     }
     
-    // === MOSTRAR OPCIONES (FULL SCREEN) ===
+    // === SISTEMA DE VOZ COMPLETO (MANTIENE TODO) ===
+    window.hablarConCola = function(texto) {
+        if (!window.voiceEnabled || !texto) return;
+        
+        window.colaVoz.push(texto);
+        procesarColaVoz();
+    };
+
+    function procesarColaVoz() {
+        if (window.hablando || window.colaVoz.length === 0) return;
+        
+        window.hablando = true;
+        const texto = window.colaVoz.shift();
+        
+        const utterance = new SpeechSynthesisUtterance(texto);
+        utterance.lang = 'es-ES';
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+        
+        const voices = window.speechSynthesis.getVoices();
+        const spanishVoice = voices.find(voice => voice.lang.includes('es'));
+        
+        if (spanishVoice) {
+            utterance.voice = spanishVoice;
+        }
+        
+        utterance.onend = function() {
+            window.hablando = false;
+            setTimeout(procesarColaVoz, 300);
+        };
+        
+        utterance.onerror = function() {
+            window.hablando = false;
+            setTimeout(procesarColaVoz, 300);
+        };
+        
+        window.speechSynthesis.speak(utterance);
+    }
+    
+    // === MEJORAR MENSAJE INICIAL CON VOZ ===
+    function mejorarMensajeInicial() {
+        if (window.voiceEnabled && !window.mensajeInicialReproducido) {
+            window.mensajeInicialReproducido = true;
+            
+            const textoVoz = `¡Hola! Soy MatyMat cero uno, tu tutor virtual de matemáticas. Te ayudaré a entender y aprender álgebra, trigonometría y geometría. 
+
+Puedes escribir tu pregunta, tomar fotos de ejercicios, resolver paso a paso con opciones interactivas, ganar estrellas y visualizar gráficas. 
+
+Por ejemplo, puedes preguntar: resolver ecuaciones como dos equis más cinco igual a quince, calcular funciones trigonométricas como seno de treinta grados, o hallar áreas y volúmenes como el área de un círculo. 
+
+¿En qué tema matemático necesitas ayuda?`;
+            
+            setTimeout(() => {
+                window.hablarConCola(textoVoz);
+            }, 1500);
+        }
+    }
+    
+    // === MOSTRAR OPCIONES (EMERGENTE, NO FULL SCREEN) ===
     window.mostrarOpcionesInteractivo = function(opciones, pregunta = '') {
         // Cerrar teclado matemático si está abierto
         if (window.isMathKeyboardActive) {
@@ -234,7 +237,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Mostrar pregunta
         if (pregunta) {
-            questionDisplay.innerHTML = `<p>${pregunta}</p>`;
+            questionDisplay.innerHTML = `<p>${formatText(pregunta)}</p>`;
         } else {
             questionDisplay.innerHTML = `<p>Selecciona la opción correcta:</p>`;
         }
@@ -257,18 +260,24 @@ document.addEventListener('DOMContentLoaded', function() {
             optionsGrid.appendChild(btn);
         });
         
-        // Mostrar contenedor de opciones (full screen)
+        // Mostrar contenedor de opciones (emergente)
         optionsContainer.style.display = 'block';
-        document.body.style.overflow = 'hidden'; // Evitar scroll del body
+        
+        // Scroll al popup de opciones
+        setTimeout(() => {
+            optionsContainer.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+        }, 300);
     };
     
     // Cerrar opciones
     window.closeOptions = function() {
         optionsContainer.style.display = 'none';
-        document.body.style.overflow = ''; // Restaurar scroll
     };
     
-    // === FUNCIÓN MEJORADA PARA ELEGIR OPCIÓN ===
+    // === FUNCIÓN MEJORADA PARA ELEGIR OPCIÓN (MANTIENE TODO) ===
     window.elegirOpcion = async function(opcion, esCorrecta) {
         if (!window.sesionActual) return;
         
@@ -308,7 +317,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     
                     if (window.voiceEnabled) {
-                        window.hablarConCola(`Incorrecto. La opción correcta es la ${opcionCorrecta.letra}.`);
+                        const explicacion = `Incorrecto. La opción correcta es la ${opcionCorrecta.letra}. `;
+                        window.hablarConCola(explicacion);
+                        
+                        setTimeout(() => {
+                            const textoOpciones = `Recuerda que: ${window.pasoActual?.explicacionError || 'revisa los conceptos básicos.'}`;
+                            window.hablarConCola(textoOpciones);
+                        }, 2000);
                     }
                 }
             }
@@ -326,7 +341,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const data = await response.json();
             
-            // Cerrar opciones actuales
+            // Cerrar opciones actuales después de 2 segundos
             setTimeout(() => {
                 closeOptions();
                 addMessage(data.respuesta, 'bot');
@@ -390,21 +405,86 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
-    // === ACTUALIZAR ESTRELLAS ===
+    // === NARRAR EXPLICACIÓN COMPLETA DEL PASO ===
+    function narrarPasoCompleto(respuestaCompleta, opciones, respuestaCorrecta) {
+        if (!window.voiceEnabled) return;
+        
+        const lineas = respuestaCompleta.split('\n');
+        let explicacionPaso = "";
+        
+        for (const linea of lineas) {
+            if (linea.includes('Opciones:')) break;
+            explicacionPaso += linea + ". ";
+        }
+        
+        explicacionPaso = explicacionPaso.replace(/\*\*/g, '').replace(/📝\s*\*?\*?Paso\s*\d+[:\.\-]\s*\*?\*?/i, '');
+        
+        window.hablarConCola(explicacionPaso);
+        
+        setTimeout(() => {
+            let textoOpciones = " Ahora tienes estas opciones: ";
+            opciones.forEach((opcion, index) => {
+                const letra = String.fromCharCode(65 + index);
+                textoOpciones += `Opción ${letra}. `;
+            });
+            textoOpciones += "¿Cuál eliges?";
+            window.hablarConCola(textoOpciones);
+        }, 5000);
+    }
+    
+    // === ACTUALIZAR ESTRELLAS CON ANIMACIÓN ===
     function actualizarEstrellas(cantidad) {
         window.estrellasTotales = cantidad;
-        const contador = document.getElementById('contadorEstrellas');
         
-        if (contador) {
-            contador.textContent = cantidad;
-            contador.classList.add('star-pulse');
+        if (contadorEstrellas) {
+            let currentCount = parseInt(contadorEstrellas.textContent) || 0;
+            const increment = cantidad > currentCount ? 1 : -1;
+            
+            const animateCount = () => {
+                currentCount += increment;
+                contadorEstrellas.textContent = currentCount;
+                
+                if (increment > 0) {
+                    crearConfeti();
+                }
+                
+                if ((increment > 0 && currentCount < cantidad) || 
+                    (increment < 0 && currentCount > cantidad)) {
+                    requestAnimationFrame(animateCount);
+                }
+            };
+            
+            animateCount();
+            
+            contadorEstrellas.classList.add('star-pulse');
             setTimeout(() => {
-                contador.classList.remove('star-pulse');
+                contadorEstrellas.classList.remove('star-pulse');
             }, 1000);
         }
     }
     
-    // === FUNCIONES PRINCIPALES ===
+    // === CREAR EFECTO CONFETI ===
+    function crearConfeti() {
+        const confettiContainer = document.createElement('div');
+        confettiContainer.className = 'star-confetti';
+        
+        for (let i = 0; i < 30; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti-piece';
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.animationDelay = Math.random() * 2 + 's';
+            confetti.style.background = ['#FFD700', '#FF8C00', '#FF6347', '#00CED1', '#9370DB'][Math.floor(Math.random() * 5)];
+            confettiContainer.appendChild(confetti);
+        }
+        
+        document.body.appendChild(confettiContainer);
+        
+        setTimeout(() => {
+            confettiContainer.remove();
+        }, 3000);
+    }
+    
+    // === FUNCIONES PRINCIPALES DE CHAT ===
     function addMessage(text, sender) {
         const div = document.createElement('div');
         div.className = `message ${sender}`;
@@ -444,9 +524,194 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function formatText(text) {
         return text
-            .replace(/(Paso\s*\d+[:\.\-])/gi, '<strong style="color: #1565c0;">$1</strong>')
-            .replace(/(Solución final[:\.\-])/gi, '<strong style="color: #2e7d32;">$1</strong>')
+            .replace(/(Paso\s*\d+[:\.\-])/gi, '<strong style="color: #1565c0; font-size: 1.1em;">$1</strong>')
+            .replace(/(Solución final[:\.\-])/gi, '<strong style="color: #2e7d32; font-size: 1.1em;">$1</strong>')
             .replace(/\n/g, '<br>');
+    }
+    
+    // === SIMULACIÓN DE ANÁLISIS DE IMAGEN ===
+    async function simulateImageAnalysis(file) {
+        // Mostrar opciones directamente sin OCR
+        setTimeout(() => {
+            addMessage('✅ Foto recibida. ¿Qué te gustaría hacer con esta actividad matemática?', 'bot');
+            
+            const opciones = [
+                { letra: 'A', texto: "📝 Describir el problema para resolverlo", accion: "describir" },
+                { letra: 'B', texto: "📚 Pedir explicación de conceptos", accion: "explicar" },
+                { letra: 'C', texto: "🔄 Tomar otra foto", accion: "otra" }
+            ];
+            
+            mostrarOpcionesInteractivo(opciones, "¿Qué te gustaría hacer con la foto del ejercicio?");
+        }, 1000);
+    }
+    
+    // === ENVIAR MENSAJE COMPLETO ===
+    async function sendMessage() {
+        if (isSending) return;
+        const text = userInput.value.trim();
+        if (!text) return;
+        isSending = true;
+        addMessage(text, 'user');
+        userInput.value = '';
+        
+        // Detectar si es una solicitud de gráfica
+        const funcionAGraficar = detectarYGraficarFuncion(text);
+        
+        if (funcionAGraficar) {
+            try {
+                const typing = createTypingMessage("Generando gráfica...");
+                await graficarFuncionGeoGebra(funcionAGraficar);
+                removeTypingMessage(typing);
+            } catch (error) {
+                addMessage("❌ Error al generar la gráfica.", 'bot');
+            } finally {
+                isSending = false;
+            }
+            return;
+        }
+        
+        // Flujo normal para consultas
+        const typing = createTypingMessage("Pensando...");
+        try {
+            const response = await fetch('/analizar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text })
+            });
+            const data = await response.json();
+            removeTypingMessage(typing);
+            
+            if (data.respuesta) {
+                if (data.necesitaGrafica && data.graficaData && data.graficaData.funcion) {
+                    addMessage(data.respuesta, 'bot');
+                    graficarFuncionGeoGebra(data.graficaData.funcion);
+                    isSending = false;
+                    return;
+                }
+
+                // MODO INTERACTIVO CON OPCIONES
+                if (data.tipo === "interactivo" && data.tieneOpciones) {
+                    window.sesionActual = data.sesionId;
+                    window.opcionesActuales = data.opciones || [];
+                    window.respuestaCorrecta = data.respuestaCorrecta;
+                    window.totalPreguntas++;
+                    
+                    window.pasoActual = {
+                        explicacionError: data.explicacionError || "Revisa los conceptos básicos.",
+                        opcionCorrecta: data.respuestaCorrecta
+                    };
+                    
+                    actualizarEstrellas(data.estrellas || 0);
+                    addMessage(data.respuesta, 'bot');
+                    
+                    setTimeout(() => {
+                        mostrarOpcionesInteractivo(data.opciones);
+                        if (window.voiceEnabled) {
+                            narrarPasoCompleto(data.respuesta, data.opciones, data.respuestaCorrecta);
+                        }
+                    }, 500);
+                } else {
+                    // MODO NORMAL (sin opciones)
+                    await showStepsSequentially(data.respuesta);
+                }
+            } else {
+                addMessage("⚠️ No pude procesar tu pregunta.", 'bot');
+            }
+        } catch (err) {
+            removeTypingMessage(typing);
+            addMessage("🔴 Error de conexión. Intenta recargar.", 'bot');
+            console.error('Error:', err);
+        } finally {
+            isSending = false;
+        }
+    }
+    
+    function createTypingMessage(text) {
+        const typing = document.createElement('div');
+        typing.className = 'message bot';
+        typing.innerHTML = `
+            <div class="avatar bot-avatar">
+                <img src="tutor-avatar.png" alt="Tutor">
+            </div>
+            <div class="message-content">${text}</div>
+        `;
+        chatContainer.appendChild(typing);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        return typing;
+    }
+    
+    function removeTypingMessage(typing) {
+        if (typing && typing.parentNode) {
+            typing.remove();
+        }
+    }
+    
+    async function showStepsSequentially(fullResponse) {
+        const steps = extractSteps(fullResponse);
+        
+        if (steps.length > 0) {
+            for (let i = 0; i < steps.length; i++) {
+                await addMessageWithDelay(steps[i], 'bot', i * 1500);
+                
+                if (window.voiceEnabled) {
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    window.hablarConCola(cleanTextForSpeech(steps[i]));
+                    
+                    if (i < steps.length - 1) {
+                        await waitForSpeechEnd();
+                    }
+                }
+            }
+        } else {
+            addMessage(fullResponse, 'bot');
+            if (window.voiceEnabled) {
+                window.hablarConCola(cleanTextForSpeech(fullResponse));
+            }
+        }
+    }
+    
+    function waitForSpeechEnd() {
+        return new Promise(resolve => {
+            const checkSpeaking = setInterval(() => {
+                if (!window.speechSynthesis.speaking) {
+                    clearInterval(checkSpeaking);
+                    resolve();
+                }
+            }, 100);
+        });
+    }
+    
+    function cleanTextForSpeech(text) {
+        return text
+            .replace(/(\d+)x/gi, '$1 equis')
+            .replace(/\bx\b/gi, 'equis')
+            .replace(/\+/g, ' más ')
+            .replace(/\-/g, ' menos ')
+            .replace(/\*/g, ' por ')
+            .replace(/\//g, ' entre ')
+            .replace(/\=/g, ' igual a ')
+            .replace(/\^/g, ' elevado a ')
+            .replace(/sin\(/gi, 'seno de ')
+            .replace(/cos\(/gi, 'coseno de ')
+            .replace(/tan\(/gi, 'tangente de ')
+            .replace(/sqrt\(/gi, 'raíz cuadrada de ')
+            .replace(/π/gi, 'pi')
+            .replace(/θ/gi, 'theta');
+    }
+    
+    function extractSteps(text) {
+        const stepPattern = /(Paso\s*\d+[:\-\.]\s*[^Paso]+)(?=Paso|Solución|$)/gi;
+        let matches = text.match(stepPattern);
+        return matches && matches.length > 0 ? matches.map(s => s.trim()) : [text];
+    }
+    
+    function addMessageWithDelay(text, sender, delay) {
+        return new Promise(resolve => {
+            setTimeout(() => {
+                addMessage(text, sender);
+                resolve();
+            }, delay);
+        });
     }
     
     // === EVENTOS PRINCIPALES ===
@@ -497,15 +762,11 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             sendMessage();
         }
-    });
-    
-    // Cerrar teclado al hacer clic fuera
-    document.addEventListener('click', (e) => {
-        if (mathKeyboard.style.display === 'block' && 
-            !mathKeyboard.contains(e.target) && 
-            e.target !== toggleKeyboardBtn && 
-            !toggleKeyboardBtn.contains(e.target)) {
-            closeMathKeyboardFunc();
+        
+        // Ctrl+L para limpiar
+        if (e.ctrlKey && e.key === 'l') {
+            e.preventDefault();
+            clearAll();
         }
     });
     
@@ -575,136 +836,32 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Inicializar componentes
-    initMathKeyboard();
-    
-    // === FUNCIONES DE ENVÍO DE MENSAJES (simplificadas) ===
-    async function sendMessage() {
-        if (isSending) return;
-        const text = userInput.value.trim();
-        if (!text) return;
-        isSending = true;
-        addMessage(text, 'user');
-        userInput.value = '';
-        userInput.style.height = 'auto';
-        
-        // Simular respuesta del tutor
-        const typing = createTypingMessage("Pensando...");
-        
-        setTimeout(() => {
-            removeTypingMessage(typing);
-            
-            // Simular una pregunta con opciones (para demo)
-            if (text.toLowerCase().includes('resuelve') || text.toLowerCase().includes('calcula')) {
-                window.sesionActual = 'demo-' + Date.now();
-                window.opcionesActuales = [
-                    { letra: 'A', texto: "x = 5", correcta: true },
-                    { letra: 'B', texto: "x = 10", correcta: false },
-                    { letra: 'C', texto: "x = 15", correcta: false }
-                ];
-                
-                const respuestaBot = `📝 Para resolver: ${text}<br><br>
-                <strong>Paso 1:</strong> Aislar la variable x<br>
-                <strong>Paso 2:</strong> Simplificar la ecuación<br>
-                <strong>Paso 3:</strong> Encontrar el valor de x<br><br>
-                ¿Cuál crees que es la solución correcta?`;
-                
-                addMessage(respuestaBot, 'bot');
-                
-                setTimeout(() => {
-                    mostrarOpcionesInteractivo(window.opcionesActuales, "¿Cuál es el valor de x?");
-                }, 1000);
-            } else {
-                // Respuesta normal
-                const respuestas = [
-                    "¡Excelente pregunta! Para resolver esto necesitamos aplicar los conceptos de álgebra básica.",
-                    "Entiendo tu consulta. Vamos a resolverlo paso a paso para que comprendas el proceso.",
-                    "Esta es una pregunta interesante. Te mostraré cómo abordarla sistemáticamente."
-                ];
-                addMessage(respuestas[Math.floor(Math.random() * respuestas.length)], 'bot');
-            }
-            
-            isSending = false;
-        }, 1500);
-    }
-    
-    function createTypingMessage(text) {
-        const typing = document.createElement('div');
-        typing.className = 'message bot';
-        typing.innerHTML = `
-            <div class="avatar bot-avatar">
-                <img src="tutor-avatar.png" alt="Tutor">
-            </div>
-            <div class="message-content">${text}</div>
-        `;
-        chatContainer.appendChild(typing);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-        return typing;
-    }
-    
-    function removeTypingMessage(typing) {
-        if (typing && typing.parentNode) {
-            typing.remove();
-        }
-    }
-    
-    // Simular análisis de imagen
-    function simulateImageAnalysis(file) {
-        setTimeout(() => {
-            const opciones = [
-                { letra: 'A', texto: "Resolver esta ecuación paso a paso", correcta: false },
-                { letra: 'B', texto: "Explicar el concepto matemático involucrado", correcta: false },
-                { letra: 'C', texto: "Mostrar ejemplos similares para practicar", correcta: true }
-            ];
-            
-            mostrarOpcionesInteractivo(opciones, "¿Qué te gustaría hacer con este ejercicio?");
-        }, 2000);
-    }
-    
-    // Función de voz (simplificada)
-    window.hablarConCola = function(texto) {
-        if (!window.voiceEnabled || !texto) return;
-        
-        if ('speechSynthesis' in window) {
-            const utterance = new SpeechSynthesisUtterance(texto);
-            utterance.lang = 'es-ES';
-            utterance.rate = 0.9;
-            window.speechSynthesis.speak(utterance);
-        }
-    };
-    
-    function narrarPasoCompleto(respuestaCompleta, opciones, respuestaCorrecta) {
-        if (!window.voiceEnabled) return;
-        
-        const texto = "Ahora elige una opción entre A, B o C.";
-        window.hablarConCola(texto);
-    }
+    initKeyboard();
+    mejorarMensajeInicial();
 });
 
 // === FUNCIONES PARA GRÁFICAS CON GEOGEBRA ===
 async function graficarFuncionGeoGebra(funcionTexto) {
     try {
         if (!window.ggbApp) {
-            console.error("GeoGebra no está inicializado");
-            return;
+            inicializarGeoGebra();
+            await new Promise(resolve => setTimeout(resolve, 1000));
         }
         
         const graphContainer = document.getElementById('graphContainer');
         graphContainer.style.display = 'block';
         
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 500));
         
         window.ggbApp.evalCommand('DeleteAll()');
         window.ggbApp.evalCommand(`f(x)=${funcionTexto}`);
         window.ggbApp.setCoordSystem(-10, 10, -10, 10);
         
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 300));
         window.ggbApp.zoomToFit();
-        
-        // addMessage(`✅ Gráfica generada para: f(x) = ${funcionTexto}`, 'bot');
         
     } catch (error) {
         console.error('Error al graficar con GeoGebra:', error);
-        // addMessage("❌ Error al generar la gráfica. Verifica la función.", 'bot');
     }
 }
 
@@ -712,7 +869,11 @@ function detectarYGraficarFuncion(texto) {
     const patronesExplicitos = [
         /graficar\s+(.+)/i,
         /gráfica\s+de\s+(.+)/i,
-        /dibujar\s+(.+)/i
+        /dibujar\s+(.+)/i,
+        /plot\s+(.+)/i,
+        /generar\s+gráfica\s+de\s+(.+)/i,
+        /muestra\s+la\s+gráfica\s+de\s+(.+)/i,
+        /representar\s+gráficamente\s+(.+)/i
     ];
     
     for (const patron of patronesExplicitos) {
@@ -720,6 +881,17 @@ function detectarYGraficarFuncion(texto) {
         if (match && match[1]) {
             return match[1].trim();
         }
+    }
+    
+    const esFuncionPura = 
+        texto.length <= 30 &&
+        (/[\^\+\-\*\/\(\)]/.test(texto) || /f\(x\)/i.test(texto)) &&
+        !/(resolver|calcular|explicar|ayuda|ejemplo|problema|ejercicio|derivada|integral|límite|ecuación|despejar|simplificar)/i.test(texto) &&
+        !/\?/.test(texto) &&
+        !/^\d+$/.test(texto);
+    
+    if (esFuncionPura) {
+        return texto;
     }
     
     return null;
@@ -781,6 +953,77 @@ function inicializarGeoGebra() {
     window.ggbApp = new GGBApplet(parameters, true);
     window.ggbApp.inject('ggb-element');
 }
+
+// === DOBLE CLICK PARA SALIR - VERSIÓN MINIMALISTA ===
+let clicks = 0;
+
+document.addEventListener('click', (e) => {
+    if (e.target.closest('button, textarea, input')) return;
+    
+    clicks++;
+    
+    if (clicks === 1) {
+        setTimeout(() => clicks = 0, 1500);
+        showExitHint();
+    } else if (clicks === 2) {
+        clicks = 0;
+        confirmExit();
+    }
+});
+
+function showExitHint() {
+    const hint = document.createElement('div');
+    hint.textContent = '👆 Toca otra vez para SALIR';
+    hint.style.cssText = `
+        position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+        background: #ff4757; color: white; padding: 10px 20px; border-radius: 20px;
+        font-weight: bold; z-index: 9999; animation: fadeHint 2s;
+    `;
+    document.body.appendChild(hint);
+    setTimeout(() => hint.remove(), 2000);
+}
+
+function confirmExit() {
+    const modal = document.createElement('div');
+    modal.innerHTML = `
+        <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:10000;">
+            <div style="background:white; padding:25px; border-radius:15px; text-align:center; max-width:300px;">
+                <h3 style="margin:0 0 15px 0;">¿Salir de MatyMat?</h3>
+                <button onclick="closeApp()" style="background:#ff4757; color:white; border:none; padding:10px 20px; border-radius:8px; margin:5px; cursor:pointer;">
+                    ✅ Sí, salir
+                </button>
+                <button onclick="this.closest('div').remove()" style="background:#576574; color:white; border:none; padding:10px 20px; border-radius:8px; margin:5px; cursor:pointer;">
+                    ❌ Cancelar
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function closeApp() {
+    document.body.innerHTML = `
+        <div style="height:100vh; background:linear-gradient(135deg, #667eea, #764ba2); display:flex; align-items:center; justify-content:center; color:white; font-family:Poppins;">
+            <div style="text-align:center;">
+                <h1 style="font-size:2.5rem; margin-bottom:20px;">👋 ¡Hasta pronto!</h1>
+                <p>MatyMat-01</p>
+            </div>
+        </div>
+    `;
+    setTimeout(() => window.close() || (window.location.href = 'about:blank'), 1500);
+}
+
+// Estilos adicionales dinámicos
+document.head.insertAdjacentHTML('beforeend', `
+    <style>
+        @keyframes fadeHint {
+            0% { opacity:0; transform:translateX(-50%) translateY(-10px); }
+            20% { opacity:1; transform:translateX(-50%) translateY(0); }
+            80% { opacity:1; transform:translateX(-50%) translateY(0); }
+            100% { opacity:0; transform:translateX(-50%) translateY(-10px); }
+        }
+    </style>
+`);
 
 // Llamar inicialización cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', inicializarGeoGebra);
