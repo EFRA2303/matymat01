@@ -39,10 +39,10 @@ document.addEventListener('DOMContentLoaded', function() {
     window.isMathKeyboardActive = false;
     
     // =============== CONFIGURACIÓN DEL TECLADO ===============
-    const keyboardExtrasData = {
-        basic: ['π', 'θ', '°', '%', '!', '|x|', '∞', '≈', '≠', '≤', '≥', '±'],
-        algebra: ['x²', 'x³', 'x^y', '√(', '∛(', '∑', '∏', 'log', 'ln', '| |', 'a/b', '(a)/(b)'],
-        trigonometry: ['sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'arcsin', 'arccos', 'arctan', 'sinh', 'cosh', 'tanh'],
+   const keyboardExtrasData = {
+        basic: ['π', 'e', '°', '%', '!', '∞', '≈', '≠', '±', '‰', '∠', '∥'],
+        algebra: ['x²', 'x³', 'x^y', '√(', '∛(', '∑', '∏', 'log', 'ln', '|x|', 'a/b', '(a)/(b)'],
+        trigonometry: ['sin(', 'cos(', 'tan(', 'cot(', 'sec(', 'csc(', 'asin(', 'acos(', 'atan(', 'sinh(', 'cosh(', 'tanh('],
         calculus: ['∫', '∂', 'dx', 'dy', 'dz', 'lim', 'Δ', '∇', '∫dx', '∫dy', 'd/dx', '∂/∂x'],
         special: ['⌊x⌋', '⌈x⌉', '→', '⇔', '∈', '∉', '⊂', '⊆', '∪', '∩', '∅', '∴']
     };
@@ -88,15 +88,25 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // =============== GENERAR CONTENIDO EXTRA DEL TECLADO ===============
     function generateKeyboardExtras(tabName) {
-        if (!keyboardExtras) return;
-        
-        keyboardExtras.innerHTML = '';
-        const items = keyboardExtrasData[tabName] || [];
-        
-        items.forEach(item => {
-            const btn = document.createElement('button');
-            btn.className = 'tool-btn func-btn';
-            btn.textContent = item;
+    if (!keyboardExtras) return;
+    
+            keyboardExtras.innerHTML = '';
+    const items = keyboardExtrasData[tabName] || [];
+    
+    // ✅ AGREGAR ESTO:
+    if (items.length > 12) {
+            keyboardExtras.style.gridTemplateColumns = 'repeat(6, 1fr)';
+            keyboardExtras.style.gap = '6px';
+    } else {
+            keyboardExtras.style.gridTemplateColumns = 'repeat(4, 1fr)';
+            keyboardExtras.style.gap = '8px';
+    }
+    
+    // El resto del código igual...
+    items.forEach(item => {
+        const btn = document.createElement('button');
+        btn.className = 'tool-btn func-btn';
+        btn.textContent = item;
             
             // Asignar función según el elemento
             if (item === 'x²') {
@@ -504,10 +514,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (contadorEstrellas) {
             contadorEstrellas.textContent = cantidad;
             contadorEstrellas.classList.add('star-pulse');
+            try {
+            const audio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ'); // Sonido corto
+            audio.volume = 0.3;
+            audio.play();
+            } catch (e) { console.log('Sin audio'); }
+        
             setTimeout(() => {
                 contadorEstrellas.classList.remove('star-pulse');
             }, 1000);
-            
+        
             // Efecto confeti
             crearConfeti();
         }
@@ -1129,4 +1145,5 @@ function closeApp() {
 // =============== INICIALIZAR GEOGEBRA AL CARGAR ===============
 
 document.addEventListener('DOMContentLoaded', inicializarGeoGebra);
+
 
