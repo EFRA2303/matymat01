@@ -274,22 +274,22 @@ header p {
 .options-popup {
     display: block;
     position: fixed;
-    bottom: -25vh;
+    bottom: -30vh;
     left: 10px;
     right: 10px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 15px 15px 0 0; 
+    border-radius: 15px 15px 0 0;
     z-index: 1001;
     box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-    animation: slideUpOptions 0.3s ease;
     max-height: 30vh;
     overflow-y: auto;
     border: 2px solid rgba(255,255,255,0.3);
     border-bottom: none;
-    transition: bottom 0.3s ease; /* ✅ TRANSICIÓN SUAVE */
+    transition: all 0.3s ease;
     opacity: 0;
+    pointer-events: none;
 }
-/* ✅ HANDLE PARA JALAR */
+
 .options-popup::before {
     content: '';
     position: absolute;
@@ -303,18 +303,9 @@ header p {
 }
 
 .options-popup.visible {
-    bottom: 100px; /* ✅ VISIBLE SOBRE BOTONES */
+    bottom: 100px;
     opacity: 1;
-}
-@keyframes slideUpOptions {
-    from { 
-        opacity: 0;
-        transform: translateY(100%) scale(0.95);
-    }
-    to { 
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+    pointer-events: auto;
 }
 
 .options-header {
@@ -1229,5 +1220,6 @@ body.keyboard-active .options-popup {
     from { transform: translateY(100%); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
 }
+
 
 
