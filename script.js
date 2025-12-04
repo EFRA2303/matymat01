@@ -39,13 +39,28 @@ document.addEventListener('DOMContentLoaded', function() {
     window.isMathKeyboardActive = false;
     
     // =============== CONFIGURACIÓN DEL TECLADO ===============
-   const keyboardExtrasData = {
-        basic: ['π', 'e', '°', '%', '!', '∞', '≈', '≠', '±', '‰', '∠', '∥'],
-        algebra: ['x²', 'x³', 'x^y', '√(', '∛(', '∑', '∏', 'log', 'ln', '|x|', 'a/b', '(a)/(b)'],
-        trigonometry: ['sin(', 'cos(', 'tan(', 'cot(', 'sec(', 'csc(', 'asin(', 'acos(', 'atan(', 'sinh(', 'cosh(', 'tanh('],
-        calculus: ['∫', '∂', 'dx', 'dy', 'dz', 'lim', 'Δ', '∇', '∫dx', '∫dy', 'd/dx', '∂/∂x'],
-        special: ['⌊x⌋', '⌈x⌉', '→', '⇔', '∈', '∉', '⊂', '⊆', '∪', '∩', '∅', '∴']
-    };
+  const keyboardExtrasData = {
+    basic: [
+        'π', 'e', '°', '%', '!', '∞', 
+        '≈', '≠', '±', '‰', '∠', '∥'
+    ],
+    algebra: [
+        'x²', 'x³', 'xⁿ', '√', '∛', '∑',
+        '∏', 'log', 'ln', '|x|', 'a/b', 'n√'
+    ],
+    trigonometry: [
+        'sin', 'cos', 'tan', 'cot', 'sec', 'csc',
+        'sin⁻¹', 'cos⁻¹', 'tan⁻¹', 'sinh', 'cosh', 'tanh'
+    ],
+    calculus: [
+        '∫', '∂', 'dx', 'dy', 'dz', 'lim',
+        'Δ', '∇', '∫dx', '∫dy', 'd/dx', '∂/∂x'
+    ],
+    special: [
+        '⌊x⌋', '⌈x⌉', '→', '⇔', '∈', '∉',
+        '⊂', '⊆', '∪', '∩', '∅', '∴'
+    ]
+};
     
     // =============== INICIALIZAR TECLADO ===============
     function initMathKeyboard() {
@@ -87,57 +102,78 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // =============== GENERAR CONTENIDO EXTRA DEL TECLADO ===============
-    function generateKeyboardExtras(tabName) {
+   function generateKeyboardExtras(tabName) {
     if (!keyboardExtras) return;
     
-            keyboardExtras.innerHTML = '';
+    keyboardExtras.innerHTML = '';
     const items = keyboardExtrasData[tabName] || [];
     
-    // ✅ AGREGAR ESTO:
-    if (items.length > 12) {
-            keyboardExtras.style.gridTemplateColumns = 'repeat(6, 1fr)';
-            keyboardExtras.style.gap = '6px';
-    } else {
-            keyboardExtras.style.gridTemplateColumns = 'repeat(4, 1fr)';
-            keyboardExtras.style.gap = '8px';
-    }
+    // ✅ DISTRIBUCIÓN INTELIGENTE POR CATEGORÍA
+    keyboardExtras.style.gridTemplateColumns = 'repeat(auto-fit, minmax(75px, 1fr))';
+    keyboardExtras.style.gap = '6px';
+    keyboardExtras.style.padding = '12px';
     
-    // El resto del código igual...
     items.forEach(item => {
         const btn = document.createElement('button');
-        btn.className = 'tool-btn func-btn';
+        btn.className = 'tool-btn';
+        
+        // ✅ COLORES POR CATEGORÍA
+        if (tabName === 'basic') {
+            btn.classList.add('basic-btn');
+        } else if (tabName === 'algebra') {
+            btn.classList.add('algebra-btn');
+        } else if (tabName === 'trigonometry') {
+            btn.classList.add('trig-btn');
+        } else if (tabName === 'calculus') {
+            btn.classList.add('calc-btn');
+        } else if (tabName === 'special') {
+            btn.classList.add('special-btn');
+        }
+        
         btn.textContent = item;
-            
-            // Asignar función según el elemento
-            if (item === 'x²') {
-                btn.addEventListener('click', () => insertPower('²'));
-            } else if (item === 'x³') {
-                btn.addEventListener('click', () => insertPower('³'));
-            } else if (item === 'x^y') {
-                btn.addEventListener('click', () => insertAtCursor('^'));
-            } else if (item === 'a/b') {
-                btn.addEventListener('click', () => insertFraction());
-            } else if (item === '(a)/(b)') {
-                btn.addEventListener('click', () => insertSimpleFraction());
-            } else if (item === '√(') {
-                btn.addEventListener('click', () => insertAtCursor('√('));
-            } else if (item === '∛(') {
-                btn.addEventListener('click', () => insertAtCursor('∛('));
-            } else if (['sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'arcsin', 'arccos', 'arctan', 'sinh', 'cosh', 'tanh', 'log', 'ln', 'lim'].includes(item)) {
-                btn.addEventListener('click', () => insertFunction(item));
-            } else if (item === '∫') {
-                btn.addEventListener('click', () => insertIntegral());
-            } else if (item === 'd/dx') {
-                btn.addEventListener('click', () => insertAtCursor('d/dx '));
-            } else if (item === '∂/∂x') {
-                btn.addEventListener('click', () => insertAtCursor('∂/∂x '));
-            } else {
-                btn.addEventListener('click', () => insertAtCursor(item));
-            }
-            
-            keyboardExtras.appendChild(btn);
-        });
-    }
+        
+        // ✅ FUNCIONES (MANTIENE TU LÓGICA ORIGINAL)
+        if (item === 'x²') {
+            btn.addEventListener('click', () => insertPower('²'));
+        } else if (item === 'x³') {
+            btn.addEventListener('click', () => insertPower('³'));
+        } else if (item === 'xⁿ') {
+            btn.addEventListener('click', () => insertAtCursor('^'));
+        } else if (item === '√') {
+            btn.addEventListener('click', () => insertAtCursor('√('));
+        } else if (item === '∛') {
+            btn.addEventListener('click', () => insertAtCursor('∛('));
+        } else if (item === 'n√') {
+            btn.addEventListener('click', () => insertAtCursor('√['));
+        } else if (item === 'a/b') {
+            btn.addEventListener('click', () => insertFraction());
+        } else if (item === '(a)/(b)') {
+            btn.addEventListener('click', () => insertSimpleFraction());
+        } else if (['sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'sin⁻¹', 'cos⁻¹', 'tan⁻¹', 'sinh', 'cosh', 'tanh', 'log', 'ln', 'lim'].includes(item)) {
+            let funcion = item;
+            if (item === 'sin⁻¹') funcion = 'arcsin';
+            if (item === 'cos⁻¹') funcion = 'arccos';
+            if (item === 'tan⁻¹') funcion = 'arctan';
+            btn.addEventListener('click', () => insertFunction(funcion));
+        } else if (item === '∫') {
+            btn.addEventListener('click', () => insertIntegral());
+        } else if (item === 'd/dx') {
+            btn.addEventListener('click', () => insertAtCursor('d/dx '));
+        } else if (item === '∂/∂x') {
+            btn.addEventListener('click', () => insertAtCursor('∂/∂x '));
+        } else if (item === '∑') {
+            btn.addEventListener('click', () => insertAtCursor('∑_{i=1}^{n}'));
+        } else if (item === '∏') {
+            btn.addEventListener('click', () => insertAtCursor('∏_{i=1}^{n}'));
+        } else if (item === '|x|') {
+            btn.addEventListener('click', () => insertAtCursor('| |'));
+        } else {
+            btn.addEventListener('click', () => insertAtCursor(item));
+        }
+        
+        keyboardExtras.appendChild(btn);
+    });
+}
     
     // =============== FUNCIONES DEL TECLADO ===============
     
@@ -1145,5 +1181,6 @@ function closeApp() {
 // =============== INICIALIZAR GEOGEBRA AL CARGAR ===============
 
 document.addEventListener('DOMContentLoaded', inicializarGeoGebra);
+
 
 
