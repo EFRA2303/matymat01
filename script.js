@@ -319,9 +319,10 @@ document.addEventListener('DOMContentLoaded', function() {
             closeMathKeyboardFunc();
         }
         
-        // Mostrar pregunta
+        // ✅ CORRECCIÓN: Mostrar solo las opciones, NO la pregunta en el popup
         if (questionDisplay) {
-            questionDisplay.innerHTML = `<p>${formatText(pregunta || 'Selecciona la opción correcta:')}</p>`;
+            questionDisplay.innerHTML = `<p>Selecciona la opción correcta:</p>`;
+            questionDisplay.style.display = 'none'; // Ocultamos completamente la pregunta
         }
         
         // Limpiar y agregar opciones (máximo 3)
@@ -347,10 +348,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (optionsContainer) {
             optionsContainer.style.display = 'block';
             
+            // ✅ CORRECCIÓN: Asegurar que solo ocupe 20-30% de la pantalla
+            optionsContainer.style.maxHeight = '30vh';
+            optionsContainer.style.overflowY = 'auto';
+            
             // Asegurar visibilidad del proceso
             setTimeout(() => {
                 if (chatContainer) {
-                    chatContainer.scrollTop = chatContainer.scrollHeight - 250;
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
                 }
             }, 100);
         }
@@ -359,6 +364,9 @@ document.addEventListener('DOMContentLoaded', function() {
     window.closeOptions = function() {
         if (optionsContainer) {
             optionsContainer.style.display = 'none';
+            if (questionDisplay) {
+                questionDisplay.style.display = 'block';
+            }
         }
     };
     
@@ -433,7 +441,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (data.opciones) {
                             window.sesionActual = data.sesionId;
                             window.opcionesActuales = data.opciones;
-                            window.mostrarOpcionesInteractivo(data.opciones, data.respuesta);
+                            window.mostrarOpcionesInteractivo(data.opciones, "");
                         }
                     }, 2000);
                 } else if (data.sesionCompletada) {
@@ -566,6 +574,37 @@ document.addEventListener('DOMContentLoaded', function() {
             .replace(/\n/g, '<br>');
     }
     
+    // =============== FUNCIONES DE TYPING (FALTANTES) ===============
+    
+    function createTypingMessage(text) {
+        if (!chatContainer) return null;
+        
+        const typing = document.createElement('div');
+        typing.className = 'message bot typing-message';
+        typing.innerHTML = `
+            <div class="avatar bot-avatar">
+                <img src="tutor-avatar.png" alt="Tutor">
+            </div>
+            <div class="message-content">
+                <div class="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <span class="typing-text">${text}</span>
+            </div>
+        `;
+        chatContainer.appendChild(typing);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        return typing;
+    }
+    
+    function removeTypingMessage(typing) {
+        if (typing && typing.parentNode) {
+            typing.remove();
+        }
+    }
+    
     // =============== SISTEMA DE VOZ ===============
     
     window.hablarConCola = function(texto) {
@@ -657,10 +696,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.opcionesActuales = data.opciones;
                 window.respuestaCorrecta = data.respuestaCorrecta;
                 
+                // ✅ CORRECCIÓN: Solo mostrar la explicación en el chat, NO en el popup
                 addMessage(data.respuesta, 'bot');
                 
                 setTimeout(() => {
-                    window.mostrarOpcionesInteractivo(data.opciones, data.respuesta);
+                    window.mostrarOpcionesInteractivo(data.opciones, "");
                 }, 1000);
                 
                 if (data.estrellas !== undefined) {
@@ -682,7 +722,9 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error:', error);
             
             // ✅ FALLBACK SIMPLE PERO SIN SIMULACIÓN EXTENSA
-            removeTypingMessage(createTypingMessage("Pensando..."));
+            if (document.querySelector('.typing-message')) {
+                removeTypingMessage(document.querySelector('.typing-message'));
+            }
             
             const respuestas = [
                 "⚠️ Error de conexión. Por favor, intenta nuevamente.",
@@ -695,28 +737,6 @@ document.addEventListener('DOMContentLoaded', function() {
         isSending = false;
     }
     
-    function createTypingMessage(text) {
-        if (!chatContainer) return null;
-        
-        const typing = document.createElement('div');
-        typing.className = 'message bot';
-        typing.innerHTML = `
-            <div class="avatar bot-avatar">
-                <img src="tutor-avatar.png" alt="Tutor">
-            </div>
-            <div class="message-content">${text}</div>
-        `;
-        chatContainer.appendChild(typing);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-        return typing;
-    }
-    
-    function removeTypingMessage(typing) {
-        if (typing && typing.parentNode) {
-            typing.remove();
-        }
-    }
-    
     // =============== SIMULACIÓN DE ANÁLISIS DE IMAGEN ===============
     
     function simulateImageAnalysis(file) {
@@ -727,7 +747,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 { letra: 'C', texto: "Mostrar ejemplos similares para practicar", correcta: true }
             ];
             
-            window.mostrarOpcionesInteractivo(opciones, "¿Qué te gustaría hacer con este ejercicio?");
+            addMessage('📸 Analizando imagen... He detectado un ejercicio matemático. ¿Qué te gustaría hacer?', 'bot');
+            
+            setTimeout(() => {
+                window.mostrarOpcionesInteractivo(opciones, "");
+            }, 1500);
         }, 2000);
     }
     
