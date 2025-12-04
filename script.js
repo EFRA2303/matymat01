@@ -452,31 +452,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }, 2000);
             
-        } catch (error) {
-            console.error('Error:', error);
             
-            // Fallback visual si hay error
-            if (botonElegido) {
-                if (esCorrecta) {
-                    botonElegido.classList.add('correct');
-                    botonElegido.innerHTML += ' <i class="fas fa-check"></i>';
-                    window.respuestasCorrectas++;
-                    
-                    const estrellasGanadas = 1;
-                    window.estrellasTotales += estrellasGanadas;
-                    actualizarEstrellas(window.estrellasTotales);
-                    
-                    addMessage(`Elegiste: Opción ${opcion} ✓ (¡Correcto! +${estrellasGanadas}⭐)`, 'user');
-                } else {
-                    botonElegido.classList.add('incorrect');
-                    botonElegido.innerHTML += ' <i class="fas fa-times"></i>';
-                    addMessage(`Elegiste: Opción ${opcion} ✗ (Incorrecto)`, 'user');
-                }
-            }
-            
-            addMessage("⚠️ Error de conexión. Usando modo local...", 'bot');
-            botones.forEach(btn => btn.disabled = false);
-            closeOptions();
+           } catch (error) {
+        console.error('Error:', error);
+        addMessage("❌ Error al procesar tu respuesta. Intenta nuevamente.", 'bot');
+        botones.forEach(btn => btn.disabled = false);
+        closeOptions();
         }
     };
     
@@ -1048,3 +1029,4 @@ function closeApp() {
 // =============== INICIALIZAR GEOGEBRA AL CARGAR ===============
 
 document.addEventListener('DOMContentLoaded', inicializarGeoGebra);
+
