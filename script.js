@@ -39,13 +39,13 @@ document.addEventListener('DOMContentLoaded', function() {
     window.isMathKeyboardActive = false;
     
     // =============== CONFIGURACIÓN DEL TECLADO ===============
-   const keyboardExtrasData = {
-    basic: ['π', 'θ', '°', '%', '!', '|x|', '∞', '≈', '≠', '≤', '≥', '±', '°', '‰', '∵', '∴', '∝', '∅', '∠', '∥'],
-    algebra: ['x²', 'x³', 'x^y', '√(', '∛(', '∑', '∏', 'log', 'ln', '| |', 'a/b', '(a)/(b)', 'mod', 'gcd', 'lcm', '√n', 'n√', 'bin', 'hex', 'dec'],
-    trigonometry: ['sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'arcsin', 'arccos', 'arctan', 'sinh', 'cosh', 'tanh', 'coth', 'sech', 'csch', 'asin', 'acos', 'atan', 'sin⁻¹', 'cos⁻¹'],
-    calculus: ['∫', '∂', 'dx', 'dy', 'dz', 'lim', 'Δ', '∇', '∫dx', '∫dy', 'd/dx', '∂/∂x', '∮', '∯', '∰', '∞', '→', 'lim→∞', '∑_{n=1}^∞', '∏_{i=1}^n'],
-    special: ['⌊x⌋', '⌈x⌉', '→', '⇔', '∈', '∉', '⊂', '⊆', '∪', '∩', '∅', '∴', '∵', '∃', '∀', '¬', '∧', '∨', '⊕', '⊗']
-};    
+    const keyboardExtrasData = {
+        basic: ['π', 'θ', '°', '%', '!', '|x|', '∞', '≈', '≠', '≤', '≥', '±'],
+        algebra: ['x²', 'x³', 'x^y', '√(', '∛(', '∑', '∏', 'log', 'ln', '| |', 'a/b', '(a)/(b)'],
+        trigonometry: ['sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'arcsin', 'arccos', 'arctan', 'sinh', 'cosh', 'tanh'],
+        calculus: ['∫', '∂', 'dx', 'dy', 'dz', 'lim', 'Δ', '∇', '∫dx', '∫dy', 'd/dx', '∂/∂x'],
+        special: ['⌊x⌋', '⌈x⌉', '→', '⇔', '∈', '∉', '⊂', '⊆', '∪', '∩', '∅', '∴']
+    };
     
     // =============== INICIALIZAR TECLADO ===============
     function initMathKeyboard() {
@@ -347,7 +347,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Mostrar opciones emergentes
         if (optionsContainer) {
             optionsContainer.style.display = 'block';
-            optionsContainer.classList.remove('hidden');
             
             // ✅ Asegurar que solo ocupe 20-30% de la pantalla
             setTimeout(() => {
@@ -359,12 +358,8 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     window.closeOptions = function() {
-    if (optionsContainer) {
-        optionsContainer.classList.add('hidden');
-        setTimeout(() => {
+        if (optionsContainer) {
             optionsContainer.style.display = 'none';
-            optionsContainer.classList.remove('hidden');
-            }, 300);
         }
     };
     
@@ -408,16 +403,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     addMessage(`Elegiste: Opción ${opcion} ✓ (¡Correcto! +${estrellasGanadas}⭐)`, 'user');
                     
-                    if (window.voiceEnabled) {
-                        window.hablarConCola("¡Correcto! Excelente trabajo.");
+                    // ✅ CORRECCIÓN: VOZ EXPLICA TODO EL TEXTO
+                    if (window.voiceEnabled && data.respuesta) {
+                        const textoVoz = data.respuesta.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+                        window.hablarConCola(textoVoz);
                     }
                 } else {
                     botonElegido.classList.add('incorrect');
                     botonElegido.innerHTML += ' <i class="fas fa-times"></i>';
                     addMessage(`Elegiste: Opción ${opcion} ✗ (Incorrecto)`, 'user');
                     
-                    if (window.voiceEnabled) {
-                        window.hablarConCola(`Incorrecto. La opción correcta es la ${data.respuestaCorrecta}.`);
+                    // ✅ CORRECCIÓN: VOZ EXPLICA TODO EL TEXTO
+                    if (window.voiceEnabled && data.respuesta) {
+                        const textoVoz = `Incorrecto. ${data.respuesta.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()}`;
+                        window.hablarConCola(textoVoz);
                     }
                 }
             }
@@ -457,12 +456,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }, 2000);
             
-            
-           } catch (error) {
-        console.error('Error:', error);
-        addMessage("❌ Error al procesar tu respuesta. Intenta nuevamente.", 'bot');
-        botones.forEach(btn => btn.disabled = false);
-        closeOptions();
+        } catch (error) {
+            console.error('Error:', error);
+            addMessage("❌ Error al procesar tu respuesta. Intenta nuevamente.", 'bot');
+            botones.forEach(btn => btn.disabled = false);
+            closeOptions();
         }
     };
     
@@ -679,6 +677,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 // ✅ Explicación del problema en el chat
                 addMessage(data.respuesta, 'bot');
                 
+                // ✅ CORRECCIÓN: VOZ EXPLICA LA EXPLICACIÓN INICIAL
+                if (window.voiceEnabled && data.respuesta) {
+                    const textoVoz = data.respuesta.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+                    window.hablarConCola(textoVoz);
+                }
+                
                 // ✅ Opciones SOLO en popup inferior (sin texto del problema)
                 setTimeout(() => {
                     window.mostrarOpcionesInteractivo(data.opciones, "");
@@ -690,6 +694,11 @@ document.addEventListener('DOMContentLoaded', function() {
             } 
             else if (data.necesitaGrafica) {
                 addMessage(data.respuesta, 'bot');
+                // ✅ CORRECCIÓN: VOZ EXPLICA SOBRE GRÁFICAS
+                if (window.voiceEnabled && data.respuesta) {
+                    const textoVoz = data.respuesta.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+                    window.hablarConCola(textoVoz);
+                }
                 // Activar gráfica si es necesario
                 if (data.graficaData && data.graficaData.funcion) {
                     setTimeout(() => graficarFuncionGeoGebra(data.graficaData.funcion), 1500);
@@ -697,6 +706,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             else {
                 addMessage(data.respuesta, 'bot');
+                // ✅ CORRECCIÓN: VOZ EXPLICA RESPUESTAS NORMALES
+                if (window.voiceEnabled && data.respuesta) {
+                    const textoVoz = data.respuesta.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+                    window.hablarConCola(textoVoz);
+                }
             }
             
         } catch (error) {
@@ -711,7 +725,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 "Lo siento, hay un problema con el servidor. Intenta en un momento.",
                 "No puedo procesar tu solicitud en este momento. Verifica tu conexión."
             ];
-            addMessage(respuestas[Math.floor(Math.random() * respuestas.length)], 'bot');
+            const mensajeError = respuestas[Math.floor(Math.random() * respuestas.length)];
+            addMessage(mensajeError, 'bot');
         }
         
         isSending = false;
@@ -1034,5 +1049,3 @@ function closeApp() {
 // =============== INICIALIZAR GEOGEBRA AL CARGAR ===============
 
 document.addEventListener('DOMContentLoaded', inicializarGeoGebra);
-
-
